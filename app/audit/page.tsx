@@ -33,7 +33,10 @@ function AuditFlow() {
 
   // Auth guard + one-audit-per-account check
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event !== "INITIAL_SESSION" && event !== "SIGNED_IN") return;
+      subscription.unsubscribe();
+
       if (!session) {
         const paramUrl = searchParams.get("url");
         const dest = paramUrl ? `/auth?url=${encodeURIComponent(paramUrl)}` : "/auth";
@@ -58,6 +61,7 @@ function AuditFlow() {
         router.push("/");
       }
     });
+    return () => subscription.unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -229,7 +233,11 @@ function AuditFlow() {
     );
   }
 
-  return null;
+  return (
+    <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 }
 
 export default function AuditPage() {
