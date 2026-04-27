@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, LayoutDashboard, MessageSquare, Globe,
-  ListChecks, Settings, ChevronDown, ChevronRight, Tag, Radio, Swords,
+  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 
@@ -317,13 +317,18 @@ export function Sidebar({ activePage, onNavigate, profile }: SidebarProps) {
       </div>
 
       {/* Footer */}
-      <div className="px-3 pb-4 pt-3 border-t border-[#f0f0f0] space-y-0.5">
-        <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#888] hover:bg-[#f7f7f5] hover:text-[#0a0a0a] transition-all">
-          <Settings className="w-4 h-4 shrink-0 text-[#bbb]" />
-          Settings
-        </button>
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[#f7f7f5] transition-colors cursor-pointer">
-          <BrandFavicon domain="comly.ai" name="Comly" size={28} />
+      <div className="px-3 pb-4 pt-3 border-t border-[#f0f0f0]">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
+          <svg width="28" height="28" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+            <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#1a1a2e" />
+            <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="url(#swooshGradSidebar)" />
+            <defs>
+              <linearGradient id="swooshGradSidebar" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#5b21b6" />
+                <stop offset="100%" stopColor="#a855f7" />
+              </linearGradient>
+            </defs>
+          </svg>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">Comly</p>
             <p className="text-[11px] text-[#aaaaaa] truncate">Free plan</p>
