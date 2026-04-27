@@ -58,7 +58,7 @@ For competitors, name 3 real well-known companies in the same space. If you cann
   } catch (err) {
     console.error("Extract profile error:", err);
     return NextResponse.json(
-      { error: "Failed to analyze website content. Please try again." },
+      { error: err instanceof Error ? err.message : "Failed to analyze website content. Please try again." },
       { status: 500 }
     );
   }
