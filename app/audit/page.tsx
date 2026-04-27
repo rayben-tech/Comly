@@ -230,6 +230,28 @@ function AuditFlow() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#fafaf8] flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h2 className="text-[#0a0a0a] font-semibold text-lg mb-2">Something went wrong</h2>
+          <p className="text-[#6b7280] text-sm mb-6 leading-relaxed">{error}</p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-6 py-2.5 bg-[#5B2D91] text-white rounded-lg text-sm font-semibold hover:bg-[#4a2475] transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
