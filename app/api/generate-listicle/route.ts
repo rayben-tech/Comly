@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
+
+export const maxDuration = 60;
 import { BrandProfile } from "@/types";
 
 export async function POST(req: NextRequest) {

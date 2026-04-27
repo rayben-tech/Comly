@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 async function scrapeWithFirecrawl(url: string, apiKey: string) {
   const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
     method: "POST",

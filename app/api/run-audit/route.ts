@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
+
+export const maxDuration = 60;
 import { generateAuditPrompts } from "@/lib/generate-prompts";
 import { calculateScore, calculateCompetitorRankings } from "@/lib/score";
 import { BrandProfile, PromptResult } from "@/types";
