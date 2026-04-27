@@ -1225,6 +1225,7 @@ export default function LandingPage() {
     if (!url.trim()) return;
     let u = url.trim();
     if (!u.startsWith("http://") && !u.startsWith("https://")) u = "https://" + u;
+    try { sessionStorage.setItem("comly_pending_url", u); } catch {}
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       router.push(`/audit?url=${encodeURIComponent(u)}`);

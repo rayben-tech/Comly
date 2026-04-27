@@ -33,12 +33,9 @@ function AuditFlow() {
 
   // Auth guard + one-audit-per-account check
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event !== "INITIAL_SESSION" && event !== "SIGNED_IN") return;
-      subscription.unsubscribe();
-
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        const paramUrl = searchParams.get("url");
+        const paramUrl = searchParams.get("url") || sessionStorage.getItem("comly_pending_url") || "";
         const dest = paramUrl ? `/auth?url=${encodeURIComponent(paramUrl)}` : "/auth";
         router.replace(dest);
         return;
@@ -53,15 +50,15 @@ function AuditFlow() {
         return;
       }
 
-      const paramUrl = searchParams.get("url");
+      const paramUrl = searchParams.get("url") || sessionStorage.getItem("comly_pending_url") || "";
       if (paramUrl) {
+        try { sessionStorage.removeItem("comly_pending_url"); } catch {}
         setUrl(paramUrl);
         handleRunAuditWithUrl(paramUrl);
       } else {
         router.push("/");
       }
     });
-    return () => subscription.unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
