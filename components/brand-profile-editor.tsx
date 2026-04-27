@@ -517,7 +517,7 @@ export function BrandProfileEditor({ profile: initialProfile, onConfirm, isAudit
                 <input type="text" value={profile.brand_name} onChange={(e) => setProfile((p) => ({ ...p, brand_name: e.target.value }))} className={inputCls} />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Category">
                   <input type="text" value={profile.category} onChange={(e) => setProfile((p) => ({ ...p, category: e.target.value }))} className={inputCls} />
                 </Field>

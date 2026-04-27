@@ -7,6 +7,7 @@ import {
   ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
+import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -27,6 +28,7 @@ interface SidebarProps {
   activePage: string;
   onNavigate: (page: string) => void;
   profile: BrandProfile;
+  className?: string;
 }
 
 function domainFromUrl(url: string): string {
@@ -63,7 +65,7 @@ function BrandFavicon({ domain, name, size = 32 }: { domain: string; name: strin
   );
 }
 
-export function Sidebar({ activePage, onNavigate, profile }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, profile, className }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const [query, setQuery] = useState("");
   const isFixesActive = activePage.startsWith("fixes:");
@@ -88,7 +90,7 @@ export function Sidebar({ activePage, onNavigate, profile }: SidebarProps) {
   }
 
   return (
-    <aside className="w-[220px] shrink-0 bg-white border-r border-[#ebebeb] flex flex-col h-screen sticky top-0 overflow-hidden">
+    <aside className={cn("w-[220px] shrink-0 bg-white border-r border-[#ebebeb] flex flex-col h-screen sticky top-0 overflow-hidden", className)}>
 
       {/* Brand header */}
       <div className="px-5 py-5 border-b border-[#f0f0f0]">

@@ -1012,39 +1012,82 @@ function HeroDashboardPreview() {
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <aside className="w-[160px] shrink-0 border-r border-[#e5e5e5] flex flex-col bg-white">
-          <div className="px-4 py-3 border-b border-[#e5e5e5] flex items-center gap-2">
-            <ComlyLogo size={20} />
-            <span className="font-bold text-[#0a0a0a] text-[13px]">Comly</span>
+        {/* Sidebar — matches real sidebar layout */}
+        <aside className="w-[160px] shrink-0 border-r border-[#ebebeb] flex flex-col bg-white">
+          {/* Brand header */}
+          <div className="px-3 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+            <img src="https://www.google.com/s2/favicons?domain=notion.so&sz=64" alt="Notion" width={20} height={20} className="rounded-lg object-contain shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold text-[#0a0a0a] truncate leading-tight">Notion&apos;s dashboard</p>
+              <p className="text-[9px] text-[#aaaaaa] truncate">notion.so</p>
+            </div>
           </div>
-          <div className="px-3 py-3 flex-1">
-            <p className="text-[9px] font-bold text-[#aaaaaa] uppercase tracking-widest px-2 mb-1.5">Pages</p>
+          {/* Search */}
+          <div className="px-2.5 py-2">
+            <div className="flex items-center gap-1.5 px-2 bg-[#f7f7f5] border border-[#ebebeb] rounded-md h-6">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#cccccc" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <span className="text-[9px] text-[#cccccc]">Quick Actions</span>
+            </div>
+          </div>
+          {/* Nav */}
+          <div className="px-2 flex-1 overflow-hidden">
+            <p className="text-[8px] font-bold text-[#cccccc] uppercase tracking-[0.14em] px-1.5 mb-1">Pages</p>
             {[
               { label: "Overview", active: true },
               { label: "Prompts",  active: false },
               { label: "Sources",  active: false },
-              { label: "Models",   active: false },
             ].map(({ label, active }) => (
-              <div key={label} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg mb-0.5 text-[11px] ${active ? "bg-[#f0f0f0] font-semibold text-[#0a0a0a]" : "text-[#6b6b6b]"}`}>
-                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-[#5B2D91]" : "bg-[#e5e5e5]"}`} />
+              <div key={label} className={`flex items-center gap-1.5 px-2 py-1 rounded-md mb-0.5 text-[10px] font-medium ${active ? "bg-[#5B2D91] text-white" : "text-[#666]"}`}>
+                <div className={`w-1.5 h-1.5 rounded-sm shrink-0 ${active ? "bg-white/60" : "bg-[#e0e0e0]"}`} />
                 {label}
               </div>
             ))}
-            <div className="mt-4 px-2">
-              <p className="text-[9px] font-bold text-[#aaaaaa] uppercase tracking-widest mb-2">Brand Info</p>
-              <p className="text-[10px] text-[#aaaaaa] font-semibold uppercase mb-0.5">Name</p>
-              <p className="text-[11px] font-bold text-[#0a0a0a]">Notion</p>
-              <p className="text-[10px] text-[#aaaaaa] font-semibold uppercase mt-2 mb-0.5">URL</p>
-              <p className="text-[11px] text-blue-600">notion.so</p>
+            {/* Fixes */}
+            <div className="flex items-center justify-between px-2 py-1 rounded-md text-[10px] font-medium text-[#666] mb-0.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-sm bg-[#e0e0e0] shrink-0" />
+                Fixes
+              </div>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+            {/* Crawlers Pro */}
+            <div className="flex items-center justify-between px-2 py-1 rounded-md text-[10px] font-medium text-[#666] mb-0.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-sm bg-[#e0e0e0] shrink-0" />
+                Crawlers
+              </div>
+              <span className="text-[8px] font-semibold px-1 py-0.5 rounded-full bg-amber-50 text-amber-600">Pro</span>
+            </div>
+            {/* Competitor Playbook Pro */}
+            <div className="flex items-center justify-between px-2 py-1 rounded-md text-[10px] font-medium text-[#666] mb-0.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-sm bg-[#e0e0e0] shrink-0" />
+                <span className="truncate">Competitor</span>
+              </div>
+              <span className="text-[8px] font-semibold px-1 py-0.5 rounded-full bg-amber-50 text-amber-600">Pro</span>
+            </div>
+            {/* Brand */}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium text-[#666]">
+              <div className="w-1.5 h-1.5 rounded-sm bg-[#e0e0e0] shrink-0" />
+              Brand
             </div>
           </div>
-          <div className="px-3 py-2 border-t border-[#e5e5e5]">
-            <div className="flex items-center gap-2 bg-[#f7f7f5] rounded-lg px-2.5 py-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          {/* Footer — Comly branding */}
+          <div className="px-2 pb-2 pt-2 border-t border-[#f0f0f0]">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md">
+              <svg width="16" height="16" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#1a1a2e" />
+                <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="url(#swooshGradHero)" />
+                <defs>
+                  <linearGradient id="swooshGradHero" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#5b21b6" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
               <div>
-                <p className="text-[9px] text-[#aaaaaa] uppercase font-semibold">Next run in</p>
-                <p className="text-[11px] font-bold text-[#0a0a0a]">23h 41m</p>
+                <p className="text-[10px] font-semibold text-[#0a0a0a]">Comly</p>
+                <p className="text-[9px] text-[#aaaaaa]">Free plan</p>
               </div>
             </div>
           </div>
@@ -1052,140 +1095,202 @@ function HeroDashboardPreview() {
 
         {/* Main */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top bar */}
-          <div className="border-b border-[#e5e5e5] shrink-0">
-            <div className="flex items-center gap-2 px-4 py-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#e5e5e5] bg-white">
-                <img src="https://www.google.com/s2/favicons?domain=notion.so&sz=16" alt="" width={12} height={12} className="rounded-sm" />
-                <span className="text-[11px] font-semibold text-[#0a0a0a]">Notion</span>
-              </div>
-              {["Last 7 days", "All Models"].map((l) => (
-                <span key={l} className="text-[10px] px-2.5 py-1 rounded-full border border-[#e5e5e5] text-[#6b6b6b]">{l}</span>
-              ))}
-              <div className="ml-auto flex items-center gap-1.5">
-                <div className="bg-[#5B2D91] text-white text-[10px] font-medium px-2.5 py-1 rounded-lg">Export</div>
-              </div>
+          {/* Top bar — matches real TopBar */}
+          <div className="bg-white border-b border-[#e8e8e8] shrink-0 flex items-center gap-2 px-3 h-[36px]">
+            <div className="flex items-center gap-1 text-[10px]">
+              <span className="text-[#aaaaaa] font-medium">Comly</span>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d0d0d0" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+              <img src="https://www.google.com/s2/favicons?domain=notion.so&sz=16" alt="" width={10} height={10} className="rounded-sm" />
+              <span className="font-semibold text-[#0a0a0a]">Notion</span>
             </div>
-            <div className="flex items-center justify-between px-4 py-1.5 bg-[#fafafa] border-t border-[#f0f0f0]">
-              <p className="text-[10px] text-[#6b6b6b]"><span className="font-semibold text-[#0a0a0a]">Overview</span> · Notion&apos;s AI visibility report</p>
-              <div className="flex items-center gap-4 text-[10px] text-[#6b6b6b]">
-                <span>Visibility: <span className="font-semibold text-[#0a0a0a]">7/10</span> <span className="text-emerald-500 font-bold">↑</span></span>
-                <span>Sentiment: <span className="font-semibold text-[#0a0a0a]">68/100</span> <span className="text-emerald-500 font-bold">↑</span></span>
-                <span>Position: <span className="font-semibold text-[#0a0a0a]">#1.8</span> <span className="text-emerald-500 font-bold">↑</span></span>
+            <div className="w-px h-3 bg-[#e8e8e8]" />
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-600">
+              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+              Score 68/100
+            </div>
+            <span className="text-[9px] text-[#aaaaaa]">Visibility <span className="text-[#0a0a0a] font-semibold">70%</span></span>
+            <div className="ml-auto">
+              <div className="flex items-center gap-1 px-2 py-1 rounded text-white text-[9px] font-semibold" style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}>
+                Export
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-hidden p-3 grid grid-cols-5 gap-3">
-            {/* Left col: chart + mentions */}
-            <div className="col-span-3 flex flex-col gap-3">
-              {/* Visibility chart card */}
-              <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
-                  <div className="flex gap-1">
-                    {["Visibility", "Sentiment", "Position"].map((t, i) => (
-                      <span key={t} className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${i === 0 ? "bg-[#5B2D91] text-white" : "text-[#6b6b6b]"}`}>{t}</span>
-                    ))}
+          <div className="flex-1 overflow-hidden p-3 flex flex-col gap-3">
+
+            {/* Stat cards row */}
+            <div className="grid grid-cols-4 gap-2 shrink-0">
+              {[
+                { label: "Prompts Hit",       value: "7 / 10",     sym: "✓", color: "#10b981" },
+                { label: "Direct Awareness",  value: "Recognized", sym: "✦", color: "#5B2D91" },
+                { label: "Avg. Position",     value: "#2",         sym: "#", color: "#f59e0b" },
+                { label: "Top Competitor",    value: "Confluence", sym: "↑", color: "#ef4444" },
+              ].map(({ label, value, sym, color }) => (
+                <div key={label} className="bg-white border border-[#e5e5e5] rounded-xl p-2 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg shrink-0 flex items-center justify-center text-[11px] font-bold" style={{ background: `${color}18`, color }}>
+                    {sym}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[7px] font-bold text-[#aaaaaa] uppercase tracking-wide leading-tight">{label}</p>
+                    <p className="text-[10px] font-bold text-[#0a0a0a] leading-tight truncate">{value}</p>
                   </div>
                 </div>
-                <div className="px-3 pb-1">
-                  <span className="text-[22px] font-bold text-[#0a0a0a] leading-none">68%</span>
-                  <span className="text-[11px] font-semibold text-emerald-500 ml-2">+68%</span>
+              ))}
+            </div>
+
+            {/* Main grid */}
+            <div className="grid grid-cols-5 gap-3 flex-1 min-h-0 overflow-hidden">
+
+              {/* Left col: chart + what AI says */}
+              <div className="col-span-3 flex flex-col gap-3 min-h-0">
+                {/* Visibility chart */}
+                <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden shrink-0">
+                  <div className="flex items-center px-3 pt-2.5 pb-1 gap-1">
+                    {["Visibility", "Sentiment", "Position"].map((t, i) => (
+                      <span key={t} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${i === 0 ? "bg-[#5B2D91] text-white" : "text-[#6b6b6b]"}`}>{t}</span>
+                    ))}
+                  </div>
+                  <div className="px-3 pb-1">
+                    <span className="text-[20px] font-bold text-[#0a0a0a] leading-none">68%</span>
+                    <span className="text-[10px] font-semibold text-emerald-500 ml-2">+68%</span>
+                  </div>
+                  <div className="px-2 pb-2">
+                    <svg width="100%" height="60" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#5B2D91" stopOpacity="0.15" />
+                          <stop offset="100%" stopColor="#5B2D91" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path d={areaPath} fill="url(#hg)" />
+                      <path d={linePath} fill="none" stroke="#5B2D91" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx={xs[xs.length - 1]} cy={ys[ys.length - 1]} r="3" fill="#5B2D91" stroke="white" strokeWidth="1.5" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="px-2 pb-2">
-                  <svg width="100%" height="60" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#5B2D91" stopOpacity="0.15" />
-                        <stop offset="100%" stopColor="#5B2D91" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={areaPath} fill="url(#hg)" />
-                    <path d={linePath} fill="none" stroke="#5B2D91" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx={xs[xs.length - 1]} cy={ys[ys.length - 1]} r="3" fill="#5B2D91" stroke="white" strokeWidth="1.5" />
-                  </svg>
+
+                {/* What AI says about you */}
+                <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden flex-1 min-h-0 flex flex-col">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-[#e5e5e5] shrink-0">
+                    <div>
+                      <p className="text-[10px] font-semibold text-[#0a0a0a]">What AI says about you</p>
+                      <p className="text-[9px] text-[#6b6b6b]">Notion appeared in 7 AI responses</p>
+                    </div>
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[#5B2D91]/20" style={{ background: "#5B2D9108" }}>
+                      <span className="text-[9px] font-semibold text-[#5B2D91]">7 mentions</span>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-[#f7f7f5] overflow-hidden">
+                    {mentions.map((m, i) => (
+                      <div key={i} className="flex gap-2 px-3 py-2">
+                        <img src={`https://www.google.com/s2/favicons?domain=${m.modelDomain}&sz=16`} alt="" width={14} height={14} className="w-3.5 h-3.5 rounded-full border border-[#e5e5e5] shrink-0 mt-0.5" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <span className="text-[10px] font-bold text-[#0a0a0a]">{m.model}</span>
+                            <span className={`text-[8px] font-semibold px-1 py-0.5 rounded-full ${m.color}`}>{m.label}</span>
+                            {m.position && <span className="text-[8px] font-bold bg-indigo-50 text-indigo-600 px-1 py-0.5 rounded-full">#{m.position}</span>}
+                            <span className="ml-auto text-[9px] text-[#aaaaaa] shrink-0">{m.date}</span>
+                          </div>
+                          <p className="text-[9px] font-medium text-[#0a0a0a] truncate">{m.prompt}</p>
+                          <p className="text-[9px] text-[#6b6b6b] line-clamp-1">{m.preview}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="px-3 pb-2.5 pt-2 border-t border-[#f0f0f0] mt-auto shrink-0">
+                    <div className="flex items-center justify-between px-2.5 py-2 rounded-lg text-white" style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}>
+                      <span className="text-[9px] font-semibold">Want to change what AI says about you?</span>
+                      <span className="text-[9px] font-bold opacity-80">→ llms.txt</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Mentions feed card */}
-              <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden flex-1">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-[#e5e5e5]">
-                  <div>
-                    <p className="text-[11px] font-semibold text-[#0a0a0a]">Your mentions</p>
-                    <p className="text-[10px] text-[#6b6b6b]">Notion appeared in 7 AI responses</p>
-                  </div>
-                  <span className="text-[10px] text-[#aaaaaa]">Live feed</span>
-                </div>
-                <div className="divide-y divide-[#f7f7f5]">
-                  {mentions.map((m, i) => (
-                    <div key={i} className="flex gap-2 px-3 py-2">
-                      <img src={`https://www.google.com/s2/favicons?domain=${m.modelDomain}&sz=16`} alt="" width={16} height={16} className="w-4 h-4 rounded-full border border-[#e5e5e5] shrink-0 mt-0.5" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-[11px] font-bold text-[#0a0a0a]">{m.model}</span>
-                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${m.color}`}>{m.label}</span>
-                          {m.position && <span className="text-[9px] font-bold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">#{m.position}</span>}
-                          <span className="ml-auto text-[10px] text-[#aaaaaa] shrink-0">{m.date}</span>
+              {/* Right col: competitors */}
+              <div className="col-span-2 flex flex-col gap-3 min-h-0">
+                <div className="bg-white border border-[#e5e5e5] rounded-xl p-3 flex-1 min-h-0 overflow-hidden">
+                  <p className="text-[10px] font-semibold text-[#0a0a0a] mb-2">Competitor Ranking</p>
+                  <div className="space-y-2">
+                    {[
+                      { name: "Confluence", domain: "confluence.atlassian.com", pct: 85, color: "#3b82f6" },
+                      { name: "Notion",     domain: "notion.so",                pct: 68, color: "#5B2D91", you: true },
+                      { name: "Coda",       domain: "coda.io",                  pct: 62, color: "#8b5cf6" },
+                      { name: "Obsidian",   domain: "obsidian.md",              pct: 50, color: "#ec4899" },
+                    ].map((r, i) => (
+                      <div key={r.name} className={`flex items-center gap-1.5 ${r.you ? "bg-[#5B2D91]/[0.05] rounded-lg px-1.5 py-0.5 -mx-1" : ""}`}>
+                        <span className="text-[8px] text-[#aaaaaa] w-3">{i + 1}</span>
+                        <img src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=16`} alt="" width={11} height={11} className="rounded-sm shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        <span className="text-[9px] flex-1 text-[#0a0a0a] flex items-center gap-1">
+                          {r.name}
+                          {r.you && <span className="text-[7px] bg-[#5B2D91] text-white px-1 rounded-full">You</span>}
+                        </span>
+                        <div className="w-10 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: r.color }} />
                         </div>
-                        <p className="text-[10px] font-medium text-[#0a0a0a] truncate">{m.prompt}</p>
-                        <p className="text-[10px] text-[#6b6b6b] line-clamp-1">{m.preview}</p>
+                        <span className="text-[8px] text-[#6b6b6b] w-5 text-right">{r.pct}%</span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right col: donut + competitor */}
-            <div className="col-span-2 flex flex-col gap-3">
-              {/* Score card */}
-              <div className="bg-white border border-[#e5e5e5] rounded-xl p-3">
-                <p className="text-[11px] font-semibold text-[#0a0a0a] mb-2">Visibility Score</p>
-                <div className="flex items-center gap-3">
-                  <div className="relative shrink-0">
-                    <svg width="64" height="64" viewBox="0 0 64 64">
-                      <circle cx="32" cy="32" r="24" fill="none" stroke="#f0f0f0" strokeWidth="6" />
-                      <circle cx="32" cy="32" r="24" fill="none" stroke="#5B2D91" strokeWidth="6"
-                        strokeDasharray={`${(68 / 100) * 150.8} 150.8`}
-                        strokeLinecap="round"
-                        transform="rotate(-90 32 32)" />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black text-[#0a0a0a]">68</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#6b6b6b]">out of 100</p>
-                    <p className="text-[10px] text-emerald-500 font-semibold mt-0.5">↑ +12 this week</p>
-                    <p className="text-[10px] text-[#6b6b6b] mt-1">7/10 prompts</p>
-                  </div>
+            {/* Prompts performance table — partially clipped to show depth */}
+            <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden shrink-0">
+              <div className="flex items-center justify-between px-3 py-2 bg-[#fafafa] border-b border-[#f0f0f0]">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-[#aaaaaa]">Showing data for</span>
+                  <img src="https://www.google.com/s2/favicons?domain=notion.so&sz=16" alt="" width={10} height={10} className="rounded-sm" />
+                  <span className="text-[9px] font-semibold text-[#0a0a0a]">Notion</span>
                 </div>
+                <span className="text-[9px] font-semibold text-[#5B2D91]">View all →</span>
               </div>
-
-              {/* Competitor ranking */}
-              <div className="bg-white border border-[#e5e5e5] rounded-xl p-3 flex-1">
-                <p className="text-[11px] font-semibold text-[#0a0a0a] mb-2">Competitor Ranking</p>
-                <div className="space-y-2">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#f0f0f0]">
+                    <th className="text-left px-3 py-1.5 text-[8px] font-bold text-[#aaaaaa] uppercase tracking-wider">Prompts</th>
+                    <th className="px-3 py-1.5 text-[8px] font-bold text-[#aaaaaa] uppercase text-center">Visibility</th>
+                    <th className="px-3 py-1.5 text-[8px] font-bold text-[#aaaaaa] uppercase text-center">Position</th>
+                    <th className="px-3 py-1.5 text-[8px] font-bold text-[#aaaaaa] uppercase text-right">Model</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f7f7f5]">
                   {[
-                    { name: "Confluence", domain: "confluence.atlassian.com", pct: 85, color: "#3b82f6" },
-                    { name: "Notion",     domain: "notion.so",                pct: 68, color: "#5B2D91", you: true },
-                    { name: "Coda",       domain: "coda.io",                  pct: 62, color: "#8b5cf6" },
-                    { name: "Obsidian",   domain: "obsidian.md",              pct: 50, color: "#ec4899" },
-                  ].map((r, i) => (
-                    <div key={r.name} className={`flex items-center gap-1.5 ${r.you ? "bg-[#5B2D91]/[0.05] rounded-lg px-1.5 py-0.5 -mx-1" : ""}`}>
-                      <span className="text-[9px] text-[#aaaaaa] w-3">{i + 1}</span>
-                      <img src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=16`} alt="" width={12} height={12} className="rounded-sm shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      <span className="text-[10px] flex-1 text-[#0a0a0a] flex items-center gap-1">
-                        {r.name}
-                        {r.you && <span className="text-[8px] bg-[#5B2D91] text-white px-1 rounded-full">You</span>}
-                      </span>
-                      <div className="w-12 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: r.color }} />
-                      </div>
-                      <span className="text-[9px] text-[#6b6b6b] w-6 text-right">{r.pct}%</span>
-                    </div>
+                    { label: "Discovery",    lc: "bg-blue-50 text-blue-600",       prompt: "Best project management tools for SaaS startups?", mentioned: true,  pos: 2,    model: "ChatGPT",   md: "chatgpt.com" },
+                    { label: "Competitor",   lc: "bg-orange-50 text-orange-600",   prompt: "Notion vs Confluence for a remote team?",           mentioned: true,  pos: 1,    model: "Perplexity",md: "perplexity.ai" },
+                    { label: "Direct Brand", lc: "bg-purple-50 text-purple-600",   prompt: "What is Notion and is it good for startups?",       mentioned: true,  pos: null, model: "Claude",    md: "claude.ai" },
+                    { label: "Open Ended",   lc: "bg-[#f7f7f5] text-[#6b6b6b]",   prompt: "Top AI-powered productivity tools for teams?",      mentioned: false, pos: null, model: "Gemini",    md: "gemini.google.com" },
+                  ].map((row, i) => (
+                    <tr key={i} className="hover:bg-[#fafafa] transition-colors">
+                      <td className="px-3 py-2 max-w-0 w-[45%]">
+                        <div className="flex items-start gap-1.5">
+                          <span className={`shrink-0 text-[7px] font-semibold px-1 py-0.5 rounded-full mt-0.5 ${row.lc}`}>{row.label}</span>
+                          <span className="text-[9px] text-[#0a0a0a] line-clamp-1">{row.prompt}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-semibold ${row.mentioned ? "bg-emerald-50 text-emerald-700" : "bg-[#f7f7f5] text-[#bbbbbb]"}`}>
+                          {row.mentioned ? "100%" : "0%"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                        {row.pos ? (
+                          <span className="text-[9px] font-semibold text-[#6b6b6b] bg-[#f7f7f5] px-1.5 py-0.5 rounded">#{row.pos}</span>
+                        ) : (
+                          <span className="text-[#d0d0d0] text-[12px]">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1">
+                          <img src={`https://www.google.com/s2/favicons?domain=${row.md}&sz=16`} alt="" width={10} height={10} className="rounded-sm" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          <span className="text-[9px] text-[#6b6b6b]">{row.model}</span>
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1200,12 +1305,20 @@ export default function LandingPage() {
   const [url, setUrl] = useState("");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [navVisible, setNavVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const heroInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setNavVisible(true), 120);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   useEffect(() => {
@@ -1317,11 +1430,43 @@ export default function LandingPage() {
             <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
           </motion.div>
 
+          {/* Mobile simplified preview */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
-            className="w-full mt-6"
+            className="sm:hidden w-full mt-6 max-w-sm mx-auto bg-white rounded-2xl border border-[#e5e5e5] shadow-lg overflow-hidden"
+          >
+            <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0]">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#aaaaaa]">AI Visibility Score</p>
+                <p className="text-3xl font-black text-[#0a0a0a]">68<span className="text-lg text-[#aaaaaa] font-normal">/100</span></p>
+              </div>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}>
+                <span className="text-white font-black text-lg">B+</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-px bg-[#f0f0f0]">
+              {([
+                { label: "Prompts Hit",    value: "7 / 10",     color: "#10b981" },
+                { label: "Avg. Position",  value: "#2",         color: "#f59e0b" },
+                { label: "AI Models",      value: "4 tracked",  color: "#5B2D91" },
+                { label: "Top Competitor", value: "Confluence", color: "#ef4444" },
+              ] as const).map(({ label, value, color }) => (
+                <div key={label} className="bg-white px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "#aaaaaa" }}>{label}</p>
+                  <p className="text-[15px] font-bold" style={{ color }}>{value}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Desktop full preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
+            className="hidden sm:block w-full mt-6"
           >
             <ContainerScroll>
               <HeroDashboardPreview />
@@ -1553,11 +1698,11 @@ export default function LandingPage() {
 
             {/* ── Free (left, tilted back) ── */}
             <motion.div
-              initial={{ opacity: 0, y: 40, rotate: -6 }}
-              whileInView={{ opacity: 1, y: 0, rotate: -6 }}
+              initial={{ opacity: 0, y: 40, rotate: isMobile ? 0 : -6 }}
+              whileInView={{ opacity: 1, y: 0, rotate: isMobile ? 0 : -6 }}
               viewport={{ once: true }}
               transition={{ type: "spring", duration: 0.6, delay: 0 }}
-              className="relative z-10 w-72 rounded-2xl border border-[#e5e5e5] bg-white px-8 py-10 shadow-sm transition-transform hover:scale-105 md:-mr-4"
+              className="relative z-10 w-full sm:w-72 rounded-2xl border border-[#e5e5e5] bg-white px-8 py-10 shadow-sm transition-transform hover:scale-105 md:-mr-4"
             >
               <div className="mb-1 text-base font-bold text-[#5B2D91]">Free</div>
               <div className="mb-1 text-4xl font-extrabold text-[#0a0a0a]">$0</div>
@@ -1588,7 +1733,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ type: "spring", duration: 0.7, delay: 0.1 }}
-              className="relative z-20 w-80 scale-105 rounded-3xl border-2 border-[#7c3aed]/60 bg-gradient-to-b from-[#5B2D91] to-[#3b1a70] px-10 py-14 text-white shadow-2xl shadow-[#5B2D91]/30 transition-transform hover:scale-[1.07] md:-mt-8"
+              className="relative z-20 w-full sm:w-80 scale-105 rounded-3xl border-2 border-[#7c3aed]/60 bg-gradient-to-b from-[#5B2D91] to-[#3b1a70] px-10 py-14 text-white shadow-2xl shadow-[#5B2D91]/30 transition-transform hover:scale-[1.07] md:-mt-8"
             >
               {/* Best Deal badge */}
               <motion.div
@@ -1616,11 +1761,11 @@ export default function LandingPage() {
 
             {/* ── Pro (right, tilted back) ── */}
             <motion.div
-              initial={{ opacity: 0, y: 40, rotate: 6 }}
-              whileInView={{ opacity: 1, y: 0, rotate: 6 }}
+              initial={{ opacity: 0, y: 40, rotate: isMobile ? 0 : 6 }}
+              whileInView={{ opacity: 1, y: 0, rotate: isMobile ? 0 : 6 }}
               viewport={{ once: true }}
               transition={{ type: "spring", duration: 0.6, delay: 0.2 }}
-              className="relative z-10 w-72 rounded-2xl border border-[#e5e5e5] bg-white px-8 py-10 shadow-sm transition-transform hover:scale-105 md:-ml-4"
+              className="relative z-10 w-full sm:w-72 rounded-2xl border border-[#e5e5e5] bg-white px-8 py-10 shadow-sm transition-transform hover:scale-105 md:-ml-4"
             >
               <div className="mb-1 text-base font-bold text-[#5B2D91]">Pro</div>
               <div className="mb-1 text-4xl font-extrabold text-[#0a0a0a]">$249<span className="text-lg font-normal text-[#aaaaaa]">/mo</span></div>

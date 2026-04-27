@@ -15,7 +15,8 @@ import { LlmsTxtPage } from "@/components/dashboard/llms-txt-page";
 import { ComparisonPagesPage } from "@/components/dashboard/comparison-pages";
 import { HeroRewritePage } from "@/components/dashboard/hero-rewrite-page";
 import { EmailCapture } from "@/components/email-capture";
-import { Hash, Trophy, CheckCircle2, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords } from "lucide-react";
+import { Hash, Trophy, CheckCircle2, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const VisibilityChart = dynamic(
   () => import("@/components/dashboard/visibility-chart").then((m) => ({ default: m.VisibilityChart })),
@@ -98,6 +99,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
         activePage={activePage}
         onNavigate={(p) => setActivePage(p as Page)}
         profile={profile}
+        className="hidden lg:flex"
       />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -111,7 +113,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           onRerun={onRerun}
         />
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
 
           {/* OVERVIEW */}
           {activePage === "overview" && (
@@ -616,6 +618,31 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
             </div>
           )}
         </div>
+
+        {/* Mobile bottom nav */}
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-[#e8e8e8] flex items-stretch h-14">
+          {([
+            { id: "overview",        label: "Overview", Icon: LayoutDashboard },
+            { id: "prompts",         label: "Prompts",  Icon: MessageSquare   },
+            { id: "sources",         label: "Sources",  Icon: Globe           },
+            { id: "fixes:listicles", label: "Fixes",    Icon: ListChecks      },
+          ] as const).map(({ id, label, Icon }) => {
+            const active = activePage === id || (id === "fixes:listicles" && activePage.startsWith("fixes:"));
+            return (
+              <button
+                key={id}
+                onClick={() => setActivePage(id as Page)}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+                  active ? "text-[#5B2D91]" : "text-[#aaaaaa]"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );

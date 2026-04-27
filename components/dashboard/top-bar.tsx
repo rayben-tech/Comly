@@ -50,37 +50,37 @@ export function TopBar({ brandName, domain, score, totalMentions, promptResults,
   const scoreColor = score >= 60 ? "#10b981" : score >= 30 ? "#f59e0b" : "#ef4444";
 
   return (
-    <div className="bg-white border-b border-[#e8e8e8] shrink-0 flex items-center gap-3 px-6 h-[52px]">
+    <div className="bg-white border-b border-[#e8e8e8] shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-6 h-[52px]">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-[13px]">
-        <span className="text-[#aaaaaa] font-medium">Comly</span>
-        <ChevronRight className="w-3.5 h-3.5 text-[#d0d0d0]" />
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 text-[13px] min-w-0">
+        <span className="text-[#aaaaaa] font-medium hidden sm:inline">Comly</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#d0d0d0] hidden sm:block" />
+        <div className="flex items-center gap-1.5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
             alt={brandName}
             width={14}
             height={14}
-            className="w-3.5 h-3.5 object-contain rounded-sm"
+            className="w-3.5 h-3.5 object-contain rounded-sm shrink-0"
           />
-          <span className="font-semibold text-[#0a0a0a]">{brandName}</span>
+          <span className="font-semibold text-[#0a0a0a] truncate max-w-[120px] sm:max-w-none">{brandName}</span>
         </div>
       </div>
 
-      <div className="w-px h-4 bg-[#e8e8e8] mx-1" />
+      <div className="w-px h-4 bg-[#e8e8e8] mx-0.5 sm:mx-1 shrink-0" />
 
       {/* Score badge */}
       <div
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold shrink-0"
         style={{ background: `${scoreColor}14`, color: scoreColor }}
       >
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: scoreColor }} />
+        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: scoreColor }} />
         Score {score}/100
       </div>
 
-      {/* Visibility */}
-      <span className="text-[12px] text-[#aaaaaa] font-medium">
+      {/* Visibility — hidden on small screens */}
+      <span className="hidden sm:inline text-[12px] text-[#aaaaaa] font-medium shrink-0">
         Visibility <span className="text-[#0a0a0a] font-semibold">{visibilityPct}%</span>
       </span>
 
