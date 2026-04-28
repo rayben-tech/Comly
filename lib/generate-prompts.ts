@@ -25,7 +25,7 @@ export function generateAuditPrompts(profile: BrandProfile): string[] {
     `Is ${brand_name} a good tool for ${useCase0}?`,
 
     // COMPETITOR DISCOVERY — maximize competitor list
-    `Give me the most comprehensive list possible of every ${category} tool and competitor to ${brand_name}. Include major players, niche alternatives, and emerging tools — aim for at least 20 options.`,
+    `Give me the most comprehensive list possible of every ${category} tool and competitor to ${brand_name}. Include major players, niche alternatives, and emerging tools — aim for 20 options.`,
 
     // OPEN ENDED — catches unexpected mentions
     `What ${category} tools would you recommend for ${target_users} in 2025? Include well known and lesser known options.`,
