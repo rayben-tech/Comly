@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ChevronRight } from "lucide-react";
+import { Download, ChevronRight, PanelLeftOpen } from "lucide-react";
 import { PromptResult } from "@/types";
 
 interface TopBarProps {
@@ -11,6 +11,8 @@ interface TopBarProps {
   promptResults: PromptResult[];
   onReset: () => void;
   onRerun: () => void;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 function exportCSV(brandName: string, score: number, promptResults: PromptResult[]) {
@@ -44,13 +46,23 @@ function exportCSV(brandName: string, score: number, promptResults: PromptResult
   URL.revokeObjectURL(url);
 }
 
-export function TopBar({ brandName, domain, score, totalMentions, promptResults, onReset, onRerun }: TopBarProps) {
+export function TopBar({ brandName, domain, score, totalMentions, promptResults, onReset, onRerun, sidebarOpen = true, onToggleSidebar }: TopBarProps) {
   const total = promptResults.length || 10;
   const visibilityPct = Math.round((totalMentions / total) * 100);
   const scoreColor = score >= 60 ? "#10b981" : score >= 30 ? "#f59e0b" : "#ef4444";
 
   return (
     <div className="bg-white border-b border-[#e8e8e8] shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-6 h-[52px]">
+      {/* Sidebar expand button — desktop only, shown when sidebar is collapsed */}
+      {!sidebarOpen && (
+        <button
+          onClick={onToggleSidebar}
+          title="Expand sidebar"
+          className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-[#f0f0f0] transition-colors shrink-0 -ml-1 mr-1"
+        >
+          <PanelLeftOpen className="w-4 h-4" />
+        </button>
+      )}
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-[13px] min-w-0">
         <span className="text-[#aaaaaa] font-medium hidden sm:inline">Comly</span>

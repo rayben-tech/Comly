@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
   Copy, Download, Check, Loader2, Plus, X,
-  CheckCircle2, RefreshCw, Trash2,
+  CheckCircle2, RefreshCw, Trash2, Sparkles, ExternalLink,
 } from "lucide-react";
 
 function slugify(s: string): string {
@@ -91,6 +91,15 @@ interface Props {
   profile: BrandProfile;
 }
 
+function matchesCompetitor(url: string, competitor: string): boolean {
+  const urlNorm = url.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const compNorm = competitor.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const minLen = Math.max(3, Math.min(compNorm.length, 6));
+  const hasCompName = urlNorm.includes(compNorm.slice(0, minLen));
+  const hasVsContext = /(vs|versus|compar|alternative)/i.test(url);
+  return hasVsContext && hasCompName;
+}
+
 export function ComparisonPagesPage({ profile }: Props) {
   const competitors = profile.competitors.slice(0, 5);
   const brandSlug = slugify(profile.brand_name);
@@ -107,6 +116,34 @@ export function ComparisonPagesPage({ profile }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
+  // Existence check: map of competitor → existing URL on their site
+  const [existingUrls, setExistingUrls] = useState<Record<string, string>>({});
+  const [checkState, setCheckState] = useState<"idle" | "checking" | "done">("idle");
+
+  useEffect(() => {
+    const domain = profile.url;
+    if (!domain || competitors.length === 0) return;
+    setCheckState("checking");
+    fetch("/api/check-existing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "comparison-pages", domain }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const urls: string[] = data.urls || [];
+        const matched: Record<string, string> = {};
+        for (const comp of competitors) {
+          const found = urls.find((u) => matchesCompetitor(u, comp));
+          if (found) matched[comp] = found;
+        }
+        setExistingUrls(matched);
+        setCheckState("done");
+      })
+      .catch(() => setCheckState("done"));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.url]);
+
   function triggerDownload(content: string, title: string) {
     const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
@@ -117,7 +154,7 @@ export function ComparisonPagesPage({ profile }: Props) {
     URL.revokeObjectURL(url);
   }
 
-  async function generate(competitor: string, type: "vs" | "alternatives") {
+  async function generate(competitor: string, type: "vs" | "alternatives", existing_content?: string) {
     const key = `${type}:${competitor}`;
     const title = `${profile.brand_name} vs ${competitor}`;
     setLoading(true);
@@ -140,6 +177,7 @@ export function ComparisonPagesPage({ profile }: Props) {
           pricing: profile.pricing_tiers?.map((t) => `${t.plan}: ${t.price}`).join(", ") || "",
           competitor,
           page_type: type,
+          ...(existing_content ? { existing_content } : {}),
         }),
       });
       const data = await res.json();
@@ -264,58 +302,100 @@ export function ComparisonPagesPage({ profile }: Props) {
           <p className="text-[13px] text-[#6b6b6b] mt-0.5">One "vs" page per competitor detected in your audit</p>
         </div>
 
+        {checkState === "checking" && (
+          <div className="flex items-center gap-2 text-[13px] text-[#aaaaaa]">
+            <Loader2 className="w-4 h-4 animate-spin text-[#5B2D91]" />
+            Checking your site for existing comparison pages…
+          </div>
+        )}
+
         {competitors.length === 0 ? (
           <p className="text-[13px] text-[#aaaaaa]">No competitors found in your audit. Add a custom comparison below.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {competitors.map((comp) => ({
-              key: `vs:${comp}`,
-              emoji: "⚖️",
-              title: `${profile.brand_name} vs ${comp}`,
-              slug: `/blog/${brandSlug}-vs-${slugify(comp)}`,
-              description: `Compare ${profile.brand_name} directly against ${comp} — features, pricing, and use cases`,
-              impact: "HIGH",
-              impactBg: "#f59e0b18",
-              impactColor: "#f59e0b",
-              type: "vs" as const,
-              comp,
-            })).map((card) => {
+            {competitors.map((comp) => {
+              const card = {
+                key: `vs:${comp}`,
+                title: `${profile.brand_name} vs ${comp}`,
+                slug: `/blog/${brandSlug}-vs-${slugify(comp)}`,
+                description: `Compare ${profile.brand_name} directly against ${comp} — features, pricing, and use cases`,
+                comp,
+              };
               const isActive = activeKey === card.key && (loading || !!generatedContent);
+              const existingUrl = existingUrls[comp];
+
               return (
                 <div
                   key={card.key}
                   className={`border rounded-xl p-5 transition-colors ${
                     isActive
                       ? "border-[#5B2D91]/30 bg-[#5B2D91]/[0.02]"
+                      : existingUrl
+                      ? "border-emerald-200 bg-emerald-50/30"
                       : "border-[#e5e5e5] hover:border-[#5B2D91]/30"
                   }`}
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <span className="text-[28px] leading-none shrink-0 mt-0.5">{card.emoji}</span>
+                    <span className="text-[28px] leading-none shrink-0 mt-0.5">⚖️</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold text-[#0a0a0a] leading-snug">{card.title}</p>
-                      <p className="text-[11px] text-[#5B2D91] font-mono mt-1 truncate">{card.slug}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[14px] font-bold text-[#0a0a0a] leading-snug">{card.title}</p>
+                        {existingUrl && (
+                          <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                            <Check className="w-3 h-3" />
+                            Already live
+                          </span>
+                        )}
+                      </div>
+                      {existingUrl ? (
+                        <a
+                          href={existingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[11px] text-emerald-700 hover:underline mt-1 truncate"
+                        >
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{existingUrl}</span>
+                        </a>
+                      ) : (
+                        <p className="text-[11px] text-[#5B2D91] font-mono mt-1 truncate">{card.slug}</p>
+                      )}
                     </div>
                   </div>
-                  <p className="text-[12px] text-[#6b6b6b] leading-relaxed mb-4">{card.description}</p>
+                  <p className="text-[12px] text-[#6b6b6b] leading-relaxed mb-4">
+                    {existingUrl
+                      ? `Your existing page was found. Refine it with AI to improve its structure, depth, and AI-search ranking.`
+                      : card.description}
+                  </p>
                   <div className="flex items-center justify-between">
-                    <span
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: card.impactBg, color: card.impactColor }}
-                    >
-                      {card.impact} IMPACT
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b18] text-[#f59e0b]">
+                      HIGH IMPACT
                     </span>
-                    <button
-                      onClick={() => generate(card.comp, card.type)}
-                      disabled={loading}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-50"
-                      style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-                    >
-                      {loading && activeKey === card.key
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : null}
-                      Generate →
-                    </button>
+                    {existingUrl ? (
+                      <button
+                        onClick={() => generate(card.comp, "vs", `Existing comparison page URL: ${existingUrl}`)}
+                        disabled={loading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-50"
+                        style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+                      >
+                        {loading && activeKey === card.key
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Sparkles className="w-3.5 h-3.5" />}
+                        Refine →
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => generate(card.comp, "vs")}
+                        disabled={loading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-50"
+                        style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+                      >
+                        {loading && activeKey === card.key
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : null}
+                        Generate →
+                      </button>
+                    )}
                   </div>
                 </div>
               );

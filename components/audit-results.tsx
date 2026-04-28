@@ -85,6 +85,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
   const [activePage, setActivePage] = useState<Page>("overview");
   const [profile, setProfile] = useState<BrandProfile>(initialProfile);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { score, total_mentions, prompt_results, competitor_rankings } = result;
   const { avgPos, topComp, topCompMentions, total } = buildStats(
     score, total_mentions, prompt_results, competitor_rankings
@@ -100,7 +101,8 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
         activePage={activePage}
         onNavigate={(p) => setActivePage(p as Page)}
         profile={profile}
-        className="hidden lg:flex"
+        className={sidebarOpen ? "hidden lg:flex" : "hidden"}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -112,6 +114,8 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           promptResults={prompt_results}
           onReset={onReset}
           onRerun={onRerun}
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen(true)}
         />
 
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">

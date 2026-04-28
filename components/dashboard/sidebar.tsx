@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, LayoutDashboard, MessageSquare, Globe,
-  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords,
+  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords, PanelLeftClose,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ interface SidebarProps {
   onNavigate: (page: string) => void;
   profile: BrandProfile;
   className?: string;
+  onClose?: () => void;
 }
 
 function domainFromUrl(url: string): string {
@@ -65,7 +66,7 @@ function BrandFavicon({ domain, name, size = 32 }: { domain: string; name: strin
   );
 }
 
-export function Sidebar({ activePage, onNavigate, profile, className }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, profile, className, onClose }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const [query, setQuery] = useState("");
   const isFixesActive = activePage.startsWith("fixes:");
@@ -100,8 +101,12 @@ export function Sidebar({ activePage, onNavigate, profile, className }: SidebarP
             <p className="text-[14px] font-semibold text-[#0a0a0a] truncate leading-tight">{profile.brand_name}&apos;s dashboard</p>
             {domain && <p className="text-[11px] text-[#aaaaaa] truncate mt-0.5">{domain}</p>}
           </div>
-          <button className="shrink-0 text-[#cccccc] hover:text-[#888] transition-colors">
-            <ChevronDown className="w-4 h-4" />
+          <button
+            onClick={onClose}
+            title="Collapse sidebar"
+            className="shrink-0 text-[#cccccc] hover:text-[#888] transition-colors p-0.5 rounded-md hover:bg-[#f0f0f0]"
+          >
+            <PanelLeftClose className="w-4 h-4" />
           </button>
         </div>
       </div>

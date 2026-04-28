@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
-  Copy, Download, Check, Loader2, Plus, X, CheckCircle2,
+  Copy, Download, Check, Loader2, Plus, X, CheckCircle2, Sparkles, ExternalLink,
 } from "lucide-react";
 
 const PLATFORM_TABS = [
@@ -226,6 +226,32 @@ export function LlmsTxtPage({ profile }: Props) {
   const [copied, setCopied]     = useState(false);
   const [activeTab, setActiveTab] = useState("any");
 
+  // Existence check
+  const [existingState, setExistingState] = useState<"idle" | "checking" | "found" | "not-found">("idle");
+  const [existingContent, setExistingContent] = useState<string | null>(null);
+  const [existingExpanded, setExistingExpanded] = useState(false);
+
+  useEffect(() => {
+    const domain = profile.url;
+    if (!domain) return;
+    setExistingState("checking");
+    fetch("/api/check-existing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "llms-txt", domain }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.exists && data.content) {
+          setExistingContent(data.content);
+          setExistingState("found");
+        } else {
+          setExistingState("not-found");
+        }
+      })
+      .catch(() => setExistingState("not-found"));
+  }, [profile.url]);
+
   const previewContent = buildPreview({
     brandName, description, category, targetUsers,
     useCases, features, competitors, pricing,
@@ -242,7 +268,7 @@ export function LlmsTxtPage({ profile }: Props) {
     URL.revokeObjectURL(url);
   }
 
-  async function generate() {
+  async function generate(refineFrom?: string) {
     setLoading(true);
     setError("");
     setGeneratedContent(null);
@@ -255,6 +281,7 @@ export function LlmsTxtPage({ profile }: Props) {
           target_users: targetUsers, use_cases: useCases,
           differentiators: features, competitors, pricing,
           url: websiteUrl, blog_url: blogUrl, docs_url: docsUrl, twitter_url: twitterUrl,
+          ...(refineFrom ? { existing_content: refineFrom } : {}),
         }),
       });
       const data = await res.json();
@@ -346,10 +373,67 @@ export function LlmsTxtPage({ profile }: Props) {
         <CodeBlock content={previewContent} />
       </div>
 
-      {/* ── SECTION 3: Generator form ────────────────────────── */}
+      {/* ── SECTION 3: Existing file check ───────────────────── */}
+      {existingState === "checking" && (
+        <div className="bg-white border border-[#e5e5e5] rounded-xl px-5 py-4 flex items-center gap-3">
+          <Loader2 className="w-4 h-4 animate-spin text-[#5B2D91] shrink-0" />
+          <p className="text-[13px] text-[#6b6b6b]">Checking if you already have an llms.txt…</p>
+        </div>
+      )}
+
+      {existingState === "found" && existingContent && (
+        <div className="bg-white border border-emerald-200 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 flex items-start justify-between gap-3 bg-emerald-50 border-b border-emerald-100">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[14px] font-bold text-emerald-900">You already have an llms.txt</p>
+                <a
+                  href={`${(profile.url?.startsWith("http") ? profile.url : `https://${profile.url}`).replace(/\/$/, "")}/llms.txt`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[12px] text-emerald-700 hover:underline mt-0.5"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {(profile.url?.startsWith("http") ? profile.url : `https://${profile.url}`).replace(/\/$/, "")}/llms.txt
+                </a>
+              </div>
+            </div>
+            <button
+              onClick={() => setExistingExpanded((v) => !v)}
+              className="text-[12px] font-semibold text-emerald-700 hover:text-emerald-900 transition-colors shrink-0"
+            >
+              {existingExpanded ? "Hide" : "Show file"}
+            </button>
+          </div>
+
+          {existingExpanded && (
+            <div className="p-4 border-b border-[#f0f0f0]">
+              <CodeBlock content={existingContent} />
+            </div>
+          )}
+
+          <div className="px-5 py-4 flex items-center gap-3">
+            <button
+              onClick={() => generate(existingContent)}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-[13px] font-semibold transition-opacity disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              Refine with AI
+            </button>
+            <p className="text-[12px] text-[#aaaaaa]">AI will improve your existing file — gaps filled, structure optimized</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── SECTION 4: Generator form ────────────────────────── */}
       <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-[16px] font-bold text-[#0a0a0a]">Generate your llms.txt</h2>
+          <h2 className="text-[16px] font-bold text-[#0a0a0a]">
+            {existingState === "found" ? "Or generate a fresh llms.txt" : "Generate your llms.txt"}
+          </h2>
           <p className="text-[13px] text-[#6b6b6b] mt-0.5">Customized for your brand in one click</p>
         </div>
 
@@ -421,7 +505,7 @@ export function LlmsTxtPage({ profile }: Props) {
 
         <div>
           <button
-            onClick={generate}
+            onClick={() => generate()}
             disabled={loading || !brandName.trim()}
             className="w-full h-11 rounded-xl text-white text-[14px] font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity"
             style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}

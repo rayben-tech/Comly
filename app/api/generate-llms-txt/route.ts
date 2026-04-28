@@ -9,15 +9,14 @@ export async function POST(req: NextRequest) {
       brand_name, description, category, target_users,
       use_cases, differentiators, competitors,
       pricing, url, blog_url, docs_url, twitter_url,
+      existing_content,
     } = await req.json();
 
     if (!brand_name) {
       return NextResponse.json({ error: "Brand name is required" }, { status: 400 });
     }
 
-    const prompt = `Generate a complete llms.txt file for a SaaS website. This file follows the llms.txt standard and helps AI models understand the product.
-
-Brand details:
+    const brandContext = `Brand context:
 - Name: ${brand_name}
 - Description: ${description || "Not provided"}
 - Category: ${category}
@@ -29,7 +28,31 @@ Brand details:
 - URL: ${url || "Not provided"}
 ${blog_url ? `- Blog: ${blog_url}` : ""}
 ${docs_url ? `- Docs: ${docs_url}` : ""}
-${twitter_url ? `- Twitter: ${twitter_url}` : ""}
+${twitter_url ? `- Twitter: ${twitter_url}` : ""}`;
+
+    const prompt = existing_content
+      ? `You are improving an existing llms.txt file so it better helps AI models understand and recommend this product.
+
+Current llms.txt:
+---
+${existing_content}
+---
+
+${brandContext}
+
+Your task:
+- Preserve accurate information that already exists
+- Fix any gaps, vague descriptions, or missing sections
+- Add any missing standard sections (use cases, target audience, competitors, pricing, links)
+- Make descriptions more specific and AI-optimized
+- Ensure every section is clear, factual, and complete
+- Follow the official llms.txt markdown format
+- Max 600 words
+
+Return only the improved llms.txt content. No explanation, no preamble.`
+      : `Generate a complete llms.txt file for a SaaS website. This file follows the llms.txt standard and helps AI models understand the product.
+
+${brandContext}
 
 Requirements:
 - Follow the official llms.txt format

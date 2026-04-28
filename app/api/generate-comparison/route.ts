@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const {
       brand_name, description, category, target_users,
       use_cases, differentiators, competitors, pricing,
-      competitor, page_type,
+      competitor, page_type, existing_content,
     } = await req.json();
 
     const year = new Date().getFullYear();
@@ -136,6 +136,34 @@ Write the full page in this exact markdown format:
 [Try ${brand_name} free →](https://your-site.com)
 
 Write the complete page. Position ${brand_name} as #1. Be persuasive, specific, and credible.`;
+    }
+
+    if (existing_content) {
+      userPrompt = `You are improving an existing comparison page so it ranks better in AI search engines and is more useful to buyers.
+
+Existing page content:
+---
+${existing_content.slice(0, 3000)}
+---
+
+Brand being promoted: ${brand_name}
+Competitor being compared: ${competitor}
+
+Brand context:
+- Description: ${description}
+- Category: ${category}
+- Target users: ${target_users}
+- Key differentiators: ${differentiators || ""}
+- Pricing: ${pricing || ""}
+
+Your task:
+- Preserve the structure and accurate facts from the existing page
+- Add missing sections from the standard format (quick verdict, feature table, pricing, who should choose each)
+- Make descriptions more specific, current (${new Date().getFullYear()}), and persuasive
+- Optimize for AI citations: clear headers, factual claims, specific comparisons
+- Position ${brand_name} favorably but remain credible
+
+Return only the improved markdown content. No explanation.`;
     }
 
     const response = await openai.chat.completions.create({

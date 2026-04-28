@@ -888,7 +888,6 @@ function CssBar({ label, pct, color }: { label: string; pct: number; color: stri
   );
 }
 
-// ─── TESTIMONIAL CARD ─────────────────────────────────────────────────────────
 
 function TestimonialCard({ t }: { t: typeof TESTIMONIALS[number] }) {
   const dotIdx = t.quote.indexOf(".");
@@ -1430,34 +1429,113 @@ export default function LandingPage() {
             <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
           </motion.div>
 
-          {/* Mobile simplified preview */}
+          {/* Mobile enhanced preview */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
-            className="sm:hidden w-full mt-6 max-w-sm mx-auto bg-white rounded-2xl border border-[#e5e5e5] shadow-lg overflow-hidden"
+            className="sm:hidden w-full mt-6 max-w-sm mx-auto bg-white rounded-2xl border border-[#e5e5e5] shadow-2xl overflow-hidden"
           >
-            <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0]">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#aaaaaa]">AI Visibility Score</p>
-                <p className="text-3xl font-black text-[#0a0a0a]">68<span className="text-lg text-[#aaaaaa] font-normal">/100</span></p>
+            {/* Browser chrome */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#f7f7f5] border-b border-[#e5e5e5]">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#e5e5e5]" />
+                <div className="w-2 h-2 rounded-full bg-[#e5e5e5]" />
+                <div className="w-2 h-2 rounded-full bg-[#e5e5e5]" />
               </div>
-              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}>
-                <span className="text-white font-black text-lg">B+</span>
+              <div className="flex-1 mx-2 bg-white border border-[#e5e5e5] rounded px-2 py-0.5 text-[10px] text-[#aaaaaa]">
+                app.comly.io/dashboard
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-px bg-[#f0f0f0]">
-              {([
-                { label: "Prompts Hit",    value: "7 / 10",     color: "#10b981" },
-                { label: "Avg. Position",  value: "#2",         color: "#f59e0b" },
-                { label: "AI Models",      value: "4 tracked",  color: "#5B2D91" },
-                { label: "Top Competitor", value: "Confluence", color: "#ef4444" },
-              ] as const).map(({ label, value, color }) => (
-                <div key={label} className="bg-white px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "#aaaaaa" }}>{label}</p>
-                  <p className="text-[15px] font-bold" style={{ color }}>{value}</p>
+
+            {/* Brand header + score badge */}
+            <div className="px-4 py-3 flex items-center justify-between border-b border-[#f0f0f0]">
+              <div className="flex items-center gap-2">
+                <img src="https://www.google.com/s2/favicons?domain=notion.so&sz=32" alt="Notion" width={24} height={24} className="rounded-lg" />
+                <div>
+                  <p className="text-[12px] font-semibold text-[#0a0a0a] leading-tight">Notion</p>
+                  <p className="text-[10px] text-[#aaaaaa] leading-tight">notion.so</p>
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Score 68/100
+              </div>
+            </div>
+
+            {/* Score arc + sparkline + LLM logos */}
+            <div className="px-4 py-4 flex items-center gap-4 border-b border-[#f0f0f0]">
+              <div className="relative shrink-0">
+                <svg width="72" height="72" viewBox="0 0 72 72">
+                  <defs>
+                    <linearGradient id="mScoreGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop stopColor="#5B2D91" />
+                      <stop offset="1" stopColor="#7c3aed" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#f0f0f0" strokeWidth="6" />
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="url(#mScoreGrad)" strokeWidth="6"
+                    strokeDasharray={`${0.68 * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 36 36)" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[20px] font-black text-[#0a0a0a] leading-none">68</span>
+                  <span className="text-[9px] text-[#aaaaaa]">/100</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[11px] font-bold text-[#0a0a0a]">AI Visibility</p>
+                  <span className="text-[10px] font-bold text-emerald-500">+68% ↑</span>
+                </div>
+                <svg width="100%" height="30" viewBox="0 0 120 30" preserveAspectRatio="none" className="mb-2">
+                  <defs>
+                    <linearGradient id="mSparkGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop stopColor="#5B2D91" stopOpacity="0.18" />
+                      <stop offset="1" stopColor="#5B2D91" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,28 L17,22 L34,18 L51,13 L68,11 L85,7 L102,4 L120,1 L120,30 L0,30 Z" fill="url(#mSparkGrad)" />
+                  <path d="M0,28 L17,22 L34,18 L51,13 L68,11 L85,7 L102,4 L120,1" fill="none" stroke="#5B2D91" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="120" cy="1" r="2.5" fill="#5B2D91" stroke="white" strokeWidth="1.5" />
+                </svg>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-[#aaaaaa] font-medium mr-0.5">On</span>
+                  {(["chatgpt.com", "perplexity.ai", "claude.ai", "gemini.google.com"] as const).map((domain) => (
+                    <img key={domain} src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt={domain} width={14} height={14} className="rounded-sm" />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Prompt hit bar */}
+            <div className="px-4 py-3 border-b border-[#f0f0f0]">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-semibold text-[#0a0a0a]">Prompts Hit</p>
+                <span className="text-[10px] font-bold text-[#5B2D91]">7 / 10</span>
+              </div>
+              <div className="flex gap-1">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className={`flex-1 h-1.5 rounded-full ${i < 7 ? "bg-[#5B2D91]" : "bg-[#e5e5e5]"}`} />
+                ))}
+              </div>
+              <p className="text-[9px] text-[#aaaaaa] mt-1.5">Appears in 70% of tracked AI queries</p>
+            </div>
+
+            {/* Sample AI mention */}
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=32" width={14} height={14} alt="ChatGPT" className="rounded-sm" />
+                <p className="text-[10px] font-semibold text-[#0a0a0a]">ChatGPT</p>
+                <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">Discovery</span>
+                <span className="text-[9px] font-bold text-[#aaaaaa]">#2</span>
+              </div>
+              <div className="bg-[#f7f7f5] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-[#444] leading-relaxed">
+                  <span className="font-semibold text-[#5B2D91]">&ldquo;Notion</span> is frequently recommended for SaaS teams due to its flexible workspace structure…&rdquo;
+                </p>
+              </div>
             </div>
           </motion.div>
 

@@ -10,3 +10,4 @@ export const PROMPT_MODELS = [
   { name: "ChatGPT",    domain: "chatgpt.com"      },
   { name: "Perplexity", domain: "perplexity.ai"    },
 ];
+ 
