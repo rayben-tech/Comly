@@ -558,7 +558,7 @@ function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolea
       )}
       style={{
         maxWidth: scrolled && !menuOpen ? "896px" : "1280px",
-        transform: visible ? "translateY(0)" : "translateY(-300%)",
+        transform: visible ? "none" : "translateY(-300%)",
         transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1), max-width 500ms cubic-bezier(0.4,0,0.2,1), top 500ms cubic-bezier(0.4,0,0.2,1), background-color 300ms ease, box-shadow 300ms ease, border-color 300ms ease, padding 300ms ease",
       }}
     >
