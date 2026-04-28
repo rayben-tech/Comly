@@ -37,6 +37,16 @@ export async function saveAuditForUser(userId: string, data: {
     { onConflict: "user_id" }
   );
   if (error) throw error;
+
+  // Log to history (best-effort — never blocks the main save)
+  await supabase.from("audit_history").insert({
+    user_id: userId,
+    url: data.url,
+    brand_name: data.brand_name,
+    score: data.score,
+  }).then(({ error: e }) => {
+    if (e) console.warn("audit_history insert failed:", e.message);
+  });
 }
 
 export async function getUserAudit(userId: string) {

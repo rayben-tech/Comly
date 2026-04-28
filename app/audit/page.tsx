@@ -50,6 +50,20 @@ function AuditFlow() {
         return;
       }
 
+      // Fallback: session completed but Supabase save may not have landed yet
+      try {
+        const cached = sessionStorage.getItem(SESSION_KEY);
+        if (cached) {
+          const { profile: p, auditResult: r } = JSON.parse(cached);
+          if (p && r) {
+            setProfile(p);
+            setAuditResult(r);
+            setStep("results");
+            return;
+          }
+        }
+      } catch {}
+
       const paramUrl = searchParams.get("url") || sessionStorage.getItem("comly_pending_url") || "";
       if (paramUrl) {
         try { sessionStorage.removeItem("comly_pending_url"); } catch {}
