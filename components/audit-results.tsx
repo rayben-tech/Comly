@@ -15,7 +15,7 @@ import { LlmsTxtPage } from "@/components/dashboard/llms-txt-page";
 import { ComparisonPagesPage } from "@/components/dashboard/comparison-pages";
 import { HeroRewritePage } from "@/components/dashboard/hero-rewrite-page";
 import { EmailCapture } from "@/components/email-capture";
-import { Hash, Trophy, CheckCircle2, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks } from "lucide-react";
+import { Hash, Trophy, CheckCircle2, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const VisibilityChart = dynamic(
@@ -84,6 +84,7 @@ function buildStats(
 export function AuditResults({ result, profile: initialProfile, onReset, onRerun }: AuditResultsProps) {
   const [activePage, setActivePage] = useState<Page>("overview");
   const [profile, setProfile] = useState<BrandProfile>(initialProfile);
+  const [moreOpen, setMoreOpen] = useState(false);
   const { score, total_mentions, prompt_results, competitor_rankings } = result;
   const { avgPos, topComp, topCompMentions, total } = buildStats(
     score, total_mentions, prompt_results, competitor_rankings
@@ -619,19 +620,76 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
         </div>
 
+        {/* Mobile more sheet backdrop */}
+        {moreOpen && (
+          <div
+            className="lg:hidden fixed inset-0 z-40"
+            onClick={() => setMoreOpen(false)}
+          />
+        )}
+
+        {/* Mobile more sheet */}
+        {moreOpen && (
+          <div className="lg:hidden fixed inset-x-0 bottom-14 z-50 bg-white border-t border-[#e8e8e8] shadow-2xl rounded-t-2xl max-h-[70vh] overflow-y-auto">
+            <div className="px-4 py-4 space-y-1">
+              <p className="text-[10px] font-bold text-[#cccccc] uppercase tracking-widest px-2 pb-1">Fixes</p>
+              {([
+                { id: "fixes:listicles",       label: "Listicles Generator", badge: ""    },
+                { id: "fixes:llms-txt",        label: "llms.txt Generator",  badge: ""    },
+                { id: "fixes:comparison",      label: "Comparison Pages",    badge: ""    },
+                { id: "fixes:hero-rewrite",    label: "Hero Rewrite",        badge: ""    },
+                { id: "fixes:g2-checklist",    label: "G2 Checklist",        badge: "Pro" },
+                { id: "fixes:reddit-exposure", label: "Reddit Exposure",     badge: "Pro" },
+              ] as const).map(({ id, label, badge }) => (
+                <button
+                  key={id}
+                  onClick={() => { setActivePage(id as Page); setMoreOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[14px] font-medium text-left transition-colors",
+                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#f7f7f5]"
+                  )}
+                >
+                  <span>{label}</span>
+                  {badge && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600">{badge}</span>}
+                </button>
+              ))}
+
+              <p className="text-[10px] font-bold text-[#cccccc] uppercase tracking-widest px-2 pb-1 pt-3">Other</p>
+              {([
+                { id: "crawlers",            label: "Crawlers",            badge: "Pro", Icon: Radio  },
+                { id: "competitor-playbook", label: "Competitor Playbook", badge: "Pro", Icon: Swords },
+                { id: "brand",               label: "Brand",               badge: "",    Icon: Tag    },
+              ] as const).map(({ id, label, badge, Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => { setActivePage(id as Page); setMoreOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-left transition-colors",
+                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#f7f7f5]"
+                  )}
+                >
+                  <Icon className="w-4 h-4 shrink-0 text-[#bbb]" />
+                  <span className="flex-1">{label}</span>
+                  {badge && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600">{badge}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-[#e8e8e8] flex items-stretch h-14">
           {([
-            { id: "overview",        label: "Overview", Icon: LayoutDashboard },
-            { id: "prompts",         label: "Prompts",  Icon: MessageSquare   },
-            { id: "sources",         label: "Sources",  Icon: Globe           },
-            { id: "fixes:listicles", label: "Fixes",    Icon: ListChecks      },
+            { id: "overview", label: "Overview", Icon: LayoutDashboard },
+            { id: "prompts",  label: "Prompts",  Icon: MessageSquare   },
+            { id: "sources",  label: "Sources",  Icon: Globe           },
+            { id: "fixes:listicles", label: "Fixes", Icon: ListChecks  },
           ] as const).map(({ id, label, Icon }) => {
-            const active = activePage === id || (id === "fixes:listicles" && activePage.startsWith("fixes:"));
+            const active = !moreOpen && (activePage === id || (id === "fixes:listicles" && activePage.startsWith("fixes:")));
             return (
               <button
                 key={id}
-                onClick={() => setActivePage(id as Page)}
+                onClick={() => { setActivePage(id as Page); setMoreOpen(false); }}
                 className={cn(
                   "flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
                   active ? "text-[#5B2D91]" : "text-[#aaaaaa]"
@@ -642,6 +700,16 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
               </button>
             );
           })}
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className={cn(
+              "flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+              moreOpen || ["crawlers", "competitor-playbook", "brand"].includes(activePage) ? "text-[#5B2D91]" : "text-[#aaaaaa]"
+            )}
+          >
+            <Menu className="w-5 h-5" />
+            More
+          </button>
         </nav>
       </div>
     </div>
