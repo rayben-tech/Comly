@@ -613,8 +613,8 @@ function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolea
       {/* Mobile drawer */}
       <div
         className={cn(
-          "fixed top-14 right-0 bottom-0 left-0 z-50 bg-white/95 backdrop-blur-lg flex flex-col md:hidden border-t border-[#e5e5e5] overflow-hidden",
-          menuOpen ? "block" : "hidden",
+          "fixed top-14 right-0 bottom-0 left-0 z-50 bg-white/95 backdrop-blur-lg md:hidden border-t border-[#e5e5e5] overflow-hidden",
+          menuOpen ? "flex flex-col" : "hidden",
         )}
       >
         <div

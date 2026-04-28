@@ -505,23 +505,47 @@ export function HowItWorksAnimated() {
   return (
     <div>
       {/* Section heading */}
-      <div className="text-center pt-24 pb-10 px-6 bg-white">
+      <div className="text-center pt-16 sm:pt-24 pb-8 sm:pb-10 px-6 bg-white">
         <p className="text-[11px] font-bold tracking-widest uppercase text-[#5B2D91] mb-4">
           HOW IT WORKS
         </p>
-        <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">
+        <h2 className="text-[28px] sm:text-[42px] font-bold tracking-tight text-[#0a0a0a]">
           How Comly works
         </h2>
-        <p className="mt-3 text-lg text-[#6b6b6b]">
+        <p className="mt-3 text-base sm:text-lg text-[#6b6b6b]">
           3 steps to go from invisible to recommended
         </p>
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 sm:mt-8 flex justify-center">
           <ChevronDown className="w-5 h-5 text-[#aaaaaa] animate-bounce" />
         </div>
       </div>
 
-      {/* Scroll driver */}
-      <div ref={outerRef} id="how-it-works-steps" style={{ height: `${numPages * 100}vh` }}>
+      {/* Mobile: stacked step cards */}
+      <div className="md:hidden px-4 pb-14 space-y-5">
+        {STEPS.map((step) => {
+          const VisualComp = step.Visual;
+          return (
+            <div key={step.num} className="rounded-3xl overflow-hidden shadow-lg border border-white/10">
+              <div
+                className="flex items-start justify-center px-5 pt-8 pb-6"
+                style={{ background: step.gradient }}
+              >
+                <VisualComp />
+              </div>
+              <div className="bg-white px-6 py-6">
+                <p className="text-[10px] font-bold text-[#5B2D91] uppercase tracking-widest mb-2">
+                  Step {step.num}
+                </p>
+                <h3 className="text-xl font-bold text-[#0a0a0a] mb-2 leading-snug">{step.heading}</h3>
+                <p className="text-sm text-[#6b6b6b] leading-relaxed">{step.description}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: scroll-driven sticky animation */}
+      <div ref={outerRef} id="how-it-works-steps" style={{ height: `${numPages * 100}vh` }} className="hidden md:block">
         <div className="sticky top-0 h-screen overflow-hidden bg-white">
 
           {/* Progress dots */}
