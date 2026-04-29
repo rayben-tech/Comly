@@ -15,7 +15,7 @@ export interface PromptResult {
   response_text: string;
   mentioned: boolean;
   position: number | null;
-  competitors_mentioned: { name: string; domain: string }[];
+  competitors_mentioned: { name: string; domain: string; position: number | null }[];
   sources: { domain: string; title: string }[];
 }
 
@@ -23,6 +23,7 @@ export interface CompetitorRanking {
   name: string;
   domain: string;
   mentions: number;
+  avg_position: number | null;
 }
 
 export interface AuditResult {

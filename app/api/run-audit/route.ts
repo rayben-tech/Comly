@@ -24,7 +24,7 @@ STEP 1 — Write the response_text. Imagine a real user typed this query with ze
 STEP 2 — After writing the response, analyze what you actually wrote:
 - mentioned: is "${profile.brand_name}" present in the response_text you just wrote? (boolean — look at your actual text)
 - position: if mentioned, what rank/position (1 = first brand named) — else null
-- competitors_mentioned: every real software brand you named, each with their correct primary domain (e.g. "notion.so", "slack.com", "github.com")
+- competitors_mentioned: every real software brand you named, each with their correct primary domain and their position in the response (1 = first brand named, 2 = second, etc.)
 - sources: 3-5 real domains an AI would cite for this query type — review sites, forums, publications. Format: { domain, title }
 
 Critical rules:
@@ -53,7 +53,7 @@ Return a JSON object with a "results" array of exactly ${prompts.length} items:
       "response_text": "natural AI response here...",
       "mentioned": false,
       "position": null,
-      "competitors_mentioned": [{ "name": "Brand A", "domain": "branda.com" }],
+      "competitors_mentioned": [{ "name": "Brand A", "domain": "branda.com", "position": 1 }],
       "sources": [{ "domain": "g2.com", "title": "G2 Software Reviews" }]
     }
   ]
@@ -91,9 +91,10 @@ Return a JSON object with a "results" array of exactly ${prompts.length} items:
         competitors_mentioned: Array.isArray(r.competitors_mentioned)
           ? r.competitors_mentioned.map((c) => {
               const raw = typeof c === "string"
-                ? { name: c, domain: "" }
-                : { name: String(c.name || ""), domain: String(c.domain || "") };
-              return normalizeBrand(raw.name, raw.domain);
+                ? { name: c, domain: "", position: null }
+                : { name: String(c.name || ""), domain: String(c.domain || ""), position: c.position ?? null };
+              const normalized = normalizeBrand(raw.name, raw.domain);
+              return { ...normalized, position: raw.position };
             })
           : [],
         sources: Array.isArray(r.sources)

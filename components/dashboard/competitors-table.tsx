@@ -90,23 +90,14 @@ export function CompetitorsTable({ competitorRankings, promptResults, brandName,
 
   const brandDomain = brandUrl ? domainFromUrl(brandUrl) : "";
 
-  const rankedRows: BrandRow[] = competitorRankings.slice(0, MAX_COMPETITORS).map((c, i) => {
-    const vis = Math.round((c.mentions / totalPrompts) * 100);
-    const compMentionedWithPos = promptResults.filter((p) =>
-      p.competitors_mentioned.some((m) => m.name.toLowerCase() === c.name.toLowerCase()) && p.position !== null
-    );
-    const compAvgPos = compMentionedWithPos.length > 0
-      ? compMentionedWithPos.reduce((s, p) => s + p.position!, 0) / compMentionedWithPos.length
-      : null;
-    return {
-      name: c.name,
-      domain: c.domain,
-      visibility: vis,
-      position: compAvgPos !== null ? Math.round(compAvgPos * 10) / 10 : null,
-      isYou: false,
-      colorIdx: (i + 1) % BRAND_COLORS.length,
-    };
-  });
+  const rankedRows: BrandRow[] = competitorRankings.slice(0, MAX_COMPETITORS).map((c, i) => ({
+    name: c.name,
+    domain: c.domain,
+    visibility: Math.round((c.mentions / totalPrompts) * 100),
+    position: c.avg_position,
+    isYou: false,
+    colorIdx: (i + 1) % BRAND_COLORS.length,
+  }));
 
   // Always include specified competitors even if they got 0 mentions
   const rankedNames = new Set(rankedRows.map((r) => r.name.toLowerCase()));
@@ -137,11 +128,7 @@ export function CompetitorsTable({ competitorRankings, promptResults, brandName,
     ...zeroRows,
   ]
     .filter((r) => r.isYou || r.visibility > 0 || isSpecified(r.name))
-    .sort((a, b) => {
-      if (a.isYou) return -1;
-      if (b.isYou) return 1;
-      return b.visibility - a.visibility;
-    });
+    .sort((a, b) => b.visibility - a.visibility);
 
   const rows = allRows;
   const maxVis = Math.max(...allRows.map((r) => r.visibility), 1);
