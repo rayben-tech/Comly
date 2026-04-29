@@ -148,11 +148,10 @@ export function CompetitorsTable({ competitorRankings, promptResults, brandName,
       </div>
 
       {/* Column headers */}
-      <div className="grid grid-cols-[20px_minmax(0,1fr)_76px_52px] gap-3 px-6 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa]">
+      <div className="grid grid-cols-[20px_minmax(0,1fr)_120px] gap-3 px-6 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa]">
         <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide">#</span>
         <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide">Brand</span>
         <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide text-right">Visibility</span>
-        <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide text-right">Pos.</span>
       </div>
 
       {/* Rows */}
@@ -164,7 +163,7 @@ export function CompetitorsTable({ competitorRankings, promptResults, brandName,
           return (
             <div
               key={row.name}
-              className={`grid grid-cols-[20px_minmax(0,1fr)_76px_52px] gap-3 items-center px-6 py-3 hover:bg-[#fafafa] transition-colors ${
+              className={`grid grid-cols-[20px_minmax(0,1fr)_120px] gap-3 items-center px-6 py-3 hover:bg-[#fafafa] transition-colors ${
                 row.isYou ? "bg-[#5B2D91]/[0.02]" : ""
               }`}
             >
@@ -209,12 +208,6 @@ export function CompetitorsTable({ competitorRankings, promptResults, brandName,
                     style={{ width: `${barWidth}%`, backgroundColor: color }}
                   />
                 </div>
-              </div>
-
-              <div className="text-right">
-                <span className="text-[13px] font-semibold text-[#6b6b6b]">
-                  {row.position !== null ? `#${row.position}` : "—"}
-                </span>
               </div>
             </div>
           );

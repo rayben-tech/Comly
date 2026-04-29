@@ -62,7 +62,7 @@ function RedirectingAnimation() {
           transition={{ delay: 0.3 }}
           className="text-[#0a0a0a] font-bold text-lg mb-1.5"
         >
-          Your audit is ready
+          You&apos;ve already audited 1 website for free
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 6 }}
