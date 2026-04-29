@@ -178,6 +178,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
                     brandName={profile.brand_name}
                     brandUrl={profile.url}
                     totalMentions={total_mentions}
+                    specifiedCompetitors={profile.competitors}
                   />
                 </div>
               </div>

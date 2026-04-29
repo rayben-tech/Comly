@@ -4,6 +4,7 @@ import { openai } from "@/lib/openai";
 export const maxDuration = 60;
 import { generateAuditPrompts } from "@/lib/generate-prompts";
 import { calculateScore, calculateCompetitorRankings } from "@/lib/score";
+import { normalizeBrand } from "@/lib/brand-normalizations";
 import { BrandProfile, PromptResult } from "@/types";
 
 export async function POST(req: NextRequest) {
@@ -30,6 +31,7 @@ Critical rules:
 - response_text is ground truth — mentioned/position must reflect what is actually in it, not what you wish were in it
 - If "${profile.brand_name}" is not widely known or would not naturally appear in an honest answer, do not force it in
 - Use only real, existing brands and correct primary domains
+- Use current brand names and domains: "Bard" is now "Gemini" at gemini.google.com (not gemini.com which is a crypto exchange), "Bing Chat" is now "Microsoft Copilot" at copilot.microsoft.com
 - response_text must read as a natural AI answer, not a metadata description
 - Return ONLY valid JSON`;
 
@@ -87,11 +89,12 @@ Return a JSON object with a "results" array of exactly ${prompts.length} items:
         mentioned: Boolean(r.mentioned),
         position: r.position ?? null,
         competitors_mentioned: Array.isArray(r.competitors_mentioned)
-          ? r.competitors_mentioned.map((c) =>
-              typeof c === "string"
+          ? r.competitors_mentioned.map((c) => {
+              const raw = typeof c === "string"
                 ? { name: c, domain: "" }
-                : { name: String(c.name || ""), domain: String(c.domain || "") }
-            )
+                : { name: String(c.name || ""), domain: String(c.domain || "") };
+              return normalizeBrand(raw.name, raw.domain);
+            })
           : [],
         sources: Array.isArray(r.sources)
           ? r.sources.map((s: { domain: string; title: string }) => ({

@@ -5,7 +5,8 @@ export function generateAuditPrompts(profile: BrandProfile): string[] {
 
   const useCase0 = main_use_cases[0] || category;
   const comp0 = competitors[0] || "similar tools";
-  const comp1 = competitors[1] || competitors[0] || "other options";
+  const allComps = competitors.slice(0, 3).filter(Boolean);
+  const vsString = [brand_name, ...allComps].join(" vs ");
 
   return [
     // DIRECT BRAND — definition query always first (highest-signal prompt)
@@ -19,13 +20,13 @@ export function generateAuditPrompts(profile: BrandProfile): string[] {
 
     // COMPETITOR COMPARISON — realistic buyer behavior
     `What are the best alternatives to ${comp0}?`,
-    `${comp0} vs ${comp1} — which is better and what other options should I consider?`,
+    `${vsString} — which is best for ${target_users} and what are the key differences?`,
 
     // DIRECT BRAND — honest check: does AI know you?
     `Is ${brand_name} a good tool for ${useCase0}?`,
 
-    // COMPETITOR DISCOVERY — maximize competitor list
-    `Give me the most comprehensive list possible of every ${category} tool and competitor to ${brand_name}. Include major players, niche alternatives, and emerging tools — aim for 20 options.`,
+    // COMPETITOR DISCOVERY — named competitors anchor the response
+    `Who are the main direct competitors to ${brand_name} in the ${category} space? List the tools that ${target_users} most commonly compare when evaluating ${category} solutions, including ${allComps.join(", ")} and others.`,
 
     // OPEN ENDED — catches unexpected mentions
     `What ${category} tools would you recommend for ${target_users} in 2025? Include well known and lesser known options.`,

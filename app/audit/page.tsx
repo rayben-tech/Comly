@@ -2,11 +2,95 @@
 
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { BrandProfile, AuditResult, AuditStep } from "@/types";
 import { BrandProfileEditor } from "@/components/brand-profile-editor";
 import { AuditResults } from "@/components/audit-results";
 import { AuditLoadingView, LoadingPhase } from "@/components/audit-loading";
 import { supabase, getUserAudit, saveAuditForUser } from "@/lib/supabase";
+
+function RedirectingAnimation() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const start = Date.now();
+    const duration = 2400;
+    const iv = setInterval(() => {
+      const pct = Math.min(((Date.now() - start) / duration) * 100, 100);
+      setProgress(pct);
+      if (pct >= 100) clearInterval(iv);
+    }, 30);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-[#f7f7f5] flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="bg-white rounded-2xl border border-[#e5e5e5] shadow-sm p-10 flex flex-col items-center text-center max-w-sm w-full"
+      >
+        {/* Animated checkmark circle */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [0, 1.25, 1] }}
+          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+          className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
+          style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+        >
+          <motion.svg
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.45, ease: "easeOut" }}
+            viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round"
+            className="w-8 h-8"
+          >
+            <motion.path
+              d="M5 13l4 4L19 7"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.4, delay: 0.45, ease: "easeOut" }}
+            />
+          </motion.svg>
+        </motion.div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-[#0a0a0a] font-bold text-lg mb-1.5"
+        >
+          Your audit is ready
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="text-[#6b7280] text-sm mb-7 leading-relaxed"
+        >
+          Taking you back to your dashboard...
+        </motion.p>
+
+        {/* Progress bar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="w-full"
+        >
+          <div className="h-1.5 bg-[#f3eeff] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#5B2D91] rounded-full"
+              style={{ width: `${progress}%`, transition: "width 30ms linear" }}
+            />
+          </div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
 
 const SESSION_KEY = "comly_audit_session";
 
@@ -29,6 +113,7 @@ function AuditFlow() {
   const [heroData, setHeroData] = useState<{ title: string; description: string } | null>(null);
   const [error, setError] = useState("");
   const [isAuditing, setIsAuditing] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const firingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auth guard + one-audit-per-account check
@@ -46,7 +131,11 @@ function AuditFlow() {
       if (existing) {
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
-        setStep("results");
+        setIsRedirecting(true);
+        setTimeout(() => {
+          setIsRedirecting(false);
+          setStep("results");
+        }, 2500);
         return;
       }
 
@@ -145,6 +234,19 @@ function AuditFlow() {
   }
 
   async function handleConfirmProfile(confirmedProfile: BrandProfile) {
+    // Hard guard: re-check before spending API budget
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const existing = await getUserAudit(session.user.id);
+      if (existing) {
+        setProfile(existing.profile as BrandProfile);
+        setAuditResult(existing.results as AuditResult);
+        setIsRedirecting(true);
+        setTimeout(() => { setIsRedirecting(false); setStep("results"); }, 2500);
+        return;
+      }
+    }
+
     setProfile(confirmedProfile);
     setIsAuditing(true);
     setLoadingPhase("prompts");
@@ -185,7 +287,9 @@ function AuditFlow() {
             results: auditData,
           });
         }
-      } catch {}
+      } catch (saveErr) {
+        console.error("Supabase save failed:", saveErr);
+      }
       try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ profile: confirmedProfile, auditResult: auditData })); } catch {}
     } catch (err) {
       if (firingTimerRef.current) clearTimeout(firingTimerRef.current);
@@ -214,6 +318,10 @@ function AuditFlow() {
   async function handleRerun() {
     if (!profile) return;
     handleConfirmProfile(profile);
+  }
+
+  if (isRedirecting) {
+    return <RedirectingAnimation />;
   }
 
   // Active loading phase — show the new animated loading view

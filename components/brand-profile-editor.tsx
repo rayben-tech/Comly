@@ -35,10 +35,56 @@ function getDomain(url: string): string {
 
 // ─── TAG INPUT ────────────────────────────────────────────────────────────────
 
-function TagInput({ tags, onChange, placeholder }: {
+const COMPETITOR_DOMAINS: Record<string, string> = {
+  "claude": "claude.ai",
+  "claude ai": "claude.ai",
+  "chatgpt": "chatgpt.com",
+  "gemini": "gemini.google.com",
+  "google gemini": "gemini.google.com",
+  "perplexity": "perplexity.ai",
+  "perplexity ai": "perplexity.ai",
+  "deepseek": "deepseek.com",
+  "grok": "x.ai",
+  "copilot": "copilot.microsoft.com",
+  "microsoft copilot": "copilot.microsoft.com",
+  "mistral": "mistral.ai",
+  "mistral ai": "mistral.ai",
+  "meta ai": "meta.ai",
+  "notion": "notion.so",
+  "notion ai": "notion.so",
+  "jasper": "jasper.ai",
+  "jasper ai": "jasper.ai",
+  "writesonic": "writesonic.com",
+  "copy.ai": "copy.ai",
+  "you.com": "you.com",
+  "youchat": "you.com",
+  "openai": "openai.com",
+  "hubspot": "hubspot.com",
+  "salesforce": "salesforce.com",
+  "slack": "slack.com",
+  "notion": "notion.so",
+  "linear": "linear.app",
+  "jira": "atlassian.com/software/jira",
+  "asana": "asana.com",
+  "monday": "monday.com",
+  "monday.com": "monday.com",
+  "clickup": "clickup.com",
+  "ahrefs": "ahrefs.com",
+  "semrush": "semrush.com",
+  "moz": "moz.com",
+};
+
+function getCompetitorHref(name: string): string | undefined {
+  const domain = COMPETITOR_DOMAINS[name.toLowerCase().trim()];
+  if (domain) return `https://${domain}`;
+  return undefined;
+}
+
+function TagInput({ tags, onChange, placeholder, getHref }: {
   tags: string[];
   onChange: (tags: string[]) => void;
   placeholder: string;
+  getHref?: (tag: string) => string | undefined;
 }) {
   const [adding, setAdding] = useState(false);
   const [input, setInput] = useState("");
@@ -53,14 +99,23 @@ function TagInput({ tags, onChange, placeholder }: {
 
   return (
     <div className="flex flex-wrap gap-1.5 items-center min-h-[28px]">
-      {tags.map((tag) => (
-        <span key={tag} className="inline-flex items-center gap-1 bg-white border border-[#e5e5e5] text-[#374151] text-xs font-medium px-2.5 py-1 rounded-full">
-          {tag}
-          <button type="button" onClick={() => onChange(tags.filter((t) => t !== tag))} className="text-[#9ca3af] hover:text-[#374151] transition-colors ml-0.5">
-            <X className="w-3 h-3" />
-          </button>
-        </span>
-      ))}
+      {tags.map((tag) => {
+        const href = getHref?.(tag);
+        return (
+          <span key={tag} className="inline-flex items-center gap-1 bg-white border border-[#e5e5e5] text-[#374151] text-xs font-medium px-2.5 py-1 rounded-full">
+            {href ? (
+              <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#5B2D91] transition-colors">
+                {tag}
+              </a>
+            ) : (
+              tag
+            )}
+            <button type="button" onClick={() => onChange(tags.filter((t) => t !== tag))} className="text-[#9ca3af] hover:text-[#374151] transition-colors ml-0.5">
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        );
+      })}
       {adding ? (
         <input
           ref={inputRef}
@@ -528,7 +583,7 @@ export function BrandProfileEditor({ profile: initialProfile, onConfirm, isAudit
 
               <Field label="Competitors">
                 <div className="w-full px-3 py-2 bg-white border border-[#d1d5db] rounded-lg min-h-[46px] focus-within:border-[#5B2D91] transition-colors">
-                  <TagInput tags={profile.competitors ?? []} onChange={(tags) => setProfile((p) => ({ ...p, competitors: tags }))} placeholder="competitor" />
+                  <TagInput tags={profile.competitors ?? []} onChange={(tags) => setProfile((p) => ({ ...p, competitors: tags }))} placeholder="competitor" getHref={getCompetitorHref} />
                 </div>
               </Field>
 
