@@ -74,10 +74,10 @@ const COMPETITOR_DOMAINS: Record<string, string> = {
   "moz": "moz.com",
 };
 
-function getCompetitorHref(name: string): string | undefined {
+function getCompetitorHref(name: string): string {
   const domain = COMPETITOR_DOMAINS[name.toLowerCase().trim()];
   if (domain) return `https://${domain}`;
-  return undefined;
+  return `https://www.google.com/search?q=${encodeURIComponent(name)}+official+site`;
 }
 
 function TagInput({ tags, onChange, placeholder, getHref }: {
