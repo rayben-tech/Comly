@@ -6,15 +6,10 @@ import {
   Copy, Download, Check, Loader2, Plus, X, CheckCircle2, Sparkles, ExternalLink,
 } from "lucide-react";
 
-function ClaudeLogo() {
+function ChatGPTLogo() {
   return (
-    <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="20" height="20" rx="5" fill="#D97249"/>
-      <g transform="translate(10,10)" fill="white">
-        <ellipse rx="1.3" ry="4" transform="rotate(0)"/>
-        <ellipse rx="1.3" ry="4" transform="rotate(60)"/>
-        <ellipse rx="1.3" ry="4" transform="rotate(120)"/>
-      </g>
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A5.985 5.985 0 0 0 10.77 0a6.045 6.045 0 0 0-5.756 4.187 5.987 5.987 0 0 0-3.99 2.9 6.046 6.046 0 0 0 .745 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.984 5.984 0 0 0 13.26 24a6.04 6.04 0 0 0 5.75-4.191 5.987 5.987 0 0 0 3.99-2.9 6.046 6.046 0 0 0-.747-7.088zm-9.082 12.692a4.482 4.482 0 0 1-2.88-1.04l.144-.082 4.779-2.76a.795.795 0 0 0 .392-.681V9.419l2.02 1.167a.07.07 0 0 1 .038.052v5.573a4.504 4.504 0 0 1-4.493 4.502zm-9.306-4.113a4.481 4.481 0 0 1-.535-3.014l.144.084 4.779 2.76a.77.77 0 0 0 .785 0l5.833-3.369v2.332a.07.07 0 0 1-.028.061L9.74 19.95a4.503 4.503 0 0 1-5.846-1.55zm-1.38-10.52A4.479 4.479 0 0 1 4.81 6.01V11.5a.77.77 0 0 0 .39.681l5.833 3.368-2.019 1.167a.07.07 0 0 1-.069.006L4.227 14.3a4.503 4.503 0 0 1-1.713-6.24zm16.61 3.866-5.833-3.369 2.019-1.166a.069.069 0 0 1 .069-.006l4.719 2.724a4.503 4.503 0 0 1-.695 8.117v-5.5a.77.77 0 0 0-.279-.7zm2.01-3.024-.144-.084-4.779-2.76a.768.768 0 0 0-.786 0L9.546 9.457V7.125a.07.07 0 0 1 .028-.061l4.832-2.784A4.503 4.503 0 0 1 21.087 8.932zm-12.64 4.133-2.019-1.166a.07.07 0 0 1-.038-.053v-5.573a4.503 4.503 0 0 1 7.378-3.455l-.144.083-4.779 2.76a.795.795 0 0 0-.392.681l-.006 11.223zm1.097-2.365 2.591-1.5 2.591 1.496v2.996l-2.59 1.497-2.592-1.497V10.676z"/>
     </svg>
   );
 }
@@ -434,8 +429,8 @@ export function LlmsTxtPage({ profile }: Props) {
               </div>
               <div className="p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
-                    <ClaudeLogo />
+                  <div className="w-5 h-5 rounded-full bg-[#f0f0f0] shrink-0 flex items-center justify-center text-[#1a1a1a]">
+                    <ChatGPTLogo />
                   </div>
                   <div className="bg-[#f7f7f5] rounded-lg px-2.5 py-2 flex-1">
                     <p className="text-[11px] text-[#6b6b6b] leading-snug italic">&ldquo;I&apos;m not sure exactly what [Brand] does — it might be a project tool...&rdquo;</p>
@@ -450,8 +445,8 @@ export function LlmsTxtPage({ profile }: Props) {
               </div>
               <div className="p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
-                    <ClaudeLogo />
+                  <div className="w-5 h-5 rounded-full bg-[#f0f0f0] shrink-0 flex items-center justify-center text-[#1a1a1a]">
+                    <ChatGPTLogo />
                   </div>
                   <div className="bg-[#f3eeff] rounded-lg px-2.5 py-2 flex-1">
                     <p className="text-[11px] text-[#3a2060] leading-snug italic">&ldquo;[Brand] is a [category] tool for [target users] — it helps with [use case].&rdquo;</p>
