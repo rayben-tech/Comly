@@ -203,18 +203,22 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
                 )}
                 cursor={{ stroke: "#e5e5e5", strokeWidth: 1 }}
               />
-              {allBrands.map((brand, i) => (
-                <Line
-                  key={brand}
-                  type="monotone"
-                  dataKey={brand}
-                  stroke={allColors[i]}
-                  strokeWidth={brand === brandName ? 2.5 : 1.5}
-                  strokeDasharray={brand === brandName ? undefined : "4 3"}
-                  dot={false}
-                  activeDot={{ r: 4, fill: allColors[i], stroke: "white", strokeWidth: 2 }}
-                />
-              ))}
+              {allBrands.map((brand, i) => {
+                const isBrand = brand === brandName;
+                return (
+                  <Line
+                    key={brand}
+                    type="monotone"
+                    dataKey={brand}
+                    stroke={allColors[i]}
+                    strokeWidth={isBrand ? 3 : 1}
+                    strokeDasharray={isBrand ? undefined : "4 3"}
+                    strokeOpacity={isBrand ? 1 : 0.45}
+                    dot={false}
+                    activeDot={{ r: isBrand ? 5 : 3, fill: allColors[i], stroke: "white", strokeWidth: 2 }}
+                  />
+                );
+              })}
             </LineChart>
           </ResponsiveContainer>
         ) : (
@@ -263,8 +267,11 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}
-              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: allColors[i] }} />
-              <span className="text-[13px] text-[#6b6b6b]">{brand}</span>
+              <div
+                className="rounded-full shrink-0"
+                style={{ backgroundColor: allColors[i], width: brand === brandName ? 10 : 8, height: brand === brandName ? 10 : 8 }}
+              />
+              <span className={`text-[13px] ${brand === brandName ? "font-semibold text-[#0a0a0a]" : "text-[#6b6b6b]"}`}>{brand}</span>
             </div>
           );
         })}
