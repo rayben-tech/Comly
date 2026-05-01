@@ -306,7 +306,7 @@ export function LlmsTxtPage({ profile }: Props) {
   const hasFile = existingState === "found" && !!existingContent;
 
   return (
-    <div className="p-6 space-y-5 max-w-4xl">
+    <div className="p-6 space-y-5">
 
       {/* ── TOP BANNER: already have llms.txt ────────────────── */}
       {existingState === "checking" && (
@@ -349,7 +349,7 @@ export function LlmsTxtPage({ profile }: Props) {
       </div>
 
       {/* ── Education ────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
         <h2 className="text-[16px] font-bold text-[#0a0a0a]">What is llms.txt?</h2>
 
         <p className="text-[13px] text-[#6b6b6b] leading-relaxed">
@@ -406,7 +406,7 @@ export function LlmsTxtPage({ profile }: Props) {
       {hasFile && (
         <>
           {/* Current file preview */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
             <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0]">
               <h2 className="text-[15px] font-bold text-[#0a0a0a]">How your llms.txt looks</h2>
               <button
@@ -429,7 +429,7 @@ export function LlmsTxtPage({ profile }: Props) {
           </div>
 
           {/* Refine CTA */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-3">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-3">
             <div>
               <h2 className="text-[15px] font-bold text-[#0a0a0a]">Want to improve your llms.txt?</h2>
               <p className="text-[13px] text-[#6b6b6b] mt-1">
@@ -489,13 +489,13 @@ export function LlmsTxtPage({ profile }: Props) {
       {!hasFile && (
         <>
           {/* Preview of what will be generated */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-4">
             <h2 className="text-[16px] font-bold text-[#0a0a0a]">What your llms.txt will contain</h2>
             <CodeBlock content={previewContent} />
           </div>
 
           {/* Generator form */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
             <div>
               <h2 className="text-[16px] font-bold text-[#0a0a0a]">Generate your llms.txt</h2>
               <p className="text-[13px] text-[#6b6b6b] mt-0.5">Customized for your brand in one click</p>
@@ -593,7 +593,7 @@ export function LlmsTxtPage({ profile }: Props) {
 
           {/* Result */}
           {(generatedContent || error) && (
-            <div className="bg-white border border-[#e5e5e5] rounded-xl p-5">
+            <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5">
               {error && (
                 <div className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">{error}</div>
               )}
@@ -626,7 +626,7 @@ export function LlmsTxtPage({ profile }: Props) {
           )}
 
           {/* How to publish */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
             <h2 className="text-[14px] font-bold text-[#0a0a0a]">How to add llms.txt to your website</h2>
 
             <div className="flex flex-wrap gap-0 border-b border-[#f0f0f0] -mx-1">

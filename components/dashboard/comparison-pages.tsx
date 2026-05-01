@@ -235,7 +235,7 @@ export function ComparisonPagesPage({ profile }: Props) {
   const showResult = loading || !!generatedContent || !!error;
 
   return (
-    <div className="p-6 space-y-5 max-w-4xl">
+    <div className="p-6 space-y-5">
 
       {/* Page header */}
       <div>
@@ -246,7 +246,7 @@ export function ComparisonPagesPage({ profile }: Props) {
       </div>
 
       {/* ── SECTION 1: Education ─────────────────────────────── */}
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
         <h2 className="text-[16px] font-bold text-[#0a0a0a]">What are comparison pages?</h2>
 
         <p className="text-[13px] text-[#6b6b6b] leading-relaxed">
@@ -296,7 +296,7 @@ export function ComparisonPagesPage({ profile }: Props) {
       </div>
 
       {/* ── SECTION 2: Suggested comparisons ────────────────── */}
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
         <div>
           <h2 className="text-[16px] font-bold text-[#0a0a0a]">Your suggested comparison pages</h2>
           <p className="text-[13px] text-[#6b6b6b] mt-0.5">One "vs" page per competitor detected in your audit</p>
@@ -460,7 +460,7 @@ export function ComparisonPagesPage({ profile }: Props) {
 
       {/* ── SECTION 3: Result ────────────────────────────────── */}
       {showResult && (
-        <div className="bg-white border border-[#e5e5e5] rounded-xl p-5">
+        <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5">
           {loading && (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-[#5B2D91]/20 border-t-[#5B2D91] animate-spin" />
@@ -513,7 +513,7 @@ export function ComparisonPagesPage({ profile }: Props) {
       )}
 
       {/* ── SECTION 4: How to publish ────────────────────────── */}
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
         <h2 className="text-[14px] font-bold text-[#0a0a0a]">How to publish comparison pages</h2>
 
         <div className="flex flex-wrap gap-0 border-b border-[#f0f0f0] -mx-1">
@@ -578,7 +578,7 @@ export function ComparisonPagesPage({ profile }: Props) {
       </div>
 
       {/* ── SECTION 5: Track published pages ────────────────── */}
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-4">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-4">
         <div>
           <h2 className="text-[14px] font-bold text-[#0a0a0a]">Track published pages</h2>
           <p className="text-[13px] text-[#6b6b6b] mt-0.5">Add your published URLs to track if AI is citing them</p>

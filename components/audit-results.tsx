@@ -164,7 +164,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
 
           {activePage === "fixes:g2-checklist" && (
-            <div className="p-6 max-w-2xl mx-auto">
+            <div className="p-6">
               <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
                 <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
                   <div className="flex items-start gap-4">
@@ -243,7 +243,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
 
           {activePage === "fixes:reddit-exposure" && (
-            <div className="p-6 max-w-2xl mx-auto">
+            <div className="p-6">
               <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
                 <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
                   <div className="flex items-start gap-4">
@@ -344,7 +344,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
 
           {activePage === "crawlers" && (
-            <div className="p-6 max-w-2xl mx-auto">
+            <div className="p-6">
               <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
                 {/* Header */}
                 <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
@@ -435,7 +435,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
 
           {activePage === "competitor-playbook" && (
-            <div className="p-6 max-w-2xl mx-auto">
+            <div className="p-6">
               <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
 
                 {/* Header */}

@@ -497,7 +497,7 @@ export function HeroRewritePage({ profile }: Props) {
   }
 
   return (
-    <div className="p-6 space-y-5 max-w-4xl">
+    <div className="p-6 space-y-5">
 
       {/* Page header */}
       <div>
@@ -593,7 +593,7 @@ export function HeroRewritePage({ profile }: Props) {
           </div>
 
           {/* Hero input */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
             <div>
               <h2 className="text-[16px] font-bold text-[#0a0a0a]">Your current hero copy</h2>
               <p className="text-[13px] text-[#6b6b6b] mt-0.5">
@@ -683,7 +683,7 @@ export function HeroRewritePage({ profile }: Props) {
       {/* ── STEP 2: Analysis ──────────────────────────────────────── */}
       {step === 2 && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-6">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-6">
 
             {analyzing && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -780,7 +780,7 @@ export function HeroRewritePage({ profile }: Props) {
         <div className="space-y-5">
 
           {/* Generated copy */}
-          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
 
             {rewriting && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -886,7 +886,7 @@ export function HeroRewritePage({ profile }: Props) {
 
           {/* Before / After */}
           {rewrite && (
-            <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+            <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
               <h2 className="text-[14px] font-bold text-[#0a0a0a]">See the difference</h2>
               <div className="grid grid-cols-2 gap-5">
                 <BrowserMockup
@@ -931,7 +931,7 @@ export function HeroRewritePage({ profile }: Props) {
 
           {/* Implementation guide */}
           {rewrite && (
-            <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 space-y-5">
+            <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
               <h2 className="text-[14px] font-bold text-[#0a0a0a]">How to implement these changes</h2>
 
               <div className="flex flex-wrap gap-0 border-b border-[#f0f0f0] -mx-1">
