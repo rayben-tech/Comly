@@ -15,7 +15,7 @@ import { LlmsTxtPage } from "@/components/dashboard/llms-txt-page";
 import { ComparisonPagesPage } from "@/components/dashboard/comparison-pages";
 import { HeroRewritePage } from "@/components/dashboard/hero-rewrite-page";
 import { EmailCapture } from "@/components/email-capture";
-import { Hash, Trophy, CheckCircle2, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
+import { Hash, Trophy, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const VisibilityChart = dynamic(
@@ -36,50 +36,6 @@ interface AuditResultsProps {
 
 type Page = "overview" | "prompts" | "sources" | "brand" | "crawlers" | "competitor-playbook" | `fixes:${string}`;
 
-interface MiniStatProps {
-  label: string;
-  value: string;
-  sub: string;
-  icon: React.ElementType;
-  color: string;
-}
-
-function MiniStat({ label, value, sub, icon: Icon, color }: MiniStatProps) {
-  return (
-    <div className="bg-white border border-[#e8e8e8] rounded-xl px-5 py-4 flex items-center gap-4">
-      <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-        style={{ background: `${color}12` }}
-      >
-        <Icon className="w-4.5 h-4.5" style={{ color }} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: "#aaaaaa" }}>{label}</p>
-        <p className="text-[20px] font-bold leading-none" style={{ color: "#0a0a0a" }}>{value}</p>
-        <p className="text-[11px] mt-0.5 truncate" style={{ color: "#aaaaaa" }}>{sub}</p>
-      </div>
-    </div>
-  );
-}
-
-function buildStats(
-  score: number,
-  totalMentions: number,
-  promptResults: PromptResult[],
-  competitorRankings: CompetitorRanking[]
-) {
-  const total = promptResults.length || 10;
-  const visibilityPct = Math.round((totalMentions / total) * 100);
-  const mentionedWithPos = promptResults.filter((p) => p.mentioned && p.position !== null);
-  const avgPos =
-    mentionedWithPos.length > 0
-      ? Math.round((mentionedWithPos.reduce((s, p) => s + p.position!, 0) / mentionedWithPos.length) * 10) / 10
-      : null;
-  const topComp = competitorRankings[0]?.name ?? "—";
-  const topCompMentions = competitorRankings[0]?.mentions ?? 0;
-  return { visibilityPct, avgPos, topComp, topCompMentions, total };
-}
-
 
 export function AuditResults({ result, profile: initialProfile, onReset, onRerun }: AuditResultsProps) {
   const [activePage, setActivePage] = useState<Page>("overview");
@@ -87,16 +43,12 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { score, total_mentions, prompt_results, competitor_rankings } = result;
-  const { avgPos, topComp, topCompMentions, total } = buildStats(
-    score, total_mentions, prompt_results, competitor_rankings
-  );
-
   const domain = profile.url
     ? (() => { try { const u = profile.url.startsWith("http") ? profile.url : "https://" + profile.url; return new URL(u).hostname; } catch { return profile.url; } })()
     : profile.brand_name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "") + ".com";
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#f0ebff" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "#f7f4ff" }}>
       <Sidebar
         activePage={activePage}
         onNavigate={(p) => setActivePage(p as Page)}
@@ -124,47 +76,17 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           {activePage === "overview" && (
             <div className="p-6 space-y-5">
 
-              {/* Stat cards row */}
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-                <MiniStat
-                  label="Prompts Hit"
-                  value={`${total_mentions} / ${total}`}
-                  sub="prompts your brand appeared in"
-                  icon={CheckCircle2}
-                  color="#10b981"
-                />
-                <MiniStat
-                  label="Direct Awareness"
-                  value={prompt_results[0]?.mentioned ? "Recognized" : "Not recognized"}
-                  sub={`"What is ${profile.brand_name}?"`}
-                  icon={Sparkles}
-                  color={prompt_results[0]?.mentioned ? "#5B2D91" : "#aaaaaa"}
-                />
-                <MiniStat
-                  label="Avg. Position"
-                  value={avgPos !== null ? `#${avgPos}` : "—"}
-                  sub={avgPos !== null ? "when mentioned" : "Not mentioned"}
-                  icon={Hash}
-                  color="#f59e0b"
-                />
-                <MiniStat
-                  label="Top Competitor"
-                  value={topComp}
-                  sub={`${topCompMentions} mentions`}
-                  icon={Trophy}
-                  color="#ef4444"
-                />
-              </div>
+              {/* Visibility full width */}
+              <VisibilityChart
+                promptResults={prompt_results}
+                competitorRankings={competitor_rankings}
+                brandName={profile.brand_name}
+                brandDomain={domain}
+              />
 
-              {/* Two-column grid */}
+              {/* Two-column grid below */}
               <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
                 <div className="xl:col-span-3 space-y-5">
-                  <VisibilityChart
-                    promptResults={prompt_results}
-                    competitorRankings={competitor_rankings}
-                    brandName={profile.brand_name}
-                    brandDomain={domain}
-                  />
                   <ModelBreakdown
                     promptResults={prompt_results}
                     brandName={profile.brand_name}

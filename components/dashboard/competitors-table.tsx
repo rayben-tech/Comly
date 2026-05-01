@@ -8,7 +8,7 @@ const BRAND_COLORS = [
   "#5B2D91", "#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#a855f7",
 ];
 
-const MAX_COMPETITORS = 20;
+const MAX_COMPETITORS = 10;
 
 function BrandAvatar({ name, domain, color }: { name: string; domain: string; color: string }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");

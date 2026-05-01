@@ -112,7 +112,7 @@ function BarTooltip({ active, payload, domainMap }: { active?: boolean; payload?
 export function VisibilityChart({ promptResults, competitorRankings, brandName, brandDomain }: Props) {
   const [chartType, setChartType] = useState<"line" | "bar">("line");
 
-  const topCompetitors = competitorRankings.slice(0, 11);
+  const topCompetitors = competitorRankings.slice(0, 3);
   const allBrands = [brandName, ...topCompetitors.map((c) => c.name)];
   const allColors = LINE_COLORS.slice(0, allBrands.length);
 
