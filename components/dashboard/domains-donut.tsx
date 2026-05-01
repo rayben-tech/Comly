@@ -30,7 +30,7 @@ export function DomainsDonut() {
   const topSegment = SEGMENTS[0];
 
   return (
-    <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
+    <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between px-6 py-5 border-b border-[#e5e5e5]">
         <div>

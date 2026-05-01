@@ -94,19 +94,21 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
     <aside className={cn("w-[220px] shrink-0 bg-white border-r border-[#ebebeb] flex flex-col h-screen sticky top-0 overflow-hidden", className)}>
 
       {/* Brand header */}
-      <div className="px-5 py-5 border-b border-[#f0f0f0]">
-        <div className="flex items-center gap-3">
-          <BrandFavicon domain={domain} name={profile.brand_name} size={32} />
+      <div className="px-3 pt-4 pb-3 border-b border-[#f0f0f0]">
+        <div className="bg-[#f7f7f5] border border-[#ececec] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <BrandFavicon domain={domain} name={profile.brand_name} size={36} />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-[#0a0a0a] truncate leading-tight">{profile.brand_name}</p>
-            {domain && <p className="text-[11px] text-[#aaaaaa] truncate mt-0.5">{domain}</p>}
+            <p className="text-[13px] font-bold text-[#0a0a0a] truncate leading-tight">{profile.brand_name}</p>
+            {domain && (
+              <p className="text-[11px] text-[#aaaaaa] truncate mt-0.5 leading-tight">{domain}</p>
+            )}
           </div>
           <button
             onClick={onClose}
             title="Collapse sidebar"
-            className="shrink-0 text-[#cccccc] hover:text-[#888] transition-colors p-0.5 rounded-md hover:bg-[#f0f0f0]"
+            className="shrink-0 text-[#cccccc] hover:text-[#5B2D91] transition-colors p-1 rounded-lg hover:bg-[#ede8f7]"
           >
-            <PanelLeftClose className="w-4 h-4" />
+            <PanelLeftClose className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

@@ -421,7 +421,17 @@ export function LlmsTxtPage({ profile }: Props) {
               </div>
               <div className="p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full bg-[#f0f0f0] shrink-0 flex items-center justify-center text-[9px] font-bold text-[#888]">AI</div>
+                  <div className="w-5 h-5 rounded-full bg-[#f0f0f0] shrink-0 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none">
+                      <defs>
+                        <linearGradient id="gem-gray" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="#4285F4"/>
+                          <stop offset="100%" stopColor="#8C37CE"/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M12 2C12 7 17 12 22 12C17 12 12 17 12 22C12 17 7 12 2 12C7 12 12 7 12 2Z" fill="url(#gem-gray)"/>
+                    </svg>
+                  </div>
                   <div className="bg-[#f7f7f5] rounded-lg px-2.5 py-2 flex-1">
                     <p className="text-[11px] text-[#6b6b6b] leading-snug italic">&ldquo;I&apos;m not sure exactly what [Brand] does — it might be a project tool...&rdquo;</p>
                   </div>
@@ -435,7 +445,11 @@ export function LlmsTxtPage({ profile }: Props) {
               </div>
               <div className="p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full bg-[#5B2D91] shrink-0 flex items-center justify-center text-[9px] font-bold text-white">AI</div>
+                  <div className="w-5 h-5 rounded-full bg-[#5B2D91] shrink-0 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none">
+                      <path d="M12 2C12 7 17 12 22 12C17 12 12 17 12 22C12 17 7 12 2 12C7 12 12 7 12 2Z" fill="white"/>
+                    </svg>
+                  </div>
                   <div className="bg-[#f3eeff] rounded-lg px-2.5 py-2 flex-1">
                     <p className="text-[11px] text-[#3a2060] leading-snug italic">&ldquo;[Brand] is a [category] tool for [target users] — it helps with [use case].&rdquo;</p>
                   </div>

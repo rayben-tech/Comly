@@ -270,7 +270,7 @@ export function BrandPage({ profile, onSave }: Props) {
         )}
       </div>
 
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-5 space-y-4">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5 space-y-4">
         {/* Identity header */}
         <div className="flex items-center gap-3 pb-4 border-b border-[#f0f0f0]">
           <BrandFaviconLarge domain={editing ? domain : displayDomain} name={editing ? draft.brand_name : profile.brand_name} />

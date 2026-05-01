@@ -133,7 +133,7 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
   }));
 
   return (
-    <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
+    <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-5 pb-4">
         <div>
