@@ -139,7 +139,7 @@ export function CompetitorsTable({ competitorRankings, promptResults, brandName,
       <div className="flex items-start justify-between px-6 py-5 border-b border-[#e5e5e5]">
         <div>
           <h3 className="text-base font-semibold text-[#0a0a0a]">Competitors</h3>
-          <p className="text-[13px] text-[#6b6b6b] mt-0.5">{brandName} vs. the field</p>
+          <p className="text-[13px] text-[#6b6b6b] mt-0.5">Based on AI citations</p>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f7f7f5] border border-[#e5e5e5]">
           <Trophy className="w-3.5 h-3.5 text-[#6b6b6b]" />
