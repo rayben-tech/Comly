@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { AuditResult, BrandProfile, PromptResult, CompetitorRanking } from "@/types";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { TopBar } from "@/components/dashboard/top-bar";
 import { CompetitorsTable } from "@/components/dashboard/competitors-table";
 import { DomainsTable } from "@/components/dashboard/domains-table";
 import { PromptsPage } from "@/components/dashboard/prompts-page";
@@ -15,7 +14,7 @@ import { LlmsTxtPage } from "@/components/dashboard/llms-txt-page";
 import { ComparisonPagesPage } from "@/components/dashboard/comparison-pages";
 import { HeroRewritePage } from "@/components/dashboard/hero-rewrite-page";
 import { EmailCapture } from "@/components/email-capture";
-import { Hash, Trophy, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
+import { Hash, Trophy, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu, Download, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const VisibilityChart = dynamic(
@@ -36,6 +35,33 @@ interface AuditResultsProps {
 
 type Page = "overview" | "prompts" | "sources" | "brand" | "crawlers" | "competitor-playbook" | `fixes:${string}`;
 
+
+function exportCSV(brandName: string, score: number, promptResults: PromptResult[]) {
+  const rows: string[][] = [
+    ["Comly AI Visibility Audit"],
+    ["Brand", brandName],
+    ["Score", String(score)],
+    ["Visibility", `${Math.round((promptResults.filter((r) => r.mentioned).length / promptResults.length) * 100)}%`],
+    ["Date", new Date().toLocaleDateString()],
+    [],
+    ["#", "Prompt", "Mentioned", "Position", "Competitors Mentioned"],
+    ...promptResults.map((r, i) => [
+      String(i + 1),
+      r.prompt,
+      r.mentioned ? "Yes" : "No",
+      r.position !== null ? String(r.position) : "—",
+      r.competitors_mentioned.map((c) => c.name).join("; "),
+    ]),
+  ];
+  const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `comly-audit-${brandName.toLowerCase().replace(/\s+/g, "-")}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function AuditResults({ result, profile: initialProfile, onReset, onRerun }: AuditResultsProps) {
   const [activePage, setActivePage] = useState<Page>("overview");
@@ -58,17 +84,34 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
       />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <TopBar
-          brandName={profile.brand_name}
-          domain={domain}
-          score={score}
-          totalMentions={total_mentions}
-          promptResults={prompt_results}
-          onReset={onReset}
-          onRerun={onRerun}
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen(true)}
-        />
+        {/* Page header */}
+        <div className="bg-white border-b border-[#e8e8e8] shrink-0 flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                title="Expand sidebar"
+                className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-[#f0f0f0] transition-colors shrink-0"
+              >
+                <PanelLeftOpen className="w-4 h-4" />
+              </button>
+            )}
+            <div>
+              <h1 className="text-[17px] font-bold text-[#0a0a0a]">Dashboard</h1>
+              <p className="text-[13px] text-[#6b6b6b] mt-0.5">
+                Monitor how <span className="font-semibold text-[#0a0a0a]">{profile.brand_name}</span> performs across AI models
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => exportCSV(profile.brand_name, score, prompt_results)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-white text-[13px] font-semibold transition-opacity hover:opacity-90 active:opacity-80 shadow-sm"
+            style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export
+          </button>
+        </div>
 
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
 
