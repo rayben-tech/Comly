@@ -64,7 +64,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           {activePage === "overview" && (
             <>
             {/* Sticky page title */}
-            <div className="sticky top-0 z-10 flex items-center gap-3 px-6 pt-6 pb-3" style={{ background: "#f7f4ff" }}>
+            <div className="flex items-center gap-3 px-6 pt-6 pb-3">
               {!sidebarOpen && (
                 <button
                   onClick={() => setSidebarOpen(true)}
