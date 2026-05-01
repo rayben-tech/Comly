@@ -58,8 +58,8 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
       />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Page header */}
-        <div className="shrink-0 flex items-center gap-3 px-6 pt-6 pb-2">
+        {/* Page header — overview only */}
+        {activePage === "overview" && <div className="shrink-0 flex items-center gap-3 px-6 pt-6 pb-2">
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
@@ -75,7 +75,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
               Monitor how <span className="font-semibold text-[#0a0a0a]">{profile.brand_name}</span> performs across AI models
             </p>
           </div>
-        </div>
+        </div>}
 
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
 
