@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BrandProfile } from "@/types";
 import {
   FileText, ChevronRight, Copy, Download,
-  RefreshCw, Loader2, Plus, X, Check, CheckCircle2, Sparkles,
+  RefreshCw, Loader2, Plus, X, Check, Sparkles, Globe, Search,
 } from "lucide-react";
 
 interface Suggestion {
@@ -200,13 +200,35 @@ export function ListiclesPage({ profile }: Props) {
           <p className="text-[13px] text-[#6b6b6b] mb-3">Listicles are articles like:</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              "Best note-taking apps for remote teams in 2026",
-              "Top alternatives to Notion",
-              "10 tools for startup growth in 2026",
-            ].map((title, i) => (
-              <div key={i} className="bg-[#f3eeff] rounded-lg p-3 flex items-start gap-2">
-                <FileText className="w-4 h-4 text-[#5B2D91] shrink-0 mt-0.5" />
-                <span className="text-[12px] font-medium text-[#3a2060] leading-snug">{title}</span>
+              { title: "Best note-taking apps for remote teams in 2026", slug: "/blog/best-note-taking-apps", items: ["Notion", "Obsidian", "Roam Research"] },
+              { title: "Top alternatives to Notion", slug: "/blog/notion-alternatives", items: ["Coda", "Confluence", "ClickUp"] },
+              { title: "10 tools for startup growth in 2026", slug: "/blog/tools-startup-growth", items: ["Linear", "Loom", "Intercom"] },
+            ].map((card, i) => (
+              <div key={i} className="border border-[#e5e5e5] rounded-xl overflow-hidden bg-white shadow-sm">
+                {/* Browser chrome */}
+                <div className="bg-[#f7f7f5] px-3 py-2 border-b border-[#e5e5e5] flex items-center gap-2">
+                  <div className="flex gap-1 shrink-0">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff5f57]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#ffbd2e]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#27c93f]" />
+                  </div>
+                  <div className="flex-1 min-w-0 bg-white border border-[#e5e5e5] rounded text-[9px] text-[#aaaaaa] px-1.5 py-0.5 truncate text-center">
+                    yoursite.com{card.slug}
+                  </div>
+                </div>
+                {/* Article skeleton */}
+                <div className="p-3 space-y-2">
+                  <p className="text-[11px] font-bold text-[#0a0a0a] leading-tight">{card.title}</p>
+                  <div className="space-y-1.5 pt-0.5">
+                    {card.items.map((item, j) => (
+                      <div key={j} className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold text-[#5B2D91] shrink-0 w-3">{j + 1}.</span>
+                        <span className="text-[10px] text-[#3a3a3a]">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="h-1 rounded-full bg-[#5B2D91]/20 w-2/3 mt-1" />
+                </div>
               </div>
             ))}
           </div>
@@ -230,15 +252,17 @@ export function ListiclesPage({ profile }: Props) {
         {/* Why this works */}
         <div>
           <p className="text-[13px] font-semibold text-[#0a0a0a] mb-3">Why this works</p>
-          <div className="space-y-2.5">
+          <div className="grid grid-cols-3 gap-3">
             {[
-              "LLMs are trained on listicle-style content — they cite these pages heavily",
-              "Ranking in \"best X tools\" pages = getting mentioned in AI answers",
-              "Each page targets a different buyer query",
-            ].map((point, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-[#5B2D91] shrink-0 mt-0.5" />
-                <span className="text-[13px] text-[#3a3a3a] leading-relaxed">{point}</span>
+              { emoji: "📈", value: "3.2×", label: "more AI citations", sub: "vs pages without listicles", color: "#10b981", bg: "#f0fdf4", border: "#bbf7d0" },
+              { emoji: "🎯", value: "10+", label: "buyer queries hit", sub: "per published listicle page", color: "#5B2D91", bg: "#f3eeff", border: "#e0d4f7" },
+              { emoji: "⚡", value: "2–4 wks", label: "AI discovery time", sub: "after you publish & index", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
+            ].map((stat, i) => (
+              <div key={i} className="rounded-xl p-4 border" style={{ background: stat.bg, borderColor: stat.border }}>
+                <span className="text-[22px]">{stat.emoji}</span>
+                <p className="text-[24px] font-bold mt-2 leading-none" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-[12px] font-semibold text-[#0a0a0a] mt-1.5">{stat.label}</p>
+                <p className="text-[11px] text-[#6b6b6b] mt-0.5">{stat.sub}</p>
               </div>
             ))}
           </div>
@@ -403,18 +427,24 @@ export function ListiclesPage({ profile }: Props) {
       <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-4">
         <h2 className="text-[14px] font-bold text-[#0a0a0a]">How to publish these pages</h2>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-4 gap-3">
           {[
-            "Copy the markdown above",
-            "Create a new page in your blog (Webflow, WordPress, Notion, etc.)",
-            "Paste the content and publish",
-            "Submit the URL to Google Search Console",
-          ].map((step, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#5B2D91]/10 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-[11px] font-bold text-[#5B2D91]">{i + 1}</span>
+            { icon: Copy,     label: "Copy markdown",   sub: "from the generated output above" },
+            { icon: FileText, label: "Create a page",   sub: "in Webflow, WordPress, Notion…" },
+            { icon: Globe,    label: "Paste & publish",  sub: "make it live on your domain" },
+            { icon: Search,   label: "Submit to GSC",   sub: "Google Search Console indexing" },
+          ].map(({ icon: Icon, label, sub }, i) => (
+            <div key={i} className="relative flex flex-col items-center text-center gap-2 px-2 pt-4 pb-3 border border-[#e5e5e5] rounded-xl bg-white">
+              <div className="w-9 h-9 rounded-full bg-[#5B2D91] flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4 text-white" />
               </div>
-              <span className="text-[13px] text-[#3a3a3a] leading-relaxed">{step}</span>
+              {i < 3 && (
+                <div className="absolute right-0 top-[26px] translate-x-1/2 w-3 h-px bg-[#d0d0d0] z-10" />
+              )}
+              <div>
+                <p className="text-[12px] font-semibold text-[#0a0a0a]">{label}</p>
+                <p className="text-[11px] text-[#6b6b6b] mt-0.5 leading-snug">{sub}</p>
+              </div>
             </div>
           ))}
         </div>
