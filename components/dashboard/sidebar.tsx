@@ -98,7 +98,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
         <div className="flex items-center gap-3">
           <BrandFavicon domain={domain} name={profile.brand_name} size={32} />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-[#0a0a0a] truncate leading-tight">{profile.brand_name}&apos;s dashboard</p>
+            <p className="text-[14px] font-semibold text-[#0a0a0a] truncate leading-tight">{profile.brand_name}</p>
             {domain && <p className="text-[11px] text-[#aaaaaa] truncate mt-0.5">{domain}</p>}
           </div>
           <button

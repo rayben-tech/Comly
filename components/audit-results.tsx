@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuditResult, BrandProfile, PromptResult, CompetitorRanking } from "@/types";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { CompetitorsTable } from "@/components/dashboard/competitors-table";
@@ -49,13 +50,26 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#f7f4ff" }}>
-      <Sidebar
-        activePage={activePage}
-        onNavigate={(p) => setActivePage(p as Page)}
-        profile={profile}
-        className={sidebarOpen ? "hidden lg:flex" : "hidden"}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <AnimatePresence initial={false}>
+        {sidebarOpen && (
+          <motion.div
+            key="sidebar"
+            initial={{ width: 0 }}
+            animate={{ width: 220 }}
+            exit={{ width: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="hidden lg:block overflow-hidden shrink-0"
+            style={{ minWidth: 0 }}
+          >
+            <Sidebar
+              activePage={activePage}
+              onNavigate={(p) => setActivePage(p as Page)}
+              profile={profile}
+              onClose={() => setSidebarOpen(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
