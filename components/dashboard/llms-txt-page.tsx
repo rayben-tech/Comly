@@ -357,17 +357,43 @@ export function LlmsTxtPage({ profile }: Props) {
           but specifically for AI models.
         </p>
 
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { emoji: "🤖", text: "Tells AI what your product does" },
-            { emoji: "📂", text: "Lives at yoursite.com/llms.txt" },
-            { emoji: "⚡", text: "Improves how AI describes you" },
-          ].map(({ emoji, text }, i) => (
-            <div key={i} className="bg-[#f3eeff] rounded-lg p-3 flex items-start gap-2.5">
-              <span className="text-[18px] leading-none shrink-0">{emoji}</span>
-              <span className="text-[12px] font-medium text-[#3a2060] leading-snug">{text}</span>
+        {/* robots.txt vs llms.txt comparison */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="border border-[#e5e5e5] rounded-xl overflow-hidden">
+            <div className="bg-[#f7f7f5] px-3 py-2 border-b border-[#e5e5e5] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#cccccc]" />
+                <span className="text-[11px] font-semibold text-[#888]">robots.txt</span>
+              </div>
+              <span className="text-[10px] text-[#aaaaaa]">for search bots</span>
             </div>
-          ))}
+            <div className="p-3 font-mono text-[11px] space-y-1 text-[#6b6b6b]">
+              <div>User-agent: *</div>
+              <div>Allow: /</div>
+              <div>Sitemap: /sitemap.xml</div>
+            </div>
+            <div className="px-3 pb-2.5">
+              <p className="text-[11px] text-[#aaaaaa]">Tells crawlers where to go</p>
+            </div>
+          </div>
+          <div className="border-2 border-[#5B2D91]/30 rounded-xl overflow-hidden">
+            <div className="bg-[#f3eeff] px-3 py-2 border-b border-[#5B2D91]/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#5B2D91]" />
+                <span className="text-[11px] font-semibold text-[#5B2D91]">llms.txt</span>
+              </div>
+              <span className="text-[10px] text-[#5B2D91]/70">for AI models ✨</span>
+            </div>
+            <div className="p-3 font-mono text-[11px] space-y-1">
+              <div className="text-[#79c0ff]"># YourBrand</div>
+              <div className="text-[#888]">&gt; Helps [users] with [problem].</div>
+              <div className="text-[#f0883e]">## Use Cases</div>
+              <div className="text-[#7ee787]">- Automates workflows</div>
+            </div>
+            <div className="px-3 pb-2.5">
+              <p className="text-[11px] text-[#5B2D91] font-medium">Tells AI what your product does</p>
+            </div>
+          </div>
         </div>
 
         <p className="text-[13px] text-[#6b6b6b] leading-relaxed">
@@ -385,19 +411,38 @@ export function LlmsTxtPage({ profile }: Props) {
           </div>
         </div>
 
+        {/* Before / after AI response */}
         <div>
           <p className="text-[13px] font-semibold text-[#0a0a0a] mb-3">Why this works</p>
-          <div className="space-y-2.5">
-            {[
-              "AI crawlers prioritize structured files over raw webpage content",
-              "Gives AI models a clean, accurate summary of what you do and who you serve",
-              "Reduces hallucinations — AI describes you correctly instead of guessing",
-            ].map((point, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-[#5B2D91] shrink-0 mt-0.5" />
-                <span className="text-[13px] text-[#3a3a3a] leading-relaxed">{point}</span>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl overflow-hidden border border-red-100">
+              <div className="bg-red-50 px-3 py-2 border-b border-red-100">
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-wide">Without llms.txt</span>
               </div>
-            ))}
+              <div className="p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5 rounded-full bg-[#f0f0f0] shrink-0 flex items-center justify-center text-[9px] font-bold text-[#888]">AI</div>
+                  <div className="bg-[#f7f7f5] rounded-lg px-2.5 py-2 flex-1">
+                    <p className="text-[11px] text-[#6b6b6b] leading-snug italic">&ldquo;I&apos;m not sure exactly what [Brand] does — it might be a project tool...&rdquo;</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-red-500 font-medium pl-7">Vague, possibly wrong</p>
+              </div>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-emerald-200">
+              <div className="bg-emerald-50 px-3 py-2 border-b border-emerald-100">
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">With llms.txt</span>
+              </div>
+              <div className="p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5 rounded-full bg-[#5B2D91] shrink-0 flex items-center justify-center text-[9px] font-bold text-white">AI</div>
+                  <div className="bg-[#f3eeff] rounded-lg px-2.5 py-2 flex-1">
+                    <p className="text-[11px] text-[#3a2060] leading-snug italic">&ldquo;[Brand] is a [category] tool for [target users] — it helps with [use case].&rdquo;</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-medium pl-7">Accurate, citable ✓</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

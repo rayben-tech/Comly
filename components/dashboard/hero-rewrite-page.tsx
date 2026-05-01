@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
   Copy, Check, Loader2, ChevronRight, RefreshCw,
-  Download, CheckCircle2, AlertCircle, ChevronLeft, ChevronDown,
+  Download, AlertCircle, ChevronLeft, ChevronDown,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -570,20 +570,31 @@ export function HeroRewritePage({ profile }: Props) {
                   </div>
                 </div>
 
+                {/* 2×2 criterion cards */}
                 <div>
                   <p className="text-[13px] font-semibold text-[#0a0a0a] mb-3">What makes a hero AI-friendly</p>
-                  <div className="space-y-2.5">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
-                      { bold: "Clear category:", rest: " \"AI writing tool for lawyers\" not \"the future of legal work\"" },
-                      { bold: "H1 matches what users ask LLMs:", rest: " \"best [category] tool for [audience]\"" },
-                      { bold: "FAQs that mirror real prompt questions", rest: "" },
-                      { bold: "TL;DR summary at the top", rest: " — LLMs extract and cite summaries heavily" },
+                      { icon: "🏷️", title: "Clear category",       good: '"AI writing tool for lawyers"',          bad: '"The future of legal work"' },
+                      { icon: "🎯", title: "Audience-first H1",     good: '"Best [tool] for [specific audience]"',  bad: '"Work better. Together."' },
+                      { icon: "❓", title: "FAQ mirrors prompts",    good: '"Can I use this for X use case?"',       bad: 'Generic "How does it work?"' },
+                      { icon: "📝", title: "TL;DR at the top",      good: '"One-line summary AI can extract"',      bad: 'No summary — AI has to guess' },
                     ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2.5">
-                        <CheckCircle2 className="w-4 h-4 text-[#5B2D91] shrink-0 mt-0.5" />
-                        <span className="text-[13px] text-[#3a3a3a] leading-relaxed">
-                          <strong>{item.bold}</strong>{item.rest}
-                        </span>
+                      <div key={i} className="border border-[#e5e5e5] rounded-xl p-3.5 space-y-2 bg-white">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[18px]">{item.icon}</span>
+                          <p className="text-[12px] font-bold text-[#0a0a0a]">{item.title}</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-[11px] shrink-0">✅</span>
+                            <p className="text-[11px] text-emerald-700 leading-snug font-medium">{item.good}</p>
+                          </div>
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-[11px] shrink-0">❌</span>
+                            <p className="text-[11px] text-red-500 leading-snug">{item.bad}</p>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

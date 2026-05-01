@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
   Copy, Download, Check, Loader2, Plus, X,
-  CheckCircle2, RefreshCw, Trash2, Sparkles, ExternalLink,
+  RefreshCw, Trash2, Sparkles, ExternalLink,
 } from "lucide-react";
 
 function slugify(s: string): string {
@@ -253,15 +253,42 @@ export function ComparisonPagesPage({ profile }: Props) {
           Comparison pages are dedicated pages on your website that compare your product directly against competitors.
         </p>
 
+        {/* Mini VS page card mockups */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { emoji: "⚖️", text: "Notion vs Coda" },
-            { emoji: "⚖️", text: "Notion vs Obsidian" },
-            { emoji: "⚖️", text: "Notion vs Confluence" },
-          ].map(({ emoji, text }, i) => (
-            <div key={i} className="bg-[#f3eeff] rounded-lg p-3 flex items-start gap-2.5">
-              <span className="text-[18px] leading-none shrink-0">{emoji}</span>
-              <span className="text-[12px] font-medium text-[#3a2060] leading-snug">{text}</span>
+            { a: "Notion", b: "Coda",       slug: "/blog/notion-vs-coda" },
+            { a: "Notion", b: "Obsidian",   slug: "/blog/notion-vs-obsidian" },
+            { a: "Notion", b: "Confluence", slug: "/blog/notion-vs-confluence" },
+          ].map((card, i) => (
+            <div key={i} className="border border-[#e5e5e5] rounded-xl overflow-hidden bg-white shadow-sm">
+              <div className="bg-[#f7f7f5] px-3 py-2 border-b border-[#e5e5e5] flex items-center gap-2">
+                <div className="flex gap-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff5f57]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#ffbd2e]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#27c93f]" />
+                </div>
+                <div className="flex-1 min-w-0 bg-white border border-[#e5e5e5] rounded text-[9px] text-[#aaaaaa] px-1.5 py-0.5 truncate text-center">
+                  yoursite.com{card.slug}
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[11px] font-bold text-[#5B2D91]">{card.a}</span>
+                  <span className="text-[9px] font-bold text-[#aaaaaa] bg-[#f0f0f0] px-1.5 py-0.5 rounded">VS</span>
+                  <span className="text-[11px] font-bold text-[#0a0a0a]">{card.b}</span>
+                </div>
+                {["Pricing", "Features", "Best for"].map((row, j) => (
+                  <div key={j} className="flex items-center gap-1 mb-1.5">
+                    <div className="flex-1 h-1.5 rounded-full bg-[#5B2D91]/25" />
+                    <span className="text-[8px] text-[#aaaaaa] shrink-0 px-1">{row}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-[#f0f0f0]" />
+                  </div>
+                ))}
+                <div className="mt-2 flex items-center gap-1.5">
+                  <div className="h-1 rounded-full bg-[#5B2D91] w-3/5" />
+                  <span className="text-[8px] text-[#5B2D91] font-bold">Winner</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -278,17 +305,23 @@ export function ComparisonPagesPage({ profile }: Props) {
           <div className="text-[#7ee787]">└── /blog/notion-vs-confluence</div>
         </div>
 
+        {/* AI query flow */}
         <div>
           <p className="text-[13px] font-semibold text-[#0a0a0a] mb-3">Why this works</p>
-          <div className="space-y-2.5">
+          <div className="grid grid-cols-4 gap-2">
             {[
-              "When buyers compare tools they ask AI — comparison pages are what AI cites",
-              '"X vs Y" pages capture the highest buying intent queries in any category',
-              "Each page targets a different competitor's audience — massive reach with minimal effort",
-            ].map((point, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-[#5B2D91] shrink-0 mt-0.5" />
-                <span className="text-[13px] text-[#3a3a3a] leading-relaxed">{point}</span>
+              { emoji: "💬", label: "Buyer asks",      sub: '"Which is better, X or Y?"',           bg: "#f7f7f5", border: "#e5e5e5",  text: "#6b6b6b" },
+              { emoji: "🔍", label: "AI searches",     sub: "scans for comparison pages",            bg: "#fffbeb", border: "#fde68a",  text: "#92400e" },
+              { emoji: "📄", label: "Finds your page", sub: "/blog/you-vs-competitor",               bg: "#f3eeff", border: "#d4b8f0",  text: "#5B2D91" },
+              { emoji: "✅", label: "Cites you",       sub: "recommends your brand in the answer",   bg: "#f0fdf4", border: "#bbf7d0",  text: "#166534" },
+            ].map((step, i) => (
+              <div key={i} className="relative flex flex-col items-center text-center gap-1.5 px-2 py-3 rounded-xl border" style={{ background: step.bg, borderColor: step.border }}>
+                <span className="text-[20px]">{step.emoji}</span>
+                <p className="text-[11px] font-bold" style={{ color: step.text }}>{step.label}</p>
+                <p className="text-[10px] leading-snug" style={{ color: step.text, opacity: 0.8 }}>{step.sub}</p>
+                {i < 3 && (
+                  <span className="absolute -right-2.5 top-1/2 -translate-y-1/2 text-[14px] text-[#aaaaaa] z-10 font-bold">›</span>
+                )}
               </div>
             ))}
           </div>
