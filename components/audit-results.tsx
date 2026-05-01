@@ -58,30 +58,30 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
       />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Page header — overview only */}
-        {activePage === "overview" && <div className="shrink-0 flex items-center gap-3 px-6 pt-6 pb-2">
-          {!sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              title="Expand sidebar"
-              className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-black/5 transition-colors shrink-0"
-            >
-              <PanelLeftOpen className="w-4 h-4" />
-            </button>
-          )}
-          <div>
-            <h1 className="text-[20px] font-bold text-[#0a0a0a]">Dashboard</h1>
-            <p className="text-[13px] text-[#6b6b6b] mt-0.5">
-              Monitor how <span className="font-semibold text-[#0a0a0a]">{profile.brand_name}</span> performs across AI models
-            </p>
-          </div>
-        </div>}
-
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
 
           {/* OVERVIEW */}
           {activePage === "overview" && (
-            <div className="p-6 space-y-5">
+            <>
+            {/* Sticky page title */}
+            <div className="sticky top-0 z-10 flex items-center gap-3 px-6 pt-6 pb-3" style={{ background: "#f7f4ff" }}>
+              {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  title="Expand sidebar"
+                  className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-black/5 transition-colors shrink-0"
+                >
+                  <PanelLeftOpen className="w-4 h-4" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-[20px] font-bold text-[#0a0a0a]">Dashboard</h1>
+                <p className="text-[13px] text-[#6b6b6b] mt-0.5">
+                  Monitor how <span className="font-semibold text-[#0a0a0a]">{profile.brand_name}</span> performs across AI models
+                </p>
+              </div>
+            </div>
+            <div className="px-6 pb-6 space-y-5">
 
               {/* Visibility full width */}
               <VisibilityChart
@@ -120,6 +120,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
               />
 
             </div>
+            </>
           )}
 
           {activePage === "prompts" && (
