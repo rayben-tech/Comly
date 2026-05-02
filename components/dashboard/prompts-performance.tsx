@@ -6,9 +6,10 @@ import { Eye, Hash, ChevronUp, ChevronDown, ChevronsUpDown, ArrowUpRight } from 
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS = [
-  "Discovery", "Discovery", "Discovery", "Discovery",
-  "Competitor", "Competitor",
   "Direct Brand", "Direct Brand",
+  "Discovery", "Discovery", "Discovery",
+  "Competitor", "Competitor", "Competitor",
+  "Discovery",
   "Open Ended", "Open Ended",
 ];
 

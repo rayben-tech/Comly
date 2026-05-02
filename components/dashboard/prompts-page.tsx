@@ -6,19 +6,19 @@ import { ChevronDown, ChevronUp, CheckCircle2, XCircle, SlidersHorizontal } from
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS = [
-  "Direct Brand",
-  "Discovery", "Discovery", "Discovery", "Discovery",
-  "Competitor", "Competitor",
-  "Direct Brand",
+  "Direct Brand", "Direct Brand",
+  "Discovery", "Discovery", "Discovery",
+  "Competitor", "Competitor", "Competitor",
+  "Discovery",
   "Open Ended", "Open Ended",
 ];
-
 
 const LABEL_STYLES: Record<string, { pill: string; dot: string; color: string }> = {
   Discovery:      { pill: "bg-blue-50 text-blue-600 border border-blue-100",      dot: "bg-blue-500",    color: "#3b82f6" },
   Competitor:     { pill: "bg-orange-50 text-orange-600 border border-orange-100", dot: "bg-orange-500",  color: "#f97316" },
   "Direct Brand": { pill: "bg-purple-50 text-purple-600 border border-purple-100", dot: "bg-purple-500",  color: "#a855f7" },
   "Open Ended":   { pill: "bg-[#f7f7f5] text-[#6b6b6b] border border-[#e5e5e5]",  dot: "bg-[#aaaaaa]",  color: "#aaaaaa" },
+  Other:          { pill: "bg-[#f7f7f5] text-[#6b6b6b] border border-[#e5e5e5]",  dot: "bg-[#aaaaaa]",  color: "#aaaaaa" },
 };
 
 type Filter = "all" | "mentioned" | "not-mentioned";

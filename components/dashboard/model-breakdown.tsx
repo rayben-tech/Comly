@@ -6,10 +6,11 @@ import { MessageSquareQuote, ChevronDown, ChevronUp, FileText, ChevronRight } fr
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS: Record<number, string> = {
-  0: "Discovery", 1: "Discovery", 2: "Discovery", 3: "Discovery",
-  4: "Competitor", 5: "Competitor",
-  6: "Direct Brand", 7: "Direct Brand",
-  8: "Open Ended", 9: "Open Ended",
+  0: "Direct Brand", 1: "Direct Brand",
+  2: "Discovery", 3: "Discovery", 4: "Discovery",
+  5: "Competitor", 6: "Competitor", 7: "Competitor",
+  8: "Discovery",
+  9: "Open Ended", 10: "Open Ended",
 };
 
 const LABEL_STYLES: Record<string, string> = {
