@@ -93,7 +93,10 @@ function RedirectingAnimation() {
 }
 
 const SESSION_KEY = "comly_audit_session";
-const UNLIMITED_IDS = (process.env.NEXT_PUBLIC_UNLIMITED_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const UNLIMITED_IDS = [
+  "e753721a-b4bb-44f5-84f3-3cd95c58446b",
+  ...(process.env.NEXT_PUBLIC_UNLIMITED_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+];
 
 function withMinDuration<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.all([
