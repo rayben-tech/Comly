@@ -128,8 +128,9 @@ function AuditFlow() {
       }
 
       // Check if user already has a saved audit
+      const isUnlimited = UNLIMITED_IDS.includes(session.user.id);
       const existing = await getUserAudit(session.user.id);
-      if (existing && !UNLIMITED_IDS.includes(session.user.id)) {
+      if (existing && !isUnlimited) {
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
         setIsRedirecting(true);
@@ -141,18 +142,23 @@ function AuditFlow() {
       }
 
       // Fallback: session completed but Supabase save may not have landed yet
-      try {
-        const cached = sessionStorage.getItem(SESSION_KEY);
-        if (cached) {
-          const { profile: p, auditResult: r } = JSON.parse(cached);
-          if (p && r) {
-            setProfile(p);
-            setAuditResult(r);
-            setStep("results");
-            return;
+      // Skip for unlimited users so they always run a fresh audit
+      if (!isUnlimited) {
+        try {
+          const cached = sessionStorage.getItem(SESSION_KEY);
+          if (cached) {
+            const { profile: p, auditResult: r } = JSON.parse(cached);
+            if (p && r) {
+              setProfile(p);
+              setAuditResult(r);
+              setStep("results");
+              return;
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      } else {
+        try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+      }
 
       const paramUrl = searchParams.get("url") || sessionStorage.getItem("comly_pending_url") || "";
       if (paramUrl) {
