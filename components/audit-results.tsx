@@ -79,7 +79,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           <button
             onClick={() => setSidebarOpen(true)}
             title="Expand sidebar"
-            className="hidden lg:flex items-center justify-center absolute top-4 left-4 z-30 w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-black/5 transition-colors shrink-0"
+            className="hidden lg:flex items-center justify-center absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-white border border-[#e5e5e5] shadow-sm text-[#aaaaaa] hover:text-[#5B2D91] hover:border-[#5B2D91]/30 transition-colors shrink-0"
           >
             <PanelLeftOpen className="w-4 h-4" />
           </button>
