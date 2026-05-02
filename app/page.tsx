@@ -344,6 +344,8 @@ function AfterChat({ s }: { s: ChatState }) {
 }
 
 function BeforeAfterChats() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
   const [s, setS] = useState<ChatState>({
     showUser: false, showTyping: false,
     beforeText: "", afterText: "",
@@ -352,6 +354,18 @@ function BeforeAfterChats() {
   });
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setInView(true); },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
     let alive = true;
     const maxLen = Math.max(BEFORE_RESP.length, AFTER_RESP.length);
     const maxItems = Math.max(BEFORE_ITEMS.length, AFTER_ITEMS.length);
@@ -381,10 +395,10 @@ function BeforeAfterChats() {
       }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [inView]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <BeforeChat s={s} />
       <AfterChat s={s} />
     </div>
@@ -1691,7 +1705,7 @@ export default function LandingPage() {
                       <RefreshCw className="w-4 h-4 text-[#0a0a0a]" strokeWidth={1.5} />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-lg font-semibold text-[#0a0a0a]">Weekly automated tracking</h2>
+                      <h2 className="text-lg font-semibold text-[#0a0a0a]">Daily automated tracking</h2>
                       <p className="text-sm text-[#6b6b6b]">Get score alerts by email whenever your AI visibility changes. Never miss a shift.</p>
                     </div>
                   </div>
@@ -1791,7 +1805,7 @@ export default function LandingPage() {
                     <span className="text-emerald-500 shrink-0 mt-0.5">✔</span>{f}
                   </li>
                 ))}
-                {["Weekly automated tracking", "Score history", "Email alerts"].map((f) => (
+                {["Daily automated tracking", "Score history", "Email alerts"].map((f) => (
                   <li key={f} className="flex items-start gap-2 opacity-30">
                     <span className="shrink-0 mt-0.5">✕</span>{f}
                   </li>

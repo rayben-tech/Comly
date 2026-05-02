@@ -3,10 +3,12 @@ import { BrandProfile } from "@/types";
 export function generateAuditPrompts(profile: BrandProfile): string[] {
   const { brand_name, category, target_users, main_use_cases, competitors } = profile;
 
-  const useCase0 = main_use_cases[0] || category;
-  const useCase1 = main_use_cases[1] || useCase0;
-  const comp0 = competitors[0] || "similar tools";
-  const allComps = competitors.slice(0, 3).filter(Boolean);
+  const useCases = main_use_cases ?? [];
+  const comps = competitors ?? [];
+  const useCase0 = useCases[0] || category;
+  const useCase1 = useCases[1] || useCase0;
+  const comp0 = comps[0] || "similar tools";
+  const allComps = comps.slice(0, 3).filter(Boolean);
   const vsString = [brand_name, ...allComps].join(" vs ");
 
   return [

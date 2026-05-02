@@ -366,8 +366,8 @@ function ProfileAnimation({ profile }: { profile: BrandProfile | null }) {
         { Icon: Building2, label: "Brand",       value: profile.brand_name },
         { Icon: Tag,        label: "Category",    value: profile.category },
         { Icon: Users,      label: "Audience",    value: profile.target_users },
-        { Icon: Trophy,     label: "Competitors", value: profile.competitors.slice(0, 3).join(", ") },
-        { Icon: Zap,        label: "Use cases",   value: profile.main_use_cases.slice(0, 2).join(", ") },
+        { Icon: Trophy,     label: "Competitors", value: (profile.competitors ?? []).slice(0, 3).join(", ") || "—" },
+        { Icon: Zap,        label: "Use cases",   value: (profile.main_use_cases ?? []).slice(0, 2).join(", ") || "—" },
       ]
     : [];
 

@@ -45,7 +45,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [generatedFixes, setGeneratedFixes] = useState<Record<string, boolean>>({});
   const markFixGenerated = (key: string) => setGeneratedFixes((prev) => ({ ...prev, [key]: true }));
-  const { score, total_mentions, prompt_results, competitor_rankings } = result;
+  const { score, total_mentions, prompt_results = [], competitor_rankings = [] } = result;
   const domain = profile.url
     ? (() => { try { const u = profile.url.startsWith("http") ? profile.url : "https://" + profile.url; return new URL(u).hostname; } catch { return profile.url; } })()
     : profile.brand_name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "") + ".com";
