@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  LineChart, Line, BarChart, Bar, Cell,
+  ComposedChart, Area, Line, BarChart, Bar, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { PromptResult, CompetitorRanking } from "@/types";
@@ -180,7 +180,13 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
       <div className="px-2 pb-2">
         {chartType === "line" ? (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={seriesData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }}>
+            <ComposedChart data={seriesData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="brandAreaFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#5B2D91" stopOpacity={0.12} />
+                  <stop offset="100%" stopColor="#5B2D91" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke="#f3f4f6" />
               <XAxis
                 dataKey="label"
@@ -203,23 +209,31 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
                 )}
                 cursor={{ stroke: "#e5e5e5", strokeWidth: 1 }}
               />
-              {allBrands.map((brand, i) => {
-                const isBrand = brand === brandName;
-                return (
-                  <Line
-                    key={brand}
-                    type="monotone"
-                    dataKey={brand}
-                    stroke={allColors[i]}
-                    strokeWidth={isBrand ? 3 : 1}
-                    strokeDasharray={isBrand ? undefined : "4 3"}
-                    strokeOpacity={isBrand ? 1 : 0.45}
-                    dot={false}
-                    activeDot={{ r: isBrand ? 5 : 3, fill: allColors[i], stroke: "white", strokeWidth: 2 }}
-                  />
-                );
-              })}
-            </LineChart>
+              {/* Competitor lines — rendered first so brand area sits on top */}
+              {allBrands.slice(1).map((brand, i) => (
+                <Line
+                  key={brand}
+                  type="monotone"
+                  dataKey={brand}
+                  stroke={allColors[i + 1]}
+                  strokeWidth={1}
+                  strokeDasharray="4 3"
+                  strokeOpacity={0.35}
+                  dot={false}
+                  activeDot={{ r: 3, fill: allColors[i + 1], stroke: "white", strokeWidth: 2 }}
+                />
+              ))}
+              {/* Brand area — rendered last so it sits on top */}
+              <Area
+                type="monotone"
+                dataKey={brandName}
+                stroke={allColors[0]}
+                strokeWidth={2.5}
+                fill="url(#brandAreaFill)"
+                dot={false}
+                activeDot={{ r: 5, fill: allColors[0], stroke: "white", strokeWidth: 2 }}
+              />
+            </ComposedChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={200}>

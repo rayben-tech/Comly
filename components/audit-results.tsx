@@ -71,7 +71,17 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
+        {/* Persistent sidebar-open button — visible on all pages when sidebar is closed */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            title="Expand sidebar"
+            className="hidden lg:flex items-center justify-center absolute top-4 left-4 z-30 w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-black/5 transition-colors shrink-0"
+          >
+            <PanelLeftOpen className="w-4 h-4" />
+          </button>
+        )}
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
 
           {/* OVERVIEW */}
@@ -79,15 +89,6 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
             <>
             {/* Sticky page title */}
             <div className="flex items-center gap-3 px-6 pt-6 pb-3">
-              {!sidebarOpen && (
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  title="Expand sidebar"
-                  className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md text-[#aaaaaa] hover:text-[#555] hover:bg-black/5 transition-colors shrink-0"
-                >
-                  <PanelLeftOpen className="w-4 h-4" />
-                </button>
-              )}
               <div>
                 <h1 className="text-[20px] font-bold text-[#0a0a0a]">Dashboard</h1>
                 <p className="text-[13px] text-[#6b6b6b] mt-0.5">

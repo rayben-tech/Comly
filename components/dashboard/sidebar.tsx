@@ -66,6 +66,55 @@ function BrandFavicon({ domain, name, size = 32 }: { domain: string; name: strin
   );
 }
 
+function NavButton({
+  active,
+  locked,
+  onClick,
+  icon: Icon,
+  label,
+  badge,
+  indent = false,
+}: {
+  active: boolean;
+  locked?: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  label: string;
+  badge?: string;
+  indent?: boolean;
+}) {
+  return (
+    <button
+      disabled={locked}
+      onClick={onClick}
+      className={cn(
+        "relative w-full flex items-center gap-2.5 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all overflow-hidden",
+        indent ? "pl-9 pr-3" : "px-3",
+        active
+          ? "bg-[#5B2D91]/[0.07] text-[#5B2D91]"
+          : locked
+          ? "text-[#cccccc] cursor-default"
+          : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
+      )}
+    >
+      {/* Left accent bar */}
+      {active && (
+        <span className="absolute left-0 inset-y-[5px] w-[3px] bg-[#5B2D91] rounded-r-full" />
+      )}
+      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-[#5B2D91]" : "text-[#bbb]")} />
+      <span className="flex-1 truncate">{label}</span>
+      {badge && (
+        <span className={cn(
+          "shrink-0 text-[10px] font-medium",
+          active ? "text-[#5B2D91]/70" : "text-[#c0c0c0]"
+        )}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function Sidebar({ activePage, onNavigate, profile, className, onClose }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const [query, setQuery] = useState("");
@@ -147,14 +196,15 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
               const fixId = id.replace("fixes:", "");
               const badge = isFixesSub
                 ? (FIXES_ITEMS.find((f) => f.id === fixId)?.badge ?? "")
-                : id === "crawlers" ? "Pro" : "";
-              const locked = false;
+                : id === "crawlers" || id === "competitor-playbook" ? "Pro" : "";
               return (
-                <button
+                <NavButton
                   key={id}
-                  disabled={locked}
+                  active={active}
+                  icon={Icon}
+                  label={label}
+                  badge={badge}
                   onClick={() => {
-                    if (locked) return;
                     if (isFixesSub) {
                       handleFixesNavClick(fixId);
                     } else if (id !== "fixes") {
@@ -162,22 +212,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
                     }
                     setQuery("");
                   }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
-                    active
-                      ? "bg-[#5B2D91] text-white shadow-sm"
-                      : locked
-                      ? "text-[#cccccc] cursor-default"
-                      : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-white/80" : "text-[#bbb]"}`} />
-                  {label}
-                  {badge && (
-                    <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600"}`}>
-                      {badge}
-                    </span>
-                  )}
-                </button>
+                />
               );
             }) : (
               <p className="text-[12px] text-[#cccccc] px-3 py-2">No results</p>
@@ -185,36 +220,29 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
           </nav>
         ) : (
           <nav className="space-y-0.5">
-            {/* Regular nav items (no Fixes) */}
-            {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-              const active = activePage === id;
-              return (
-                <button
-                  key={id}
-                  onClick={() => onNavigate(id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
-                    active
-                      ? "bg-[#5B2D91] text-white shadow-sm"
-                      : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-white/80" : "text-[#bbb]"}`} />
-                  {label}
-                </button>
-              );
-            })}
+            {/* Regular nav items */}
+            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+              <NavButton
+                key={id}
+                active={activePage === id}
+                icon={Icon}
+                label={label}
+                onClick={() => onNavigate(id)}
+              />
+            ))}
 
             {/* Fixes accordion */}
             <div>
               <button
                 onClick={() => setFixesOpen((v) => !v)}
-                className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
+                className={cn(
+                  "relative w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all overflow-hidden",
                   isFixesActive
-                    ? "text-[#5B2D91]"
+                    ? "bg-transparent text-[#5B2D91]"
                     : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                }`}
+                )}
               >
-                <ListChecks className={`w-4 h-4 shrink-0 ${isFixesActive ? "text-[#5B2D91]" : "text-[#bbb]"}`} />
+                <ListChecks className={cn("w-4 h-4 shrink-0", isFixesActive ? "text-[#5B2D91]" : "text-[#bbb]")} />
                 <span className="flex-1 text-left">Fixes</span>
                 {fixesOpen
                   ? <ChevronDown className="w-3.5 h-3.5 text-[#aaaaaa]" />
@@ -232,30 +260,17 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
                     className="overflow-hidden"
                   >
                     <div className="mt-0.5 space-y-0.5 pb-1">
-                      {FIXES_ITEMS.map((item) => {
-                        const isActive = activePage === `fixes:${item.id}`;
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => handleFixesNavClick(item.id)}
-                            className={`w-full relative flex items-center justify-between pl-9 pr-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
-                              isActive
-                                ? "text-[#5B2D91] bg-[#5B2D91]/[0.04]"
-                                : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-[#5B2D91] rounded-full" />
-                            )}
-                            <span>{item.label}</span>
-                            {item.badge && (
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isActive ? "bg-[#5B2D91]/10 text-[#5B2D91]" : "bg-amber-50 text-amber-600"}`}>
-                                {item.badge}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+                      {FIXES_ITEMS.map((item) => (
+                        <NavButton
+                          key={item.id}
+                          active={activePage === `fixes:${item.id}`}
+                          icon={ListChecks}
+                          label={item.label}
+                          badge={item.badge}
+                          indent
+                          onClick={() => handleFixesNavClick(item.id)}
+                        />
+                      ))}
                     </div>
                   </motion.div>
                 )}
@@ -263,64 +278,30 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose }:
             </div>
 
             {/* Crawlers — Pro */}
-            {(() => {
-              const active = activePage === "crawlers";
-              return (
-                <button
-                  onClick={() => onNavigate("crawlers")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
-                    active
-                      ? "bg-[#5B2D91] text-white shadow-sm"
-                      : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                  }`}
-                >
-                  <Radio className={`w-4 h-4 shrink-0 ${active ? "text-white/80" : "text-[#bbb]"}`} />
-                  <span className="flex-1 text-left">Crawlers</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600"}`}>
-                    Pro
-                  </span>
-                </button>
-              );
-            })()}
+            <NavButton
+              active={activePage === "crawlers"}
+              icon={Radio}
+              label="Crawlers"
+              badge="Pro"
+              onClick={() => onNavigate("crawlers")}
+            />
 
             {/* Competitor Playbook — Pro */}
-            {(() => {
-              const active = activePage === "competitor-playbook";
-              return (
-                <button
-                  onClick={() => onNavigate("competitor-playbook")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
-                    active
-                      ? "bg-[#5B2D91] text-white shadow-sm"
-                      : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                  }`}
-                >
-                  <Swords className={`w-4 h-4 shrink-0 ${active ? "text-white/80" : "text-[#bbb]"}`} />
-                  <span className="flex-1 text-left">Competitor Playbook</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600"}`}>
-                    Pro
-                  </span>
-                </button>
-              );
-            })()}
+            <NavButton
+              active={activePage === "competitor-playbook"}
+              icon={Swords}
+              label="Competitor Playbook"
+              badge="Pro"
+              onClick={() => onNavigate("competitor-playbook")}
+            />
 
-            {/* Brand — last */}
-            {(() => {
-              const active = activePage === "brand";
-              return (
-                <button
-                  onClick={() => onNavigate("brand")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all ${
-                    active
-                      ? "bg-[#5B2D91] text-white shadow-sm"
-                      : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                  }`}
-                >
-                  <Tag className={`w-4 h-4 shrink-0 ${active ? "text-white/80" : "text-[#bbb]"}`} />
-                  Brand
-                </button>
-              );
-            })()}
+            {/* Brand */}
+            <NavButton
+              active={activePage === "brand"}
+              icon={Tag}
+              label="Brand"
+              onClick={() => onNavigate("brand")}
+            />
           </nav>
         )}
       </div>
