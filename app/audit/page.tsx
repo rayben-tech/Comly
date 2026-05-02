@@ -93,6 +93,7 @@ function RedirectingAnimation() {
 }
 
 const SESSION_KEY = "comly_audit_session";
+const UNLIMITED_IDS = (process.env.NEXT_PUBLIC_UNLIMITED_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
 function withMinDuration<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.all([
@@ -128,7 +129,7 @@ function AuditFlow() {
 
       // Check if user already has a saved audit
       const existing = await getUserAudit(session.user.id);
-      if (existing) {
+      if (existing && !UNLIMITED_IDS.includes(session.user.id)) {
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
         setIsRedirecting(true);
@@ -238,7 +239,7 @@ function AuditFlow() {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const existing = await getUserAudit(session.user.id);
-      if (existing) {
+      if (existing && !UNLIMITED_IDS.includes(session.user.id)) {
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
         setIsRedirecting(true);
