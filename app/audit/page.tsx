@@ -131,6 +131,7 @@ function AuditFlow() {
       }
 
       // Check if user already has a saved audit
+      console.log("[comly] session.user.id:", session.user.id, "| isUnlimited:", UNLIMITED_IDS.includes(session.user.id));
       const isUnlimited = UNLIMITED_IDS.includes(session.user.id);
       const existing = await getUserAudit(session.user.id);
       if (existing && !isUnlimited) {
