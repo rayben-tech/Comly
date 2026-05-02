@@ -43,6 +43,8 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
   const [profile, setProfile] = useState<BrandProfile>(initialProfile);
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [generatedFixes, setGeneratedFixes] = useState<Record<string, boolean>>({});
+  const markFixGenerated = (key: string) => setGeneratedFixes((prev) => ({ ...prev, [key]: true }));
   const { score, total_mentions, prompt_results, competitor_rankings } = result;
   const domain = profile.url
     ? (() => { try { const u = profile.url.startsWith("http") ? profile.url : "https://" + profile.url; return new URL(u).hostname; } catch { return profile.url; } })()
@@ -149,19 +151,19 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
 
           {activePage === "fixes:listicles" && (
-            <ListiclesPage profile={profile} />
+            <ListiclesPage profile={profile} locked={!!generatedFixes["listicles"]} onGenerated={() => markFixGenerated("listicles")} />
           )}
 
           {activePage === "fixes:llms-txt" && (
-            <LlmsTxtPage profile={profile} />
+            <LlmsTxtPage profile={profile} locked={!!generatedFixes["llms-txt"]} onGenerated={() => markFixGenerated("llms-txt")} />
           )}
 
           {activePage === "fixes:comparison" && (
-            <ComparisonPagesPage profile={profile} />
+            <ComparisonPagesPage profile={profile} locked={!!generatedFixes["comparison"]} onGenerated={() => markFixGenerated("comparison")} />
           )}
 
           {activePage === "fixes:hero-rewrite" && (
-            <HeroRewritePage profile={profile} />
+            <HeroRewritePage profile={profile} locked={!!generatedFixes["hero-rewrite"]} onGenerated={() => markFixGenerated("hero-rewrite")} />
           )}
 
           {activePage === "fixes:g2-checklist" && (

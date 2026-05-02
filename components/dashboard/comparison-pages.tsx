@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
   Copy, Download, Check, Loader2, Plus, X,
-  RefreshCw, Trash2, Sparkles, ExternalLink,
+  RefreshCw, Trash2, Sparkles, ExternalLink, Lock,
 } from "lucide-react";
 
 function slugify(s: string): string {
@@ -89,6 +89,8 @@ interface TrackedUrl {
 
 interface Props {
   profile: BrandProfile;
+  locked?: boolean;
+  onGenerated?: () => void;
 }
 
 function matchesCompetitor(url: string, competitor: string): boolean {
@@ -100,7 +102,7 @@ function matchesCompetitor(url: string, competitor: string): boolean {
   return hasVsContext && hasCompName;
 }
 
-export function ComparisonPagesPage({ profile }: Props) {
+export function ComparisonPagesPage({ profile, locked, onGenerated }: Props) {
   const competitors = profile.competitors.slice(0, 5);
   const brandSlug = slugify(profile.brand_name);
 
@@ -184,6 +186,7 @@ export function ComparisonPagesPage({ profile }: Props) {
       if (!res.ok) throw new Error(data.error || "Failed to generate");
       setGeneratedContent(data.content);
       triggerDownload(data.content, title);
+      onGenerated?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
     } finally {
@@ -330,10 +333,24 @@ export function ComparisonPagesPage({ profile }: Props) {
 
       {/* ── SECTION 2: Suggested comparisons ────────────────── */}
       <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
-        <div>
-          <h2 className="text-[16px] font-bold text-[#0a0a0a]">Your suggested comparison pages</h2>
-          <p className="text-[13px] text-[#6b6b6b] mt-0.5">One "vs" page per competitor detected in your audit</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-[16px] font-bold text-[#0a0a0a]">Your suggested comparison pages</h2>
+            <p className="text-[13px] text-[#6b6b6b] mt-0.5">One "vs" page per competitor detected in your audit</p>
+          </div>
+          {locked && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#f7f7f5] border border-[#e5e5e5] shrink-0">
+              <Lock className="w-3 h-3 text-[#aaaaaa]" />
+              <span className="text-[11px] text-[#aaaaaa] font-medium">1 / 1 used</span>
+            </div>
+          )}
         </div>
+        {locked && !generatedContent && (
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#fafaf8] border border-[#e5e5e5] text-[13px] text-[#888]">
+            <Lock className="w-4 h-4 shrink-0 text-[#bbb]" />
+            You&apos;ve already generated a comparison page for this audit. Upgrade to Pro for unlimited generations.
+          </div>
+        )}
 
         {checkState === "checking" && (
           <div className="flex items-center gap-2 text-[13px] text-[#aaaaaa]">
@@ -407,24 +424,26 @@ export function ComparisonPagesPage({ profile }: Props) {
                     {existingUrl ? (
                       <button
                         onClick={() => generate(card.comp, "vs", `Existing comparison page URL: ${existingUrl}`)}
-                        disabled={loading}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-50"
+                        disabled={loading || locked}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-40"
                         style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
                       >
                         {loading && activeKey === card.key
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : locked ? <Lock className="w-3.5 h-3.5" />
                           : <Sparkles className="w-3.5 h-3.5" />}
                         Refine →
                       </button>
                     ) : (
                       <button
                         onClick={() => generate(card.comp, "vs")}
-                        disabled={loading}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-50"
+                        disabled={loading || locked}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-40"
                         style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
                       >
                         {loading && activeKey === card.key
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : locked ? <Lock className="w-3.5 h-3.5" />
                           : null}
                         Generate →
                       </button>
@@ -439,8 +458,9 @@ export function ComparisonPagesPage({ profile }: Props) {
         {/* Custom comparison */}
         {!showCustomInput ? (
           <button
-            onClick={() => setShowCustomInput(true)}
-            className="flex items-center gap-2 text-[13px] font-semibold text-[#5B2D91] hover:text-[#4a2478] transition-colors"
+            onClick={() => !locked && setShowCustomInput(true)}
+            disabled={locked}
+            className="flex items-center gap-2 text-[13px] font-semibold text-[#5B2D91] hover:text-[#4a2478] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />
             Create custom comparison
@@ -463,7 +483,7 @@ export function ComparisonPagesPage({ profile }: Props) {
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && customInput.trim()) {
+                  if (e.key === "Enter" && customInput.trim() && !locked) {
                     generate(customInput.trim(), "vs");
                     setShowCustomInput(false);
                     setCustomInput("");
@@ -474,13 +494,13 @@ export function ComparisonPagesPage({ profile }: Props) {
               />
               <button
                 onClick={() => {
-                  if (customInput.trim()) {
+                  if (customInput.trim() && !locked) {
                     generate(customInput.trim(), "vs");
                     setShowCustomInput(false);
                     setCustomInput("");
                   }
                 }}
-                disabled={!customInput.trim() || loading}
+                disabled={!customInput.trim() || loading || locked}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-[13px] font-semibold disabled:opacity-40 transition-opacity"
                 style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
               >

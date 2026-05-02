@@ -47,7 +47,7 @@ function exportCSV(brandName: string, score: number, promptResults: PromptResult
 }
 
 export function TopBar({ brandName, domain, score, totalMentions, promptResults, onReset, onRerun, sidebarOpen = true, onToggleSidebar }: TopBarProps) {
-  const total = promptResults.length || 10;
+  const total = promptResults.length || 11;
   const visibilityPct = Math.round((totalMentions / total) * 100);
   const scoreColor = score >= 60 ? "#10b981" : score >= 30 ? "#f59e0b" : "#ef4444";
 

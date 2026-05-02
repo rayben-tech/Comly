@@ -79,7 +79,7 @@ function domainFromUrl(url: string): string {
 }
 
 export function CompetitorsTable({ competitorRankings, promptResults, brandName, brandUrl, totalMentions, specifiedCompetitors }: Props) {
-  const totalPrompts = promptResults.length || 10;
+  const totalPrompts = promptResults.length || 11;
 
   const mentionedWithPos = promptResults.filter((p) => p.mentioned && p.position !== null);
   const brandAvgPos = mentionedWithPos.length > 0

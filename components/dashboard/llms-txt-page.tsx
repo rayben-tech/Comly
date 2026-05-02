@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
-  Copy, Download, Check, Loader2, Plus, X, CheckCircle2, Sparkles, ExternalLink,
+  Copy, Download, Check, Loader2, Plus, X, CheckCircle2, Sparkles, ExternalLink, Lock,
 } from "lucide-react";
 
 function ChatGPTLogo() {
@@ -205,9 +205,11 @@ function CodeBlock({ content }: { content: string }) {
 
 interface Props {
   profile: BrandProfile;
+  locked?: boolean;
+  onGenerated?: () => void;
 }
 
-export function LlmsTxtPage({ profile }: Props) {
+export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
   const defaultFeatures = profile.differentiators
     ? profile.differentiators.split(/[,;]/).map((s) => s.trim()).filter(Boolean).slice(0, 5)
     : [];
@@ -295,6 +297,7 @@ export function LlmsTxtPage({ profile }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate");
       setGeneratedContent(data.content);
+      onGenerated?.();
       triggerDownload(data.content);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
@@ -553,10 +556,24 @@ export function LlmsTxtPage({ profile }: Props) {
 
           {/* Generator form */}
           <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
-            <div>
-              <h2 className="text-[16px] font-bold text-[#0a0a0a]">Generate your llms.txt</h2>
-              <p className="text-[13px] text-[#6b6b6b] mt-0.5">Customized for your brand in one click</p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[16px] font-bold text-[#0a0a0a]">Generate your llms.txt</h2>
+                <p className="text-[13px] text-[#6b6b6b] mt-0.5">Customized for your brand in one click</p>
+              </div>
+              {locked && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#f7f7f5] border border-[#e5e5e5] shrink-0">
+                  <Lock className="w-3 h-3 text-[#aaaaaa]" />
+                  <span className="text-[11px] text-[#aaaaaa] font-medium">1 / 1 used</span>
+                </div>
+              )}
             </div>
+            {locked && !generatedContent && (
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#fafaf8] border border-[#e5e5e5] text-[13px] text-[#888]">
+                <Lock className="w-4 h-4 shrink-0 text-[#bbb]" />
+                You&apos;ve already generated an llms.txt for this audit. Upgrade to Pro for unlimited generations.
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -627,14 +644,19 @@ export function LlmsTxtPage({ profile }: Props) {
             <div>
               <button
                 onClick={() => generate()}
-                disabled={loading || !brandName.trim()}
-                className="w-full h-11 rounded-xl text-white text-[14px] font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity"
+                disabled={loading || !brandName.trim() || locked}
+                className="w-full h-11 rounded-xl text-white text-[14px] font-semibold flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity"
                 style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Generating your llms.txt...
+                  </>
+                ) : locked ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Generation limit reached
                   </>
                 ) : (
                   "Generate & Download llms.txt →"

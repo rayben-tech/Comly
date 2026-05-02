@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
 import {
   Copy, Check, Loader2, ChevronRight, RefreshCw,
-  Download, AlertCircle, ChevronLeft, ChevronDown,
+  Download, AlertCircle, ChevronLeft, ChevronDown, Lock,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -336,9 +336,11 @@ function BrowserMockup({
 
 interface Props {
   profile: BrandProfile;
+  locked?: boolean;
+  onGenerated?: () => void;
 }
 
-export function HeroRewritePage({ profile }: Props) {
+export function HeroRewritePage({ profile, locked, onGenerated }: Props) {
   const domain = profile.url
     ? (() => { try { const u = profile.url.startsWith("http") ? profile.url : "https://" + profile.url; return new URL(u).hostname; } catch { return profile.url; } })()
     : "";
@@ -449,6 +451,7 @@ export function HeroRewritePage({ profile }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to rewrite");
       setRewrite(data);
+      onGenerated?.();
     } catch {
       setRewriteError("Something went wrong. Try rewriting again.");
     } finally {
@@ -762,10 +765,11 @@ export function HeroRewritePage({ profile }: Props) {
                 <div className="pt-4 border-t border-[#f0f0f0] space-y-2">
                   <button
                     onClick={handleRewrite}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-[14px]"
+                    disabled={locked}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
                   >
-                    Generate AI-Optimized Hero <ChevronRight className="w-4 h-4" />
+                    {locked ? <><Lock className="w-4 h-4" /> Generation limit reached</> : <>Generate AI-Optimized Hero <ChevronRight className="w-4 h-4" /></>}
                   </button>
                   <p className="text-[12px] text-[#aaaaaa] text-center">
                     Rewrite your hero copy based on the analysis above
@@ -809,7 +813,8 @@ export function HeroRewritePage({ profile }: Props) {
                 <div className="flex gap-2">
                   <button
                     onClick={handleRewrite}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-semibold text-[13px]"
+                    disabled={locked}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-semibold text-[13px] disabled:opacity-40"
                     style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
                   >
                     <RefreshCw className="w-3.5 h-3.5" /> Try again
@@ -884,10 +889,11 @@ export function HeroRewritePage({ profile }: Props) {
                   </button>
                   <button
                     onClick={handleRewrite}
-                    disabled={rewriting}
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[#e5e5e5] text-[13px] font-semibold text-[#666] hover:bg-[#f7f7f5] transition-colors disabled:opacity-50"
+                    disabled={rewriting || locked}
+                    title={locked ? "1 generation used — upgrade to Pro for unlimited" : undefined}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[#e5e5e5] text-[13px] font-semibold text-[#666] hover:bg-[#f7f7f5] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    {locked ? <Lock className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
                     Regenerate
                   </button>
                 </div>

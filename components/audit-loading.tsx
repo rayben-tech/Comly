@@ -486,14 +486,14 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
         `What is ${profile.brand_name} used for?`,
         `Best ${profile.category.toLowerCase()} for ${profile.target_users.split(",")[0]?.trim() ?? "teams"}`,
       ]
-    : Array.from({ length: 10 }, (_, i) => `Generating prompt ${i + 1}...`);
+    : Array.from({ length: 11 }, (_, i) => `Generating prompt ${i + 1}...`);
 
   useEffect(() => {
     let count = 0;
     const iv = setInterval(() => {
       count++;
       setVisibleCount(count);
-      if (count >= 10) {
+      if (count >= 11) {
         clearInterval(iv);
         setTimeout(() => setDone(true), 400);
       }
@@ -519,12 +519,12 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
               animate={{ opacity: 1, scale: 1 }}
               className="text-sm font-bold text-[#5B2D91]"
             >
-              10 prompts ready ✓
+              11 prompts ready ✓
             </motion.p>
           ) : (
             <motion.div key="loading" exit={{ opacity: 0 }} className="flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 text-[#5B2D91] animate-spin" />
-              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/10 targeted prompts...</p>
+              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/11 targeted prompts...</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -563,20 +563,20 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
   useEffect(() => {
     let count = 0;
     const fire = () => {
-      if (count >= 10) { setAllDone(true); return; }
+      if (count >= 11) { setAllDone(true); return; }
       count++;
       setFiredCount(count);
       setShowResponse(true);
       setTimeout(() => setShowResponse(false), 700);
-      if (count < 10) setTimeout(fire, 950);
+      if (count < 11) setTimeout(fire, 950);
       else setTimeout(() => setAllDone(true), 900);
     };
     const t = setTimeout(fire, 400);
     return () => clearTimeout(t);
   }, []);
 
-  const stackSize = Math.max(0, 10 - firedCount);
-  const progress = (firedCount / 10) * 100;
+  const stackSize = Math.max(0, 11 - firedCount);
+  const progress = (firedCount / 11) * 100;
 
   return (
     <motion.div
@@ -600,7 +600,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
                 opacity: 1 - i * 0.18,
               }}
             >
-              Prompt {firedCount + i + 1} of 10
+              Prompt {firedCount + i + 1} of 11
             </div>
           ))}
           {stackSize === 0 && (
