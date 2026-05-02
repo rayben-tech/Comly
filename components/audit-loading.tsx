@@ -478,11 +478,11 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
         `What are the best ${profile.category.toLowerCase()} tools?`,
         `Compare top ${profile.category.toLowerCase()} solutions`,
         `Best tools for ${profile.target_users.split(",")[0]?.trim() ?? "teams"}`,
-        `${profile.competitors[0] ?? "top tool"} alternatives`,
-        `Is ${profile.brand_name} good for ${profile.main_use_cases[0]?.toLowerCase() ?? "teams"}?`,
-        `${profile.brand_name} vs ${profile.competitors[1] ?? "competition"}`,
+        `${(profile.competitors ?? [])[0] ?? "top tool"} alternatives`,
+        `Is ${profile.brand_name} good for ${(profile.main_use_cases ?? [])[0]?.toLowerCase() ?? "teams"}?`,
+        `${profile.brand_name} vs ${(profile.competitors ?? [])[1] ?? "competition"}`,
         `Top ${profile.category.toLowerCase()} recommendations 2024`,
-        `${profile.main_use_cases[1] ?? "workflow"} tools for startups`,
+        `${(profile.main_use_cases ?? [])[1] ?? "workflow"} tools for startups`,
         `What is ${profile.brand_name} used for?`,
         `Best ${profile.category.toLowerCase()} for ${profile.target_users.split(",")[0]?.trim() ?? "teams"}`,
       ]
@@ -625,7 +625,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
         {/* Right — current model + response */}
         <div className="flex-1 flex flex-col items-center gap-2">
           {(() => {
-            const model = PROMPT_MODELS[Math.max(0, firedCount - 1)];
+            const model = PROMPT_MODELS[Math.max(0, firedCount - 1)] ?? PROMPT_MODELS[0];
             return (
               <motion.div
                 key={model.name}
