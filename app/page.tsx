@@ -1446,22 +1446,23 @@ export default function LandingPage() {
   const [navVisible, setNavVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [auditLoading, setAuditLoading] = useState(false);
   const router = useRouter();
+
+  const startCheckout = async (userEmail?: string, userName?: string) => {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userEmail: userEmail ?? "", userName: userName ?? "" }),
+    });
+    const data = await res.json() as { url?: string };
+    if (data.url) window.location.href = data.url;
+  };
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json() as { url?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setCheckoutLoading(false);
-      }
+      await startCheckout();
     } catch {
       setCheckoutLoading(false);
     }
@@ -1498,11 +1499,27 @@ export default function LandingPage() {
     let u = url.trim();
     if (!u.startsWith("http://") && !u.startsWith("https://")) u = "https://" + u;
     try { sessionStorage.setItem("comly_pending_url", u); } catch {}
+
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      router.push(`/audit?url=${encodeURIComponent(u)}`);
-    } else {
+    if (!session) {
       router.push(`/auth?url=${encodeURIComponent(u)}`);
+      return;
+    }
+
+    setAuditLoading(true);
+    try {
+      const res = await fetch("/api/subscription/check", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const { isPaid } = await res.json() as { isPaid: boolean };
+
+      if (isPaid) {
+        router.push(`/audit?url=${encodeURIComponent(u)}`);
+      } else {
+        await startCheckout(session.user.email, session.user.user_metadata?.full_name as string);
+      }
+    } catch {
+      setAuditLoading(false);
     }
   }
 
@@ -1580,10 +1597,10 @@ export default function LandingPage() {
               </div>
               <button
                 onClick={handleAudit}
-                disabled={!url.trim()}
+                disabled={!url.trim() || auditLoading}
                 className="shrink-0 bg-[#5B2D91] text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-[#4a2478] transition-all hover:scale-[1.02] disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5"
               >
-                Run audit <ArrowRight className="w-3.5 h-3.5" />
+                {auditLoading ? "Checking…" : <><span>Run audit</span><ArrowRight className="w-3.5 h-3.5" /></>}
               </button>
             </div>
             <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
