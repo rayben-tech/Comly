@@ -8,19 +8,18 @@ import type {
 } from "dodopayments/resources/webhooks/webhooks";
 import { createClient } from "@supabase/supabase-js";
 
-const dodo = new DodoPayments({
-  bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-  webhookKey: process.env.DODO_WEBHOOK_SECRET!,
-  environment: "live_mode",
-});
-
-// Use service role key if available so webhook can bypass RLS
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function POST(req: NextRequest) {
+  const dodo = new DodoPayments({
+    bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
+    webhookKey: process.env.DODO_WEBHOOK_SECRET!,
+    environment: "live_mode",
+  });
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   const body = await req.text();
 
   let event: ReturnType<typeof dodo.webhooks.unwrap>;

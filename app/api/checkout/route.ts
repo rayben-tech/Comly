@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import DodoPayments from "dodopayments";
 
-const dodo = new DodoPayments({
-  bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-  environment: "live_mode",
-});
-
 export async function POST(req: NextRequest) {
+  const dodo = new DodoPayments({
+    bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
+    environment: "live_mode",
+  });
+
   try {
     const { userEmail, userName } = await req.json() as { userEmail?: string; userName?: string };
 
