@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import DodoPayments from "dodopayments";
+
+export const dynamic = "force-dynamic";
 import type {
   SubscriptionActiveWebhookEvent,
   SubscriptionCancelledWebhookEvent,
