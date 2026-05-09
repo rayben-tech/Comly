@@ -81,10 +81,12 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) {
+      console.warn("[quora] FIRECRAWL_API_KEY is not set");
       return NextResponse.json({ threads: [] });
     }
 
     const queries = await getQueries(profile);
+    console.log("[quora] queries:", queries);
     if (queries.length === 0) return NextResponse.json({ threads: [] });
 
     const allResults: Array<{ title: string; url: string }> = [];
@@ -92,8 +94,10 @@ export async function POST(req: NextRequest) {
     for (const query of queries) {
       try {
         const results = await searchQuora(query, apiKey);
+        console.log(`[quora] "${query}" → ${results.length} results`);
         allResults.push(...results);
-      } catch {
+      } catch (e) {
+        console.error(`[quora] exception for "${query}":`, e);
         continue;
       }
     }

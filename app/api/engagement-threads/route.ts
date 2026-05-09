@@ -57,14 +57,36 @@ export async function POST(req: NextRequest) {
 
     for (const query of queries) {
       try {
-        const url = `https://www.reddit.com/r/${subredditStr}/search.json?q=${encodeURIComponent(query)}&sort=relevance&t=year&limit=15&restrict_sr=1`;
+        // Search all of Reddit — subreddits used as soft context in query
+        const subredditHint = subreddits.slice(0, 3).map(s => `subreddit:${s}`).join(" OR ");
+        const fullQuery = `(${subredditHint}) ${query}`;
+        const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(fullQuery)}&sort=relevance&t=year&limit=15`;
         const res = await fetch(url, {
-          headers: { "User-Agent": "Comly/1.0 (contact@comly.app)" },
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; Comly/1.0; +https://comly.app)",
+            "Accept": "application/json",
+          },
         });
-        if (!res.ok) continue;
+        console.log(`[reddit] ${res.status} for query: ${query}`);
+        if (!res.ok) {
+          console.warn(`[reddit] failed body:`, await res.text().catch(() => ""));
+          // Fallback: try without subreddit filter
+          const fallbackUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=relevance&t=year&limit=10`;
+          const fallback = await fetch(fallbackUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (compatible; Comly/1.0; +https://comly.app)",
+              "Accept": "application/json",
+            },
+          });
+          if (!fallback.ok) continue;
+          const fd = await fallback.json();
+          allPosts.push(...(fd?.data?.children ?? []));
+          continue;
+        }
         const data = await res.json();
         allPosts.push(...(data?.data?.children ?? []));
-      } catch {
+      } catch (e) {
+        console.error(`[reddit] exception:`, e);
         continue;
       }
     }
