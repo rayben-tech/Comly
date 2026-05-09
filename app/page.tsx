@@ -1995,7 +1995,7 @@ export default function LandingPage() {
                     onClick={() => heroInputRef.current?.focus()}
                     className="w-full rounded-2xl bg-white py-4 font-extrabold text-[#5B2D91] hover:bg-white/90 active:scale-[0.98] transition-all text-[15px] shadow-xl shadow-black/30"
                   >
-                    Start 7-day Free Trial →
+                    Get started →
                   </button>
                   <div className="flex items-center justify-center gap-3 text-white/30 text-[11px]">
                     <span>✓ No credit card</span>
@@ -2107,7 +2107,7 @@ export default function LandingPage() {
               onClick={scrollToAudit}
               className="inline-flex items-center gap-2 bg-white text-[#0a0a0a] text-sm font-bold px-7 py-3.5 rounded-full hover:bg-gray-100 transition-all hover:scale-[1.02]"
             >
-              Run your free audit <ArrowRight className="w-4 h-4" />
+              Run your audit <ArrowRight className="w-4 h-4" />
             </button>
             <p className="text-[#c9a8e8] text-xs mt-3">Results in 60 seconds</p>
           </div>
