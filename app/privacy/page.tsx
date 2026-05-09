@@ -3,9 +3,20 @@ import Link from "next/link";
 function ComlyLogo() {
   return (
     <svg width="26" height="26" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M50 5L90 27.5V72.5L50 95L10 72.5V27.5L50 5Z" fill="#5B2D91" />
-      <path d="M50 25L72 37.5V62.5L50 75L28 62.5V37.5L50 25Z" fill="white" fillOpacity="0.2" />
-      <circle cx="50" cy="50" r="12" fill="white" />
+      <path
+        d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z"
+        fill="#1a1a2e"
+      />
+      <path
+        d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z"
+        fill="url(#swooshGradP)"
+      />
+      <defs>
+        <linearGradient id="swooshGradP" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#5b21b6" />
+          <stop offset="100%" stopColor="#a855f7" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
