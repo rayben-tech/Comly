@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { PromptResult, BrandProfile } from "@/types";
-import { ChevronDown, ChevronUp, CheckCircle2, XCircle, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, CheckCircle2, XCircle, SlidersHorizontal } from "lucide-react";
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS = [
@@ -208,13 +209,25 @@ export function PromptsPage({ promptResults, profile }: Props) {
                 </div>
 
                 {/* Chevron */}
-                <div className="text-[#aaaaaa] shrink-0 mt-0.5">
-                  {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </div>
+                <motion.div
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                  className="text-[#aaaaaa] shrink-0 mt-0.5"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </motion.div>
               </button>
 
               {/* Expanded panel */}
+              <AnimatePresence initial={false}>
               {isOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.24, ease: [0.4, 0, 0.2, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
                 <div className="border-t border-[#f0f0f0] bg-[#fafafa]">
                   {/* Model header */}
                   {(() => {
@@ -267,7 +280,9 @@ export function PromptsPage({ promptResults, profile }: Props) {
                     </div>
                   )}
                 </div>
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
           );
         })}
