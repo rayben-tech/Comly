@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -2131,16 +2132,9 @@ export default function LandingPage() {
             <div>
               <p className="text-xs font-bold text-[#0a0a0a] uppercase tracking-wider mb-4">Company</p>
               <div className="space-y-2.5">
-                {([
-                  ["About",   "#"],
-                  ["Contact", "mailto:support@comly.ai"],
-                  ["Privacy", "/privacy"],
-                  ["Terms",   "/terms"],
-                ] as [string, string][]).map(([l, h]) => (
-                  <a key={l} href={h} className="block text-sm text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
-                    {l}
-                  </a>
-                ))}
+                <a href="#" className="block text-sm text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">About</a>
+                <Link href="/privacy" className="block text-sm text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">Privacy</Link>
+                <Link href="/terms" className="block text-sm text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">Terms</Link>
               </div>
             </div>
 
