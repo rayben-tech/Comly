@@ -33,4 +33,4 @@ export interface AuditResult {
   competitor_rankings: CompetitorRanking[];
 }
 
-export type AuditStep = "input" | "scraping" | "profile" | "auditing" | "results";
+export type AuditStep = "input" | "scraping" | "profile" | "review-prompts" | "auditing" | "results";

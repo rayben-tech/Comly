@@ -108,15 +108,25 @@ async function callGemini(prompt: string): Promise<{ results: RawResult[] }> {
 
 export async function POST(req: NextRequest) {
   try {
-    const { profile }: { profile: BrandProfile } = await req.json();
+    const { profile, customPrompts }: { profile: BrandProfile; customPrompts?: string[] } = await req.json();
 
     if (!profile?.brand_name) {
       return NextResponse.json({ error: "Brand profile is required" }, { status: 400 });
     }
 
-    const allPrompts = generateAuditPrompts(profile);
-    const openaiPrompts = OPENAI_INDICES.map((i) => allPrompts[i]);
-    const geminiPrompts = GEMINI_INDICES.map((i) => allPrompts[i]);
+    const usingCustom = Array.isArray(customPrompts) && customPrompts.length > 0;
+    let openaiPrompts: string[];
+    let geminiPrompts: string[];
+
+    if (usingCustom) {
+      const splitIdx = Math.ceil(customPrompts!.length * 0.6);
+      openaiPrompts = customPrompts!.slice(0, splitIdx);
+      geminiPrompts = customPrompts!.slice(splitIdx);
+    } else {
+      const allPrompts = generateAuditPrompts(profile);
+      openaiPrompts = OPENAI_INDICES.map((i) => allPrompts[i]);
+      geminiPrompts = GEMINI_INDICES.map((i) => allPrompts[i]);
+    }
 
     const systemPrompt = buildSystemPrompt(profile.brand_name);
 
@@ -163,12 +173,19 @@ export async function POST(req: NextRequest) {
 
     if (!Array.isArray(geminiParsed.results)) throw new Error("Invalid Gemini response format");
 
-    // Reassemble results back into the original interleaved order
     const openaiResults = parseResults(openaiParsed, profile.brand_name);
     const geminiResults = parseResults(geminiParsed, profile.brand_name);
-    const promptResults: PromptResult[] = new Array(25);
-    OPENAI_INDICES.forEach((idx, j) => { promptResults[idx] = openaiResults[j]; });
-    GEMINI_INDICES.forEach((idx, j) => { promptResults[idx] = geminiResults[j]; });
+
+    let promptResults: PromptResult[];
+    if (usingCustom) {
+      // Custom prompts: openAI batch first, then Gemini — flat order
+      promptResults = [...openaiResults, ...geminiResults];
+    } else {
+      // Reassemble results back into the original interleaved order
+      promptResults = new Array(25);
+      OPENAI_INDICES.forEach((idx, j) => { promptResults[idx] = openaiResults[j]; });
+      GEMINI_INDICES.forEach((idx, j) => { promptResults[idx] = geminiResults[j]; });
+    }
 
     const score = calculateScore(promptResults);
     const competitor_rankings = calculateCompetitorRankings(promptResults, profile.brand_name);

@@ -170,7 +170,7 @@ function ScrapingAnimation({ url, heroData }: { url: string; heroData?: { title:
       className="w-full"
     >
       {/* Browser mockup */}
-      <div className="rounded-xl border border-[#c8c8c8] shadow-2xl overflow-hidden">
+      <div className="rounded-xl border border-[#c8c8c8] overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(91,45,145,0.28), 0 6px 20px rgba(0,0,0,0.10)" }}>
         {/* Chrome bar */}
         <div className="bg-[#e8e8e8] border-b border-[#d0d0d0] px-4 py-2.5 flex items-center gap-2.5">
           {/* Traffic lights */}
@@ -412,7 +412,7 @@ function ProfileAnimation({ profile }: { profile: BrandProfile | null }) {
         className="rounded-xl p-6 bg-white border"
         style={{
           borderColor: "rgba(91,45,145,0.3)",
-          boxShadow: "0 0 0 4px rgba(91,45,145,0.05), 0 8px 40px rgba(91,45,145,0.08)",
+          boxShadow: "0 0 0 4px rgba(91,45,145,0.08), 0 16px 50px rgba(91,45,145,0.22), 0 4px 16px rgba(0,0,0,0.08)",
         }}
       >
         {!profile ? (
@@ -485,19 +485,34 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
         `${(profile.main_use_cases ?? [])[1] ?? "workflow"} tools for startups`,
         `What is ${profile.brand_name} used for?`,
         `Best ${profile.category.toLowerCase()} for ${profile.target_users.split(",")[0]?.trim() ?? "teams"}`,
+        `${profile.brand_name} review and comparison`,
+        `${(profile.competitors ?? [])[2] ?? "top tool"} vs ${profile.brand_name}`,
+        `Top tools for ${(profile.main_use_cases ?? [])[0]?.toLowerCase() ?? "productivity"}`,
+        `${profile.brand_name} pricing and plans`,
+        `Is ${profile.brand_name} worth it?`,
+        `Best ${profile.category.toLowerCase()} for small businesses`,
+        `${profile.brand_name} features overview`,
+        `${profile.category} software comparison 2025`,
+        `What do experts recommend for ${profile.category.toLowerCase()}?`,
+        `How does ${profile.brand_name} compare to alternatives?`,
+        `${profile.brand_name} use cases and examples`,
+        `Top-rated ${profile.category.toLowerCase()} tools this year`,
+        `${profile.brand_name} for ${profile.target_users.split(",")[1]?.trim() ?? "enterprises"}`,
+        `Best free ${profile.category.toLowerCase()} tools`,
+        `${profile.category} tools with best AI features`,
       ]
-    : Array.from({ length: 11 }, (_, i) => `Generating prompt ${i + 1}...`);
+    : Array.from({ length: 25 }, (_, i) => `Generating prompt ${i + 1}...`);
 
   useEffect(() => {
     let count = 0;
     const iv = setInterval(() => {
       count++;
       setVisibleCount(count);
-      if (count >= 11) {
+      if (count >= 25) {
         clearInterval(iv);
         setTimeout(() => setDone(true), 400);
       }
-    }, 320);
+    }, 150);
     return () => clearInterval(iv);
   }, []);
 
@@ -519,12 +534,12 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
               animate={{ opacity: 1, scale: 1 }}
               className="text-sm font-bold text-[#5B2D91]"
             >
-              11 prompts ready ✓
+              25 prompts ready ✓
             </motion.p>
           ) : (
             <motion.div key="loading" exit={{ opacity: 0 }} className="flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 text-[#5B2D91] animate-spin" />
-              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/11 targeted prompts...</p>
+              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/25 targeted prompts...</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -538,7 +553,7 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
-                className="bg-white border border-[#e5e5e5] rounded-lg p-3 flex items-start gap-2.5 shadow-sm"
+                className="bg-white border border-[#e5e5e5] rounded-lg p-3 flex items-start gap-2.5" style={{ boxShadow: "0 8px 28px rgba(91,45,145,0.16), 0 2px 8px rgba(0,0,0,0.07)" }}
               >
                 <span className="w-5 h-5 rounded-full bg-[#5B2D91] text-white text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                   {i + 1}
@@ -563,20 +578,20 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
   useEffect(() => {
     let count = 0;
     const fire = () => {
-      if (count >= 11) { setAllDone(true); return; }
+      if (count >= 25) { setAllDone(true); return; }
       count++;
       setFiredCount(count);
       setShowResponse(true);
       setTimeout(() => setShowResponse(false), 700);
-      if (count < 11) setTimeout(fire, 950);
+      if (count < 25) setTimeout(fire, 400);
       else setTimeout(() => setAllDone(true), 900);
     };
     const t = setTimeout(fire, 400);
     return () => clearTimeout(t);
   }, []);
 
-  const stackSize = Math.max(0, 11 - firedCount);
-  const progress = (firedCount / 11) * 100;
+  const stackSize = Math.max(0, 25 - firedCount);
+  const progress = (firedCount / 25) * 100;
 
   return (
     <motion.div
@@ -593,14 +608,15 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
           {Array.from({ length: Math.min(stackSize, 5) }).map((_, i) => (
             <div
               key={`${firedCount}-${i}`}
-              className="absolute left-0 right-0 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2.5 text-[11px] text-[#6b7280] shadow-sm"
+              className="absolute left-0 right-0 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2.5 text-[11px] text-[#6b7280]"
               style={{
                 transform: `translateY(${i * -5}px) scale(${1 - i * 0.025})`,
                 zIndex: 5 - i,
                 opacity: 1 - i * 0.18,
+                boxShadow: "0 8px 28px rgba(91,45,145,0.18), 0 2px 8px rgba(0,0,0,0.07)",
               }}
             >
-              Prompt {firedCount + i + 1} of 11
+              Prompt {firedCount + i + 1} of 25
             </div>
           ))}
           {stackSize === 0 && (
@@ -631,7 +647,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
                 key={model.name}
                 animate={firedCount > 0 ? { borderColor: ["#e5e5e5", "#5B2D91", "#e5e5e5"] } : {}}
                 transition={{ duration: 0.4 }}
-                className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-3 w-full text-center"
+                className="bg-white border border-[#e5e5e5] rounded-xl p-3 w-full text-center" style={{ boxShadow: "0 10px 36px rgba(91,45,145,0.22), 0 3px 10px rgba(0,0,0,0.08)" }}
               >
                 <motion.img
                   key={model.domain}
@@ -678,7 +694,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
       {/* Progress */}
       <div className="mt-4 space-y-1.5">
         <div className="flex justify-between text-[11px] text-[#6b7280]">
-          <span>Firing prompt {Math.min(firedCount + 1, 10)} / 10</span>
+          <span>Firing prompt {Math.min(firedCount + 1, 25)} / 25</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="h-1.5 bg-[#f3eeff] rounded-full overflow-hidden">
@@ -788,10 +804,10 @@ function StepIndicator({ phase }: { phase: LoadingPhase }) {
 
 export function AuditLoadingView({ phase, url, profile, heroData, onReset }: AuditLoadingProps) {
   return (
-    <div className="min-h-screen bg-[#f7f7f5] flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-[#ddd5f5] flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-[820px]">
         {/* Frame */}
-        <div className="bg-white rounded-2xl border border-[#e5e5e5] shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden" style={{ boxShadow: "0 25px 60px rgba(91,45,145,0.28), 0 8px 24px rgba(91,45,145,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}>
           {/* Frame header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f0f0] bg-[#fafafa]">
             <StepIndicator phase={phase} />

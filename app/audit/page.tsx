@@ -7,7 +7,9 @@ import { BrandProfile, AuditResult, AuditStep } from "@/types";
 import { BrandProfileEditor } from "@/components/brand-profile-editor";
 import { AuditResults } from "@/components/audit-results";
 import { AuditLoadingView, LoadingPhase } from "@/components/audit-loading";
+import { PromptReview } from "@/components/prompt-review";
 import { supabase, getUserAudit, saveAuditForUser } from "@/lib/supabase";
+import { generateAuditPrompts } from "@/lib/generate-prompts";
 
 function RedirectingAnimation() {
   const [progress, setProgress] = useState(0);
@@ -118,6 +120,7 @@ function AuditFlow() {
   const [error, setError] = useState("");
   const [isAuditing, setIsAuditing] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [reviewPrompts, setReviewPrompts] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const firingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -261,51 +264,59 @@ function AuditFlow() {
     }
 
     setProfile(confirmedProfile);
-    setIsAuditing(true);
     setLoadingPhase("prompts");
     setStep("auditing");
 
-    // Switch to firing animation after showing prompts
-    firingTimerRef.current = setTimeout(() => setLoadingPhase("firing"), 3800);
+    // After prompts animation plays, transition to the review step
+    firingTimerRef.current = setTimeout(() => {
+      const prompts = generateAuditPrompts(confirmedProfile);
+      setReviewPrompts(prompts);
+      setLoadingPhase(null);
+      setStep("review-prompts");
+    }, 3800);
+  }
 
-    // Min total: 3800ms prompts + 10400ms firing animations = 14200ms
-    const MIN_AUDIT_MS = 14200;
+  async function handleStartAudit(customPrompts: string[]) {
+    if (!profile) return;
+    setLoadingPhase("firing");
+    setStep("auditing");
+    setIsAuditing(true);
+
+    // Min firing time: 25 prompts × 400ms + buffers ≈ 11s
+    const MIN_FIRING_MS = 11000;
 
     try {
       const auditData = await withMinDuration(
         fetch("/api/run-audit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ profile: confirmedProfile }),
+          body: JSON.stringify({ profile, customPrompts }),
         }).then(async (r) => {
           const d = await r.json();
           if (!r.ok) throw new Error(d.error || "Failed to run audit");
           return d;
         }),
-        MIN_AUDIT_MS
+        MIN_FIRING_MS
       );
-      if (firingTimerRef.current) clearTimeout(firingTimerRef.current);
       setAuditResult(auditData);
       setLoadingPhase(null);
       setStep("results");
-      // Save to Supabase so this account's one audit persists
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await saveAuditForUser(session.user.id, {
             url: normalizedUrl,
-            brand_name: confirmedProfile.brand_name,
+            brand_name: profile.brand_name,
             score: auditData.score,
-            profile: confirmedProfile,
+            profile,
             results: auditData,
           });
         }
       } catch (saveErr) {
         console.error("Supabase save failed:", saveErr);
       }
-      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ profile: confirmedProfile, auditResult: auditData })); } catch {}
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ profile, auditResult: auditData })); } catch {}
     } catch (err) {
-      if (firingTimerRef.current) clearTimeout(firingTimerRef.current);
       setError(err instanceof Error ? err.message : "Audit failed. Please try again.");
       setLoadingPhase(null);
       setStep("auditing");
@@ -383,6 +394,16 @@ function AuditFlow() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (step === "review-prompts" && reviewPrompts.length > 0) {
+    return (
+      <PromptReview
+        prompts={reviewPrompts}
+        onConfirm={handleStartAudit}
+        onReset={handleReset}
+      />
     );
   }
 
