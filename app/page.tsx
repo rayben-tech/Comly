@@ -1530,7 +1530,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white text-[#0a0a0a] font-sans antialiased">
-      <Navbar onCta={scrollToAudit} visible={navVisible} />
+      <Navbar onCta={handleCheckout} visible={navVisible} />
 
       {/* ═══════════════════════════════════════════════════════════════════════
           HERO
