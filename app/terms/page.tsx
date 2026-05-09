@@ -106,12 +106,16 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-bold text-[#0a0a0a] mb-4">5. Subscription &amp; Payment</h2>
+            <p className="mb-4">
+              Access to Comly is currently available under an <strong>Early Access plan at $99/month</strong>.
+              There is no free plan or free trial. You must have an active paid subscription to access the
+              Service and run audits.
+            </p>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Some features of the Service require a paid subscription. Pricing is as displayed on our pricing page.</li>
-              <li>Subscriptions are billed in advance on a monthly or annual cycle depending on the plan selected.</li>
+              <li>Subscriptions are billed monthly in advance.</li>
               <li>All fees are non-refundable except where required by applicable law.</li>
               <li>We reserve the right to change pricing with 30 days&apos; notice to subscribers. Continued use after the notice period constitutes acceptance of the new pricing.</li>
-              <li>Failure to pay may result in suspension or termination of your account.</li>
+              <li>Failure to pay will result in suspension or termination of your account and loss of access to the Service.</li>
             </ul>
           </section>
 
