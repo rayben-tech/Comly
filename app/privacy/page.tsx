@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             <p>
               Comly AI (&ldquo;Comly&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to protecting your privacy.
               This Privacy Policy explains how we collect, use, disclose, and safeguard information when you use our
-              website at <strong>comly.ai</strong> and our AI visibility audit platform (collectively, the &ldquo;Service&rdquo;).
+              website at <strong>trycomly.com</strong> and our AI visibility audit platform (collectively, the &ldquo;Service&rdquo;).
             </p>
             <p className="mt-4">
               By using the Service you agree to the practices described in this policy. If you do not agree, please
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
               We retain your account data for as long as your account is active. Audit results are retained for
               12 months from the date of the audit unless you delete them earlier. You may request deletion of
               your account and associated data at any time by emailing{" "}
-              <a href="mailto:privacy@comly.ai" className="text-[#5B2D91] hover:underline">privacy@comly.ai</a>.
+              <a href="mailto:rayanebenchaalal@gmail.com" className="text-[#5B2D91] hover:underline">rayanebenchaalal@gmail.com</a>.
             </p>
           </section>
 
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-4">
               To exercise any of these rights, contact us at{" "}
-              <a href="mailto:privacy@comly.ai" className="text-[#5B2D91] hover:underline">privacy@comly.ai</a>.
+              <a href="mailto:rayanebenchaalal@gmail.com" className="text-[#5B2D91] hover:underline">rayanebenchaalal@gmail.com</a>.
               We will respond within 30 days.
             </p>
           </section>
@@ -174,7 +174,7 @@ export default function PrivacyPage() {
             <address className="not-italic mt-4 bg-[#fafafa] border border-[#e5e5e5] rounded-xl px-5 py-4 text-sm">
               <strong>Comly AI</strong><br />
               Email:{" "}
-              <a href="mailto:privacy@comly.ai" className="text-[#5B2D91] hover:underline">privacy@comly.ai</a>
+              <a href="mailto:rayanebenchaalal@gmail.com" className="text-[#5B2D91] hover:underline">rayanebenchaalal@gmail.com</a>
             </address>
           </section>
 

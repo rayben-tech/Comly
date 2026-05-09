@@ -72,7 +72,7 @@ export default function TermsPage() {
               <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
               <li>You are responsible for all activity that occurs under your account.</li>
               <li>You must notify us immediately at{" "}
-                <a href="mailto:support@comly.ai" className="text-[#5B2D91] hover:underline">support@comly.ai</a>{" "}
+                <a href="mailto:rayanebenchaalal@gmail.com" className="text-[#5B2D91] hover:underline">rayanebenchaalal@gmail.com</a>{" "}
                 if you suspect unauthorised access to your account.
               </li>
               <li>We reserve the right to terminate accounts that violate these Terms.</li>
@@ -197,7 +197,7 @@ export default function TermsPage() {
             <address className="not-italic mt-4 bg-[#fafafa] border border-[#e5e5e5] rounded-xl px-5 py-4 text-sm">
               <strong>Comly AI</strong><br />
               Email:{" "}
-              <a href="mailto:support@comly.ai" className="text-[#5B2D91] hover:underline">support@comly.ai</a>
+              <a href="mailto:rayanebenchaalal@gmail.com" className="text-[#5B2D91] hover:underline">rayanebenchaalal@gmail.com</a>
             </address>
           </section>
 
