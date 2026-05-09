@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const session = await dodo.checkoutSessions.create({
       product_cart: [{ product_id: process.env.NEXT_PUBLIC_DODO_PRODUCT_ID!, quantity: 1 }],
       ...(userEmail ? { customer: { email: userEmail, name: userName ?? "" } } : {}),
-      return_url: `${origin}/dashboard`,
+      return_url: `${origin}/auth`,
     });
 
     return NextResponse.json({ url: session.checkout_url });

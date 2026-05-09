@@ -547,7 +547,11 @@ const FAQ_ITEMS = [
 
 // ─── NAVBAR ───────────────────────────────────────────────────────────────────
 
-function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolean }) {
+function Navbar({ onCta, visible = true, user }: {
+  onCta: () => void;
+  visible?: boolean;
+  user?: { email: string; avatar_url?: string; name?: string } | null;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const scrolled = useScroll(10);
 
@@ -610,12 +614,24 @@ function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolea
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-2">
-          <button
-            onClick={onCta}
-            className="flex items-center gap-1.5 bg-[#5B2D91] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#4a2478] transition-all hover:scale-[1.02]"
-          >
-            Get started <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {user ? (
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-[#e5e5e5] shrink-0">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={user.name ?? user.email} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-[#5B2D91] flex items-center justify-center text-white text-sm font-bold">
+                  {(user.name ?? user.email)[0].toUpperCase()}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onCta}
+              className="flex items-center gap-1.5 bg-[#5B2D91] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#4a2478] transition-all hover:scale-[1.02]"
+            >
+              Get started <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -654,12 +670,14 @@ function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolea
             ))}
           </div>
           <div className="flex flex-col gap-2">
-            <button
-              onClick={() => { onCta(); setMenuOpen(false); }}
-              className="w-full bg-[#5B2D91] text-white text-sm font-semibold py-3 rounded-full hover:bg-[#4a2478] transition-colors"
-            >
-              Get started →
-            </button>
+            {!user && (
+              <button
+                onClick={() => { onCta(); setMenuOpen(false); }}
+                className="w-full bg-[#5B2D91] text-white text-sm font-semibold py-3 rounded-full hover:bg-[#4a2478] transition-colors"
+              >
+                Get started →
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1447,6 +1465,7 @@ export default function LandingPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [sessionUser, setSessionUser] = useState<{ email: string; avatar_url?: string; name?: string } | null>(null);
   const router = useRouter();
 
   const startCheckout = async (userEmail?: string, userName?: string) => {
@@ -1478,6 +1497,14 @@ export default function LandingPage() {
   useEffect(() => {
     const t = setTimeout(() => setNavVisible(true), 120);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const toUser = (s: { user: { email?: string | null; user_metadata?: Record<string, unknown> } } | null) =>
+      s ? { email: s.user.email ?? "", avatar_url: s.user.user_metadata?.avatar_url as string | undefined, name: s.user.user_metadata?.full_name as string | undefined } : null;
+    supabase.auth.getSession().then(({ data: { session } }) => setSessionUser(toUser(session)));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSessionUser(toUser(session)));
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -1536,7 +1563,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white text-[#0a0a0a] font-sans antialiased">
-      <Navbar onCta={handleCheckout} visible={navVisible} />
+      <Navbar onCta={handleCheckout} visible={navVisible} user={sessionUser} />
 
       {/* ═══════════════════════════════════════════════════════════════════════
           HERO

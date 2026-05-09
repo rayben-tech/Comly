@@ -18,7 +18,7 @@ export default function AuthCallbackPage() {
         if (pendingUrl) {
           router.replace(`/audit?url=${encodeURIComponent(pendingUrl)}`);
         } else {
-          router.replace("/audit");
+          router.replace("/");
         }
       }
     });

@@ -54,7 +54,7 @@ function AuthFlow() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit");
+        router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/");
       }
     });
   }, [router, pendingUrl]);
@@ -69,7 +69,7 @@ function AuthFlow() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         if (data.session) {
-          router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit");
+          router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/");
         } else {
           setSuccess("Check your email for a confirmation link, then come back to log in.");
         }
@@ -171,7 +171,7 @@ function AuthFlow() {
             </h1>
             <p className="text-[13.5px] text-[#6b6b6b]">
               {tab === "signup"
-                ? "Create your account — it's free"
+                ? "Create your account to continue"
                 : "Log in to continue your audit"}
             </p>
           </div>
