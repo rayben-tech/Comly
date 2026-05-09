@@ -1445,7 +1445,27 @@ export default function LandingPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [navVisible, setNavVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const router = useRouter();
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json() as { url?: string };
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutLoading(false);
+      }
+    } catch {
+      setCheckoutLoading(false);
+    }
+  };
   const heroInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -1992,10 +2012,11 @@ export default function LandingPage() {
 
                 <div className="space-y-3">
                   <button
-                    onClick={() => heroInputRef.current?.focus()}
-                    className="w-full rounded-2xl bg-white py-4 font-extrabold text-[#5B2D91] hover:bg-white/90 active:scale-[0.98] transition-all text-[15px] shadow-xl shadow-black/30"
+                    onClick={handleCheckout}
+                    disabled={checkoutLoading}
+                    className="w-full rounded-2xl bg-white py-4 font-extrabold text-[#5B2D91] hover:bg-white/90 active:scale-[0.98] transition-all text-[15px] shadow-xl shadow-black/30 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    Get started →
+                    {checkoutLoading ? "Redirecting…" : "Get started →"}
                   </button>
                   <div className="flex items-center justify-center gap-3 text-white/30 text-[11px]">
                     <span>✓ No credit card</span>
