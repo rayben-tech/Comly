@@ -10,11 +10,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Comly — AI Visibility Audit for Your SaaS",
+  title: "Comly — AI Visibility Audit for Your Brand",
   description:
-    "Find out if AI recommends your brand. Run a free AI visibility audit and see how you rank against competitors in AI-generated responses.",
+    "Find out if AI recommends your brand. Run an AI visibility audit and see how you rank against competitors in AI-generated responses.",
   openGraph: {
-    title: "Comly — AI Visibility Audit for Your SaaS",
+    title: "Comly — AI Visibility Audit for Your Brand",
     description: "Find out if AI recommends your brand. Run a free AI visibility audit.",
     type: "website",
   },

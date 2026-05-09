@@ -521,7 +521,7 @@ const COMPACT_FEATURES = [
   { icon: <RefreshCw  className="w-3.5 h-3.5" />, title: "Weekly tracking",           desc: "Fresh audit data every week automatically"           },
   { icon: <Globe      className="w-3.5 h-3.5" />, title: "Diagnosis checklist",       desc: "Know exactly why you're invisible to AI"             },
   { icon: <Code       className="w-3.5 h-3.5" />, title: "llms.txt generator",        desc: "One-click generation of your llms.txt file"          },
-  { icon: <Users      className="w-3.5 h-3.5" />, title: "SaaS-focused",              desc: "Built for SaaS founders, not agencies"               },
+  { icon: <Users      className="w-3.5 h-3.5" />, title: "Brand-focused",             desc: "Built for any brand that wants AI visibility"        },
 ];
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
