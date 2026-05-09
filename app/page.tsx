@@ -1455,15 +1455,21 @@ export default function LandingPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userEmail: userEmail ?? "", userName: userName ?? "" }),
     });
-    const data = await res.json() as { url?: string };
-    if (data.url) window.location.href = data.url;
+    const data = await res.json() as { url?: string; error?: string };
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      console.error("Checkout failed:", data.error);
+      throw new Error(data.error ?? "No checkout URL returned");
+    }
   };
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
     try {
       await startCheckout();
-    } catch {
+    } catch (err) {
+      console.error("Checkout error:", err);
       setCheckoutLoading(false);
     }
   };
