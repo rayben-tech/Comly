@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -631,7 +631,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
                 key={model.name}
                 animate={firedCount > 0 ? { borderColor: ["#e5e5e5", "#5B2D91", "#e5e5e5"] } : {}}
                 transition={{ duration: 0.4 }}
-                className="bg-white border border-[#e5e5e5] rounded-xl p-3 w-full text-center"
+                className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-3 w-full text-center"
               >
                 <motion.img
                   key={model.domain}
@@ -813,3 +813,4 @@ export function AuditLoadingView({ phase, url, profile, heroData, onReset }: Aud
     </div>
   );
 }
+

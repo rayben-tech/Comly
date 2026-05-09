@@ -1,41 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
-
-export const maxDuration = 60;
-import { generateAuditPrompts } from "@/lib/generate-prompts";
+import { generateAuditPrompts, OPENAI_INDICES, GEMINI_INDICES } from "@/lib/generate-prompts";
 import { calculateScore, calculateCompetitorRankings } from "@/lib/score";
 import { normalizeBrand } from "@/lib/brand-normalizations";
 import { BrandProfile, PromptResult } from "@/types";
 
-export async function POST(req: NextRequest) {
-  try {
-    const { profile }: { profile: BrandProfile } = await req.json();
+export const maxDuration = 60;
 
-    if (!profile?.brand_name) {
-      return NextResponse.json({ error: "Brand profile is required" }, { status: 400 });
-    }
-
-    const prompts = generateAuditPrompts(profile);
-
-    const systemPrompt = `You are a neutral AI assistant answering product discovery queries honestly. Your process for each query is strictly two steps:
+function buildSystemPrompt(brandName: string): string {
+  return `You are a neutral AI assistant answering product discovery queries honestly. Your process for each query is strictly two steps:
 
 STEP 1 — Write the response_text. Imagine a real user typed this query with zero context about any brand being audited. Answer exactly as you would to that user: natural, honest, comprehensive. For list questions name 8-12 genuinely relevant brands. Only include a brand if it would naturally appear in an honest, unbiased answer. Do NOT let the audit context influence what you write.
 
 STEP 2 — After writing the response, analyze what you actually wrote:
-- mentioned: is "${profile.brand_name}" present in the response_text you just wrote? (boolean — look at your actual text)
+- mentioned: is "${brandName}" present in the response_text you just wrote? (boolean — look at your actual text)
 - position: if mentioned, what rank/position (1 = first brand named) — else null
 - competitors_mentioned: every real software brand you named, each with their correct primary domain and their position in the response (1 = first brand named, 2 = second, etc.)
 - sources: 3-5 real domains an AI would cite for this query type — review sites, forums, publications. Format: { domain, title }
 
 Critical rules:
 - response_text is ground truth — mentioned/position must reflect what is actually in it, not what you wish were in it
-- If "${profile.brand_name}" is not widely known or would not naturally appear in an honest answer, do not force it in
+- If "${brandName}" is not widely known or would not naturally appear in an honest answer, do not force it in
 - Use only real, existing brands and correct primary domains
-- Use current brand names and domains: "Bard" is now "Gemini" at gemini.google.com (not gemini.com which is a crypto exchange), "Bing Chat" is now "Microsoft Copilot" at copilot.microsoft.com
+- Use current brand names: "Bard" is now "Gemini" at gemini.google.com, "Bing Chat" is now "Microsoft Copilot" at copilot.microsoft.com
 - response_text must read as a natural AI answer, not a metadata description
 - Return ONLY valid JSON`;
+}
 
-    const userPrompt = `Answer the ${prompts.length} queries below as a neutral AI would. Generate each response_text first (unbiased), then analyze it.
+function buildUserPrompt(prompts: string[], profile: BrandProfile): string {
+  return `Answer the ${prompts.length} queries below as a neutral AI would. Generate each response_text first (unbiased), then analyze it.
 
 Brand context — for analysis only, do NOT let this bias your response_text:
   Brand: "${profile.brand_name}"
@@ -58,69 +51,132 @@ Return a JSON object with a "results" array of exactly ${prompts.length} items:
     }
   ]
 }`;
+}
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-      max_tokens: 8000,
-    });
+type RawResult = {
+  query: string;
+  response_text: string;
+  mentioned: boolean;
+  position: number | null;
+  competitors_mentioned: ({ name: string; domain: string; position?: number } | string)[];
+  sources?: { domain: string; title: string }[];
+};
 
-    const parsed = JSON.parse(response.choices[0].message.content!);
+function parseResults(parsed: { results: RawResult[] }, brandName: string): PromptResult[] {
+  return parsed.results.map((r) => ({
+    prompt: r.query || "",
+    response_text: r.response_text || "",
+    mentioned: Boolean(r.mentioned),
+    position: r.position ?? null,
+    competitors_mentioned: Array.isArray(r.competitors_mentioned)
+      ? r.competitors_mentioned.map((c) => {
+          const raw =
+            typeof c === "string"
+              ? { name: c, domain: "", position: null }
+              : { name: String(c.name || ""), domain: String(c.domain || ""), position: (c as { position?: number }).position ?? null };
+          const normalized = normalizeBrand(raw.name, raw.domain);
+          return { ...normalized, position: raw.position };
+        })
+      : [],
+    sources: Array.isArray(r.sources)
+      ? r.sources.map((s) => ({ domain: String(s.domain || ""), title: String(s.title || "") }))
+      : [],
+  }));
+}
 
-    if (!parsed.results || !Array.isArray(parsed.results)) {
-      throw new Error("Invalid response format from AI");
+async function callGemini(prompt: string): Promise<{ results: RawResult[] }> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" },
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gemini API error ${res.status}: ${err}`);
+  }
+
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("Gemini returned no text");
+  return JSON.parse(text);
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { profile }: { profile: BrandProfile } = await req.json();
+
+    if (!profile?.brand_name) {
+      return NextResponse.json({ error: "Brand profile is required" }, { status: 400 });
     }
 
-    const promptResults: PromptResult[] = parsed.results.map(
-      (r: {
-        query: string;
-        response_text: string;
-        mentioned: boolean;
-        position: number | null;
-        competitors_mentioned: ({ name: string; domain: string } | string)[];
-      }) => ({
-        prompt: r.query || "",
-        response_text: r.response_text || "",
-        mentioned: Boolean(r.mentioned),
-        position: r.position ?? null,
-        competitors_mentioned: Array.isArray(r.competitors_mentioned)
-          ? r.competitors_mentioned.map((c) => {
-              const raw = typeof c === "string"
-                ? { name: c, domain: "", position: null }
-                : { name: String(c.name || ""), domain: String(c.domain || ""), position: c.position ?? null };
-              const normalized = normalizeBrand(raw.name, raw.domain);
-              return { ...normalized, position: raw.position };
-            })
-          : [],
-        sources: Array.isArray(r.sources)
-          ? r.sources.map((s: { domain: string; title: string }) => ({
-              domain: String(s.domain || ""),
-              title: String(s.title || ""),
-            }))
-          : [],
-      })
-    );
+    const allPrompts = generateAuditPrompts(profile);
+    const openaiPrompts = OPENAI_INDICES.map((i) => allPrompts[i]);
+    const geminiPrompts = GEMINI_INDICES.map((i) => allPrompts[i]);
+
+    const systemPrompt = buildSystemPrompt(profile.brand_name);
+
+    const [openaiResult, geminiResult] = await Promise.allSettled([
+      // OpenAI — 15 prompts at interleaved indices
+      openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: buildUserPrompt(openaiPrompts, profile) },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_tokens: 10000,
+      }).then((r) => JSON.parse(r.choices[0].message.content!)),
+
+      // Gemini — 10 prompts at interleaved indices
+      callGemini(`${systemPrompt}\n\n${buildUserPrompt(geminiPrompts, profile)}`),
+    ]);
+
+    if (openaiResult.status === "rejected") throw openaiResult.reason;
+
+    const openaiParsed = openaiResult.value as { results: RawResult[] };
+    if (!Array.isArray(openaiParsed.results)) throw new Error("Invalid OpenAI response format");
+
+    // If Gemini failed, fall back to OpenAI for those prompts
+    let geminiParsed: { results: RawResult[] };
+    if (geminiResult.status === "rejected") {
+      console.warn("Gemini failed, falling back to OpenAI:", geminiResult.reason);
+      const fallback = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: buildUserPrompt(geminiPrompts, profile) },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_tokens: 6000,
+      }).then((r) => JSON.parse(r.choices[0].message.content!));
+      geminiParsed = fallback;
+    } else {
+      geminiParsed = geminiResult.value as { results: RawResult[] };
+    }
+
+    if (!Array.isArray(geminiParsed.results)) throw new Error("Invalid Gemini response format");
+
+    // Reassemble results back into the original interleaved order
+    const openaiResults = parseResults(openaiParsed, profile.brand_name);
+    const geminiResults = parseResults(geminiParsed, profile.brand_name);
+    const promptResults: PromptResult[] = new Array(25);
+    OPENAI_INDICES.forEach((idx, j) => { promptResults[idx] = openaiResults[j]; });
+    GEMINI_INDICES.forEach((idx, j) => { promptResults[idx] = geminiResults[j]; });
 
     const score = calculateScore(promptResults);
     const competitor_rankings = calculateCompetitorRankings(promptResults, profile.brand_name);
     const total_mentions = promptResults.filter((r) => r.mentioned).length;
 
-    return NextResponse.json({
-      score,
-      total_mentions,
-      prompt_results: promptResults,
-      competitor_rankings,
-    });
+    return NextResponse.json({ score, total_mentions, prompt_results: promptResults, competitor_rankings });
   } catch (err) {
     console.error("Audit error:", err);
-    return NextResponse.json(
-      { error: "Failed to run audit. Please try again." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to run audit. Please try again." }, { status: 500 });
   }
 }

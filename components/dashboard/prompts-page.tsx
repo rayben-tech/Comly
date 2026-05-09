@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { PromptResult, BrandProfile } from "@/types";
@@ -6,11 +6,31 @@ import { ChevronDown, ChevronUp, CheckCircle2, XCircle, SlidersHorizontal } from
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS = [
-  "Direct Brand", "Direct Brand",
-  "Discovery", "Discovery", "Discovery",
-  "Competitor", "Competitor", "Competitor",
-  "Discovery",
-  "Open Ended", "Open Ended",
+  "Direct Brand", // 00 ChatGPT
+  "Discovery",    // 01 Gemini
+  "Competitor",   // 02 ChatGPT
+  "Discovery",    // 03 ChatGPT
+  "Discovery",    // 04 Gemini
+  "Direct Brand", // 05 ChatGPT
+  "Discovery",    // 06 ChatGPT
+  "Open Ended",   // 07 Gemini
+  "Competitor",   // 08 ChatGPT
+  "Discovery",    // 09 ChatGPT
+  "Discovery",    // 10 Gemini
+  "Direct Brand", // 11 ChatGPT
+  "Competitor",   // 12 ChatGPT
+  "Discovery",    // 13 Gemini
+  "Discovery",    // 14 ChatGPT
+  "Discovery",    // 15 ChatGPT
+  "Open Ended",   // 16 Gemini
+  "Discovery",    // 17 ChatGPT
+  "Discovery",    // 18 ChatGPT
+  "Discovery",    // 19 Gemini
+  "Discovery",    // 20 ChatGPT
+  "Discovery",    // 21 ChatGPT
+  "Open Ended",   // 22 Gemini
+  "Open Ended",   // 23 Gemini
+  "Discovery",    // 24 Gemini
 ];
 
 const LABEL_STYLES: Record<string, { pill: string; dot: string; color: string }> = {
@@ -88,7 +108,7 @@ export function PromptsPage({ promptResults, profile }: Props) {
         {catStats.map(({ cat, hit, total }) => {
           const style = LABEL_STYLES[cat];
           return (
-            <div key={cat} className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-3">
+            <div key={cat} className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] px-4 py-3">
               <div className="flex items-center gap-1.5 mb-2">
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${style.dot}`} />
                 <span className="text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide truncate">{cat}</span>
@@ -261,3 +281,4 @@ export function PromptsPage({ promptResults, profile }: Props) {
     </div>
   );
 }
+

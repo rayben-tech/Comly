@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { PromptResult, BrandProfile } from "@/types";
@@ -70,14 +70,14 @@ export function MentionsFeed({ promptResults, profile }: Props) {
 
   if (mentions.length === 0) {
     return (
-      <div className="bg-white border border-[#e5e5e5] rounded-xl p-8 text-center">
+      <div className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-8 text-center">
         <p className="text-[14px] text-[#aaaaaa]">No mentions found in this audit.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
+    <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-[#e5e5e5]">
         <div>
@@ -138,3 +138,4 @@ export function MentionsFeed({ promptResults, profile }: Props) {
     </div>
   );
 }
+

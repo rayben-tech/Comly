@@ -281,29 +281,31 @@ export function VisualStep02() {
   );
 }
 
-// ── Step 03: Score + fix list ─────────────────────────────────────────────────
+// ── Step 03: Score + fixes + engagement ──────────────────────────────────────
 
 const FIX_ITEMS = [
-  { text: "Add llms.txt to your site",    priority: "High"   },
-  { text: "Improve product description",  priority: "Medium" },
-  { text: "Add more use cases",           priority: "Medium" },
+  { text: "Listicles Generator", badge: "Generate" },
+  { text: "llms.txt Generator",  badge: "Generate" },
+  { text: "Comparison Pages",    badge: "Create"   },
+  { text: "Hero Rewrite",        badge: "Rewrite"  },
 ];
 const TARGET_SCORE = 72;
 
-const PRIORITY_COLORS: Record<string, string> = {
-  High:   "rgba(239,68,68,0.75)",
-  Medium: "rgba(251,191,36,0.75)",
-};
+const ENGAGE_MSGS = [
+  { platform: "reddit.com", text: "Just tried this — honestly game changer" },
+  { platform: "quora.com",  text: "Best answer: this solves exactly what you need" },
+];
 
 export function VisualStep03() {
   const [score, setScore] = useState(0);
   const [fixes, setFixes] = useState(0);
+  const [engageVisible, setEngageVisible] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       while (alive) {
-        setScore(0); setFixes(0);
+        setScore(0); setFixes(0); setEngageVisible(false);
         await sleep(500);
         const STEPS = 50;
         for (let i = 1; i <= STEPS && alive; i++) {
@@ -311,31 +313,32 @@ export function VisualStep03() {
           setScore(Math.round(ease * TARGET_SCORE));
           await sleep(26);
         }
-        await sleep(500);
+        await sleep(400);
         for (let i = 1; i <= FIX_ITEMS.length && alive; i++) {
-          setFixes(i); await sleep(440);
+          setFixes(i); await sleep(380);
         }
-        await sleep(2600);
+        await sleep(300);
+        if (alive) setEngageVisible(true);
+        await sleep(2400);
       }
     })();
     return () => { alive = false; };
   }, []);
 
-  // Circular SVG progress
-  const R = 54;
+  const R = 46;
   const circ = 2 * Math.PI * R;
   const offset = circ - (score / 100) * circ;
   const ringColor = score > 60 ? "#34d399" : score > 30 ? "#fbbf24" : "#f87171";
 
   return (
-    <div className="w-full max-w-[440px] space-y-4">
+    <div className="w-full max-w-[440px] space-y-3">
 
       {/* Score card */}
       <div
-        className="rounded-2xl p-6 backdrop-blur-sm"
+        className="rounded-2xl p-5 backdrop-blur-sm"
         style={{ background: "rgba(255,255,255,0.10)", border: "1.5px solid rgba(255,255,255,0.18)" }}
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart2 className="w-4 h-4 text-white/50" />
             <span className="text-sm font-semibold text-white/80">AI Visibility Score</span>
@@ -343,108 +346,134 @@ export function VisualStep03() {
           <span className="text-xs font-bold text-emerald-400">+12 vs last ↑</span>
         </div>
 
-        <div className="flex items-center gap-7">
-          {/* Circular ring */}
+        <div className="flex items-center gap-6">
+          {/* Circular ring — slightly smaller */}
           <div
             className="relative shrink-0"
             style={{ animation: score === TARGET_SCORE ? "ringPop 0.5s ease" : "none" }}
           >
-            <svg width="128" height="128" className="-rotate-90">
-              <circle cx="64" cy="64" r={R}
-                fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="9" />
-              <circle cx="64" cy="64" r={R}
-                fill="none"
-                stroke={ringColor}
-                strokeWidth="9"
-                strokeLinecap="round"
-                strokeDasharray={circ}
-                strokeDashoffset={offset}
-                style={{ transition: "stroke-dashoffset 26ms linear, stroke 600ms ease" }}
-              />
+            <svg width="108" height="108" className="-rotate-90">
+              <circle cx="54" cy="54" r={R} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="8" />
+              <circle cx="54" cy="54" r={R} fill="none" stroke={ringColor} strokeWidth="8"
+                strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+                style={{ transition: "stroke-dashoffset 26ms linear, stroke 600ms ease" }} />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-black text-white tabular-nums leading-none">
-                {score}
-              </span>
-              <span className="text-xs text-white/40 mt-0.5">/100</span>
+              <span className="text-3xl font-black text-white tabular-nums leading-none">{score}</span>
+              <span className="text-[10px] text-white/40 mt-0.5">/100</span>
             </div>
           </div>
 
           {/* Score breakdown */}
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 space-y-2.5">
             <div>
-              <div className="flex justify-between text-[11px] text-white/40 mb-1.5">
-                <span>Visibility</span>
-                <span>{score}%</span>
+              <div className="flex justify-between text-[11px] text-white/40 mb-1">
+                <span>Visibility</span><span>{score}%</span>
               </div>
               <div className="h-1.5 bg-white/12 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${score}%`, background: ringColor }}
-                />
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${score}%`, background: ringColor }} />
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-[11px] text-white/40 mb-1.5">
-                <span>Competitor rank</span>
-                <span>#3</span>
+              <div className="flex justify-between text-[11px] text-white/40 mb-1">
+                <span>Prompts hit</span><span>{Math.round(score / 10)} / 10</span>
+              </div>
+              <div className="h-1.5 bg-white/12 rounded-full overflow-hidden">
+                <div className="h-full rounded-full bg-white/40" style={{ width: `${score}%`, transition: "width 26ms linear" }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-[11px] text-white/40 mb-1">
+                <span>Competitor rank</span><span>#3</span>
               </div>
               <div className="h-1.5 bg-white/12 rounded-full overflow-hidden">
                 <div className="h-full rounded-full bg-white/40" style={{ width: "33%" }} />
               </div>
             </div>
-            <p className="text-xs text-white/40 leading-relaxed">
-              Mentioned in <span className="text-white/80 font-semibold">{score}%</span> of targeted prompts
-            </p>
           </div>
         </div>
       </div>
 
-      {/* Fix list */}
-      <div
-        className="rounded-2xl overflow-hidden backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.12)" }}
-      >
-        <div className="px-5 py-3 border-b border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">
-            Priority fix list
-          </p>
+      {/* Fixes + Engagement side by side */}
+      <div className="grid grid-cols-2 gap-3">
+
+        {/* Fix toolkit */}
+        <div
+          className="rounded-2xl overflow-hidden backdrop-blur-sm"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.12)" }}
+        >
+          <div className="px-3.5 py-2.5 border-b border-white/10">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/35">Fixes</p>
+          </div>
+          <div className="px-3.5 py-3 space-y-2.5">
+            {FIX_ITEMS.map(({ text, badge }, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2"
+                style={{
+                  opacity:   i < fixes ? 1 : 0.12,
+                  transform: i < fixes ? "translateY(0)" : "translateY(5px)",
+                  transition: "opacity 0.35s ease, transform 0.35s ease",
+                }}
+              >
+                <span
+                  className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
+                  style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)" }}
+                >
+                  {i + 1}
+                </span>
+                <span className="text-[10px] text-white/75 flex-1 leading-tight">{text}</span>
+                <span
+                  className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{ background: "rgba(167,139,250,0.2)", color: "rgba(196,181,253,0.9)", border: "1px solid rgba(167,139,250,0.3)" }}
+                >
+                  {badge}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="p-5 space-y-3.5">
-          {FIX_ITEMS.map(({ text, priority }, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 transition-all duration-350"
-              style={{
-                opacity:    i < fixes ? 1 : 0.12,
-                transform:  i < fixes ? "translateY(0)" : "translateY(5px)",
-                transition: "opacity 0.35s ease, transform 0.35s ease",
-              }}
+
+        {/* Engagement */}
+        <div
+          className="rounded-2xl overflow-hidden backdrop-blur-sm transition-all duration-500"
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            border: "1.5px solid rgba(255,255,255,0.12)",
+            opacity: engageVisible ? 1 : 0.15,
+            transform: engageVisible ? "translateY(0)" : "translateY(6px)",
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+          }}
+        >
+          <div className="px-3.5 py-2.5 border-b border-white/10 flex items-center gap-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/35">Engage</p>
+            <span
+              className="ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: "rgba(52,211,153,0.15)", color: "#34d399" }}
             >
-              <span
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
-                style={{
-                  background: "rgba(255,255,255,0.12)",
-                  border:     "1px solid rgba(255,255,255,0.2)",
-                  color:      "rgba(255,255,255,0.7)",
-                }}
-              >
-                {i + 1}
-              </span>
-              <span className="text-[13px] text-white/80 flex-1">{text}</span>
-              <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0"
-                style={{
-                  background: `${PRIORITY_COLORS[priority]}22`,
-                  color:       PRIORITY_COLORS[priority],
-                  border:      `1px solid ${PRIORITY_COLORS[priority]}44`,
-                }}
-              >
-                {priority}
-              </span>
+              Live
+            </span>
+          </div>
+          <div className="px-3.5 py-3 space-y-2">
+            {ENGAGE_MSGS.map((msg, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${msg.platform}&sz=32`}
+                  alt="" width={11} height={11}
+                  className="rounded-sm shrink-0 mt-[2px]"
+                />
+                <p className="text-[9.5px] text-white/60 leading-snug line-clamp-2">{msg.text}</p>
+              </div>
+            ))}
+            <div className="pt-1 flex items-center gap-1">
+              {["chatgpt.com", "claude.ai", "perplexity.ai"].map((d) => (
+                <img key={d} src={`https://www.google.com/s2/favicons?domain=${d}&sz=32`} alt="" width={10} height={10} className="rounded-sm" />
+              ))}
+              <span className="text-[8.5px] text-white/30 ml-0.5">pick this up</span>
             </div>
-          ))}
+          </div>
         </div>
+
       </div>
     </div>
   );
@@ -473,8 +502,8 @@ const STEPS = [
     num: "03",
     visualOnLeft: true,
     gradient: "linear-gradient(135deg, #170836 0%, #4c1d95 60%, #7c3aed 100%)",
-    heading: "Get your score and fix list",
-    description: "See your visibility score, competitor ranking, and a prioritized to-do list. Generate your llms.txt in one click and track your improvement weekly.",
+    heading: "Score, fix, and get cited",
+    description: "See your visibility score and prompts hit across all 4 LLMs. Use built-in tools — Listicles, llms.txt, Comparison Pages, Hero Rewrite — then engage on Reddit & Quora so AI starts recommending you.",
     Visual: VisualStep03,
   },
 ] as const;

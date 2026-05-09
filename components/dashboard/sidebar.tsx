@@ -3,25 +3,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, LayoutDashboard, MessageSquare, Globe,
-  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords, PanelLeftClose,
+  LayoutDashboard, MessageSquare, Globe,
+  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "prompts",  label: "Prompts",  icon: MessageSquare },
-  { id: "sources",  label: "Sources",  icon: Globe },
-];
-
-const FIXES_ITEMS = [
-  { id: "listicles",        label: "Listicles Generator", badge: ""    },
-  { id: "llms-txt",         label: "llms.txt Generator",  badge: ""    },
-  { id: "comparison",       label: "Comparison Pages",    badge: ""    },
-  { id: "hero-rewrite",     label: "Hero Rewrite",        badge: ""    },
-  { id: "g2-checklist",     label: "G2 Checklist",        badge: "Pro" },
-  { id: "reddit-exposure",  label: "Reddit Exposure",     badge: "Pro" },
+const BRAND_CONTENT_ITEMS = [
+  { id: "listicles",  label: "Listicles Generator", badge: "" },
+  { id: "llms-txt",  label: "llms.txt Generator",  badge: "" },
+  { id: "comparison", label: "Comparison Pages",    badge: "" },
 ];
 
 interface SidebarProps {
@@ -30,6 +21,41 @@ interface SidebarProps {
   profile: BrandProfile;
   className?: string;
   onClose?: () => void;
+  onOpen?: () => void;
+  collapsed?: boolean;
+  demoMode?: boolean;
+}
+
+function LockedNavItem({
+  icon: Icon,
+  imgSrc,
+  label,
+  indent = false,
+  title = "Available on actual audit",
+}: {
+  icon?: React.ElementType;
+  imgSrc?: string;
+  label: string;
+  indent?: boolean;
+  title?: string;
+}) {
+  return (
+    <div
+      title={title}
+      className={cn(
+        "w-full flex items-center gap-2.5 py-[7px] rounded-lg text-[13px] font-medium text-[#c4c4c4] cursor-not-allowed select-none",
+        indent ? "pl-8 pr-3" : "px-3"
+      )}
+    >
+      {imgSrc ? (
+        <img src={imgSrc} width={16} height={16} className="w-4 h-4 shrink-0 rounded-sm grayscale opacity-40" alt="" />
+      ) : Icon ? (
+        <Icon className="w-4 h-4 shrink-0 text-[#d4d4d4]" />
+      ) : null}
+      <span className="flex-1 truncate">{label}</span>
+      <Lock className="w-3 h-3 text-[#d4d4d4]" />
+    </div>
+  );
 }
 
 function domainFromUrl(url: string): string {
@@ -66,47 +92,67 @@ function BrandFavicon({ domain, name, size = 32 }: { domain: string; name: strin
   );
 }
 
-function NavButton({
+function NavItem({
   active,
-  locked,
   onClick,
   icon: Icon,
+  imgSrc,
   label,
   badge,
   indent = false,
 }: {
   active: boolean;
-  locked?: boolean;
   onClick: () => void;
-  icon: React.ElementType;
+  icon?: React.ElementType;
+  imgSrc?: string;
   label: string;
   badge?: string;
   indent?: boolean;
 }) {
   return (
     <button
-      disabled={locked}
       onClick={onClick}
       className={cn(
-        "relative w-full flex items-center gap-2.5 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all overflow-hidden",
-        indent ? "pl-9 pr-3" : "px-3",
-        active
-          ? "bg-[#5B2D91]/[0.07] text-[#5B2D91]"
-          : locked
-          ? "text-[#cccccc] cursor-default"
-          : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
+        "relative w-full flex items-center gap-2.5 py-[7px] rounded-lg text-left text-[13px] font-medium transition-colors",
+        indent ? "pl-8 pr-3" : "px-3",
+        active ? "text-[#5B2D91]" : "text-[#6b7280] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
       )}
     >
-      {/* Left accent bar */}
       {active && (
-        <span className="absolute left-0 inset-y-[5px] w-[3px] bg-[#5B2D91] rounded-r-full" />
+        <motion.div
+          layoutId="nav-bg"
+          className="absolute inset-0 rounded-lg bg-[#f3eeff]"
+          transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+        />
       )}
-      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-[#5B2D91]" : "text-[#bbb]")} />
-      <span className="flex-1 truncate">{label}</span>
+      {active && (
+        <motion.span
+          layoutId="nav-indicator"
+          className="absolute left-0 inset-y-[5px] w-[3px] bg-[#5B2D91] rounded-r-full"
+          style={{ zIndex: 1 }}
+          transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+        />
+      )}
+      <span className="relative z-[1] flex items-center gap-2.5 flex-1 min-w-0">
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            width={16} height={16}
+            className="w-4 h-4 shrink-0 rounded-sm"
+            style={{ filter: active ? "none" : "grayscale(1)", opacity: active ? 1 : 0.5 }}
+            alt=""
+          />
+        ) : Icon ? (
+          <Icon className={cn("w-4 h-4 shrink-0", active ? "text-[#5B2D91]" : "text-[#9ca3af]")} />
+        ) : null}
+        <span className="flex-1 truncate">{label}</span>
+      </span>
       {badge && (
         <span className={cn(
-          "shrink-0 text-[10px] font-medium",
-          active ? "text-[#5B2D91]/70" : "text-[#c0c0c0]"
+          "relative z-[1] shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+          badge === "Pro"
+            ? "bg-amber-50 text-amber-600 border border-amber-100"
+            : active ? "text-[#5B2D91]/60" : "text-[#9ca3af]"
         )}>
           {badge}
         </span>
@@ -115,216 +161,332 @@ function NavButton({
   );
 }
 
-export function Sidebar({ activePage, onNavigate, profile, className, onClose }: SidebarProps) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-bold text-[#9ca3af] uppercase tracking-[0.12em] px-2 mb-1.5">
+      {children}
+    </p>
+  );
+}
+
+function IconBtn({
+  title,
+  active = false,
+  disabled = false,
+  onClick,
+  children,
+}: {
+  title: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      title={title}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "w-8 h-8 flex items-center justify-center rounded-lg transition-colors",
+        disabled
+          ? "cursor-not-allowed opacity-40 text-[#d4d4d4]"
+          : active
+          ? "bg-[#f3eeff] text-[#5B2D91]"
+          : "text-[#9ca3af] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
-  const [query, setQuery] = useState("");
   const isFixesActive = activePage.startsWith("fixes:");
-  const [fixesOpen, setFixesOpen] = useState(isFixesActive);
-
-  const allNavItems = [
-    ...NAV_ITEMS,
-    { id: "fixes", label: "Fixes", icon: ListChecks },
-    ...FIXES_ITEMS.map((f) => ({ id: `fixes:${f.id}`, label: f.label, icon: ListChecks })),
-    { id: "crawlers", label: "Crawlers", icon: Radio },
-    { id: "competitor-playbook", label: "Competitor Playbook", icon: Swords },
-    { id: "brand", label: "Brand", icon: Tag },
-  ];
-
-  const filteredNav = query.trim()
-    ? allNavItems.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
-    : null;
-
-  function handleFixesNavClick(id: string) {
-    onNavigate(`fixes:${id}`);
-    setFixesOpen(true);
-  }
+  const [brandContentOpen, setBrandContentOpen] = useState(isFixesActive);
 
   return (
-    <aside className={cn("w-[220px] shrink-0 bg-white border-r border-[#ebebeb] flex flex-col h-screen sticky top-0 overflow-hidden", className)}>
-
-      {/* Brand header */}
-      <div className="px-3 pt-4 pb-3 border-b border-[#f0f0f0]">
-        <div className="bg-[#f7f7f5] border border-[#ececec] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-          <BrandFavicon domain={domain} name={profile.brand_name} size={36} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-[#0a0a0a] truncate leading-tight">{profile.brand_name}</p>
-            {domain && (
-              <p className="text-[11px] text-[#aaaaaa] truncate mt-0.5 leading-tight">{domain}</p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            title="Collapse sidebar"
-            className="shrink-0 text-[#cccccc] hover:text-[#5B2D91] transition-colors p-1 rounded-lg hover:bg-[#ede8f7]"
+    <aside className={cn(
+      "w-full shrink-0 bg-white flex flex-col sticky top-0 overflow-hidden border-r border-[#e5e5e5]",
+      demoMode ? "h-full" : "h-screen",
+      className
+    )}>
+      <AnimatePresence mode="wait" initial={false}>
+        {collapsed ? (
+          <motion.div
+            key="collapsed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12, ease: "easeInOut" }}
+            className="flex flex-col h-full"
           >
-            <PanelLeftClose className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="px-4 py-3">
-        <div className={`flex items-center gap-2 px-3 bg-[#f7f7f5] border rounded-lg h-8 transition-colors ${query ? "border-[#5B2D91]/40" : "border-[#ebebeb] hover:border-[#d0d0d0]"}`}>
-          <Search className="w-3.5 h-3.5 text-[#cccccc] shrink-0" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Quick Actions"
-            className="flex-1 bg-transparent text-[13px] text-[#0a0a0a] placeholder:text-[#cccccc] outline-none min-w-0"
-          />
-          {query && (
-            <button onClick={() => setQuery("")} className="text-[#cccccc] hover:text-[#888] transition-colors text-[16px] leading-none shrink-0">
-              ×
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Nav */}
-      <div className="px-3 flex-1 overflow-y-auto">
-        <p className="text-[10px] font-bold text-[#cccccc] uppercase tracking-[0.14em] px-2 mb-2 mt-1">
-          Pages
-        </p>
-
-        {/* Search results */}
-        {filteredNav ? (
-          <nav className="space-y-0.5">
-            {filteredNav.length > 0 ? filteredNav.map(({ id, label, icon: Icon }) => {
-              const active = activePage === id;
-              const isFixesSub = id.startsWith("fixes:") && id !== "fixes";
-              const fixId = id.replace("fixes:", "");
-              const badge = isFixesSub
-                ? (FIXES_ITEMS.find((f) => f.id === fixId)?.badge ?? "")
-                : id === "crawlers" || id === "competitor-playbook" ? "Pro" : "";
-              return (
-                <NavButton
-                  key={id}
-                  active={active}
-                  icon={Icon}
-                  label={label}
-                  badge={badge}
-                  onClick={() => {
-                    if (isFixesSub) {
-                      handleFixesNavClick(fixId);
-                    } else if (id !== "fixes") {
-                      onNavigate(id);
-                    }
-                    setQuery("");
-                  }}
-                />
-              );
-            }) : (
-              <p className="text-[12px] text-[#cccccc] px-3 py-2">No results</p>
-            )}
-          </nav>
-        ) : (
-          <nav className="space-y-0.5">
-            {/* Regular nav items */}
-            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-              <NavButton
-                key={id}
-                active={activePage === id}
-                icon={Icon}
-                label={label}
-                onClick={() => onNavigate(id)}
-              />
-            ))}
-
-            {/* Fixes accordion */}
-            <div>
-              <button
-                onClick={() => setFixesOpen((v) => !v)}
-                className={cn(
-                  "relative w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all overflow-hidden",
-                  isFixesActive
-                    ? "bg-transparent text-[#5B2D91]"
-                    : "text-[#666] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
-                )}
-              >
-                <ListChecks className={cn("w-4 h-4 shrink-0", isFixesActive ? "text-[#5B2D91]" : "text-[#bbb]")} />
-                <span className="flex-1 text-left">Fixes</span>
-                {fixesOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 text-[#aaaaaa]" />
-                  : <ChevronRight className="w-3.5 h-3.5 text-[#aaaaaa]" />
-                }
-              </button>
-
-              <AnimatePresence initial={false}>
-                {fixesOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.18, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-0.5 space-y-0.5 pb-1">
-                      {FIXES_ITEMS.map((item) => (
-                        <NavButton
-                          key={item.id}
-                          active={activePage === `fixes:${item.id}`}
-                          icon={ListChecks}
-                          label={item.label}
-                          badge={item.badge}
-                          indent
-                          onClick={() => handleFixesNavClick(item.id)}
-                        />
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* Brand favicon + expand button */}
+            <div className="flex flex-col items-center gap-1.5 pt-3 pb-2.5 border-b border-[#f0f0f0]">
+              <BrandFavicon domain={domain} name={profile.brand_name} size={28} />
+              {onOpen && (
+                <button
+                  onClick={onOpen}
+                  title="Expand sidebar"
+                  className="flex items-center justify-center w-7 h-7 rounded-md text-[#9ca3af] hover:text-[#5B2D91] hover:bg-[#f3eeff] transition-colors"
+                >
+                  <PanelLeftOpen className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
-            {/* Crawlers — Pro */}
-            <NavButton
-              active={activePage === "crawlers"}
-              icon={Radio}
-              label="Crawlers"
-              badge="Pro"
-              onClick={() => onNavigate("crawlers")}
-            />
+            {/* Icon nav */}
+            <div className="flex-1 overflow-y-auto py-3 flex flex-col items-center gap-0.5">
+              <IconBtn title="Overview" active={activePage === "overview"} onClick={() => onNavigate("overview")}>
+                <LayoutDashboard className="w-4 h-4" />
+              </IconBtn>
+              <IconBtn title="Prompts" active={activePage === "prompts"} onClick={() => onNavigate("prompts")}>
+                <MessageSquare className="w-4 h-4" />
+              </IconBtn>
+              <IconBtn title="Sources" active={activePage === "sources"} onClick={() => onNavigate("sources")}>
+                <Globe className="w-4 h-4" />
+              </IconBtn>
 
-            {/* Competitor Playbook — Pro */}
-            <NavButton
-              active={activePage === "competitor-playbook"}
-              icon={Swords}
-              label="Competitor Playbook"
-              badge="Pro"
-              onClick={() => onNavigate("competitor-playbook")}
-            />
+              <div className="w-5 border-t border-[#f0f0f0] my-1.5" />
 
-            {/* Brand */}
-            <NavButton
-              active={activePage === "brand"}
-              icon={Tag}
-              label="Brand"
-              onClick={() => onNavigate("brand")}
-            />
-          </nav>
+              <IconBtn title="Reddit" active={activePage === "engagement-threads"} onClick={() => onNavigate("engagement-threads")}>
+                <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" className="w-4 h-4 rounded-sm" alt="" />
+              </IconBtn>
+
+              <IconBtn title="Quora" active={activePage === "quora-threads"} onClick={() => onNavigate("quora-threads")}>
+                <img src="https://www.google.com/s2/favicons?domain=quora.com&sz=32" className="w-4 h-4 rounded-sm" alt="" />
+              </IconBtn>
+
+              {demoMode ? (
+                <IconBtn title={`Generate listicles, comparison pages & more for ${profile.brand_name}`} disabled>
+                  <ListChecks className="w-4 h-4" />
+                </IconBtn>
+              ) : (
+                <IconBtn title={`${profile.brand_name} Content`} active={isFixesActive} onClick={() => onNavigate("fixes:listicles")}>
+                  <ListChecks className="w-4 h-4" />
+                </IconBtn>
+              )}
+
+              <div className="w-5 border-t border-[#f0f0f0] my-1.5" />
+
+              {demoMode ? (
+                <>
+                  <IconBtn title="Know exactly when AI crawls your website" disabled>
+                    <Radio className="w-4 h-4" />
+                  </IconBtn>
+                  <IconBtn title="See exactly why AI recommended your competition" disabled>
+                    <Swords className="w-4 h-4" />
+                  </IconBtn>
+                </>
+              ) : (
+                <>
+                  <IconBtn title="Crawlers" active={activePage === "crawlers"} onClick={() => onNavigate("crawlers")}>
+                    <Radio className="w-4 h-4" />
+                  </IconBtn>
+                  <IconBtn title="Competitor Playbook" active={activePage === "competitor-playbook"} onClick={() => onNavigate("competitor-playbook")}>
+                    <Swords className="w-4 h-4" />
+                  </IconBtn>
+                </>
+              )}
+
+              <div className="w-5 border-t border-[#f0f0f0] my-1.5" />
+
+              <IconBtn title="Brand" active={activePage === "brand"} onClick={() => onNavigate("brand")}>
+                <Tag className="w-4 h-4" />
+              </IconBtn>
+            </div>
+
+            {/* Footer — logo only */}
+            <div className="py-3 flex items-center justify-center border-t border-[#f0f0f0]">
+              <svg width="18" height="20" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#ede9fe" />
+                <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="url(#swooshGradCollapsed)" />
+                <defs>
+                  <linearGradient id="swooshGradCollapsed" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#5b21b6" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12, ease: "easeInOut" }}
+            className="flex flex-col h-full w-[220px]"
+          >
+            {/* Brand header */}
+            <div className="px-3 pt-3 pb-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <button className="flex-1 min-w-0 flex items-center gap-2.5 px-3 py-2 bg-white border border-[#e5e5e5] rounded-full shadow-sm hover:border-[#d0d0d0] transition-colors">
+                <BrandFavicon domain={domain} name={profile.brand_name} size={22} />
+                <span className="flex-1 min-w-0 text-[13px] font-semibold text-[#0a0a0a] truncate text-left">{profile.brand_name}</span>
+                <ChevronsUpDown className="w-3.5 h-3.5 text-[#9ca3af] shrink-0" />
+              </button>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  title="Collapse sidebar"
+                  className="flex items-center justify-center w-7 h-7 rounded-md text-[#9ca3af] hover:text-[#5B2D91] hover:bg-[#f3eeff] transition-colors shrink-0"
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Nav */}
+            <div className="px-3 flex-1 overflow-y-auto py-4 space-y-5">
+
+              {/* ANALYTICS */}
+              <div>
+                <SectionLabel>Analytics</SectionLabel>
+                <NavItem active={activePage === "overview"} icon={LayoutDashboard} label="Overview" onClick={() => onNavigate("overview")} />
+              </div>
+
+              {/* AI VISIBILITY */}
+              <div>
+                <SectionLabel>AI Visibility</SectionLabel>
+                <div className="space-y-0.5">
+                  <NavItem active={activePage === "prompts"} icon={MessageSquare} label="Prompts" onClick={() => onNavigate("prompts")} />
+                  <NavItem active={activePage === "sources"} icon={Globe} label="Sources" onClick={() => onNavigate("sources")} />
+                </div>
+              </div>
+
+              {/* OPTIMIZE */}
+              <div>
+                <SectionLabel>Optimize</SectionLabel>
+                <div className="space-y-0.5 mb-0.5">
+                  <NavItem active={activePage === "engagement-threads"} imgSrc="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" label="Reddit" onClick={() => onNavigate("engagement-threads")} />
+                  <NavItem active={activePage === "quora-threads"} imgSrc="https://www.google.com/s2/favicons?domain=quora.com&sz=32" label="Quora" onClick={() => onNavigate("quora-threads")} />
+                </div>
+                {demoMode ? (
+                  <>
+                    <button
+                      title={`Generate listicles, comparison pages & more for ${profile.brand_name}`}
+                      onClick={() => setBrandContentOpen((v) => !v)}
+                      className="relative w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium text-[#6b7280] hover:bg-[#f7f7f5] hover:text-[#0a0a0a] transition-all"
+                    >
+                      <ListChecks className="w-4 h-4 shrink-0 text-[#9ca3af]" />
+                      <span className="flex-1 truncate">{profile.brand_name} Content</span>
+                      {brandContentOpen
+                        ? <ChevronDown className="w-3.5 h-3.5 text-[#9ca3af]" />
+                        : <ChevronRight className="w-3.5 h-3.5 text-[#9ca3af]" />
+                      }
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {brandContentOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.15, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-0.5 space-y-0.5 pb-1">
+                            {BRAND_CONTENT_ITEMS.map((item) => (
+                              <LockedNavItem key={item.id} icon={ListChecks} label={item.label} indent />
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setBrandContentOpen((v) => !v)}
+                      className={cn(
+                        "relative w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all",
+                        isFixesActive ? "text-[#5B2D91]" : "text-[#6b7280] hover:bg-[#f7f7f5] hover:text-[#0a0a0a]"
+                      )}
+                    >
+                      <ListChecks className={cn("w-4 h-4 shrink-0", isFixesActive ? "text-[#5B2D91]" : "text-[#9ca3af]")} />
+                      <span className="flex-1 truncate">{profile.brand_name} Content</span>
+                      {brandContentOpen
+                        ? <ChevronDown className="w-3.5 h-3.5 text-[#9ca3af]" />
+                        : <ChevronRight className="w-3.5 h-3.5 text-[#9ca3af]" />
+                      }
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {brandContentOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.15, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-0.5 space-y-0.5 pb-1">
+                            {BRAND_CONTENT_ITEMS.map((item) => (
+                              <NavItem
+                                key={item.id}
+                                active={activePage === `fixes:${item.id}`}
+                                icon={ListChecks}
+                                label={item.label}
+                                badge={item.badge}
+                                indent
+                                onClick={() => { onNavigate(`fixes:${item.id}`); setBrandContentOpen(true); }}
+                              />
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
+              </div>
+
+              {/* INTELLIGENCE */}
+              <div>
+                <SectionLabel>Intelligence</SectionLabel>
+                <div className="space-y-0.5">
+                  {demoMode ? (
+                    <>
+                      <LockedNavItem icon={Radio} label="Crawlers" title="Know exactly when AI crawls your website" />
+                      <LockedNavItem icon={Swords} label="Competitor Playbook" title="See exactly why AI recommended your competition" />
+                    </>
+                  ) : (
+                    <>
+                      <NavItem active={activePage === "crawlers"} icon={Radio} label="Crawlers" onClick={() => onNavigate("crawlers")} />
+                      <NavItem active={activePage === "competitor-playbook"} icon={Swords} label="Competitor Playbook" onClick={() => onNavigate("competitor-playbook")} />
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Brand — separated */}
+              <div className="pt-1 border-t border-[#f0f0f0]">
+                <NavItem active={activePage === "brand"} icon={Tag} label="Brand" onClick={() => onNavigate("brand")} />
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-3 pb-4 pt-3 border-t border-[#f0f0f0]">
+              <div className="flex items-center gap-2.5 px-2 py-1.5">
+                <svg width="22" height="24" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                  <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#ede9fe" />
+                  <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="url(#swooshGradSidebar)" />
+                  <defs>
+                    <linearGradient id="swooshGradSidebar" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#5b21b6" />
+                      <stop offset="100%" stopColor="#a855f7" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">Comly</p>
+                  <p className="text-[11px] text-[#9ca3af] truncate">Free plan</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="px-3 pb-4 pt-3 border-t border-[#f0f0f0]">
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
-          <svg width="28" height="28" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-            <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#1a1a2e" />
-            <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="url(#swooshGradSidebar)" />
-            <defs>
-              <linearGradient id="swooshGradSidebar" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#5b21b6" />
-                <stop offset="100%" stopColor="#a855f7" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">Comly</p>
-            <p className="text-[11px] text-[#aaaaaa] truncate">Free plan</p>
-          </div>
-        </div>
-      </div>
+      </AnimatePresence>
     </aside>
   );
 }

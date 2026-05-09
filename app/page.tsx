@@ -11,7 +11,12 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HowItWorksAnimated } from "@/components/ui/animated-scroll";
-import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import dynamic from "next/dynamic";
+
+const DemoDashboard = dynamic(
+  () => import("@/components/demo/demo-dashboard").then((m) => ({ default: m.DemoDashboard })),
+  { ssr: false }
+);
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { useScroll } from "@/components/ui/use-scroll";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
@@ -608,7 +613,7 @@ function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolea
             onClick={onCta}
             className="flex items-center gap-1.5 bg-[#5B2D91] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#4a2478] transition-all hover:scale-[1.02]"
           >
-            Try for free <ArrowRight className="w-3.5 h-3.5" />
+            Get started <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -652,7 +657,7 @@ function Navbar({ onCta, visible = true }: { onCta: () => void; visible?: boolea
               onClick={() => { onCta(); setMenuOpen(false); }}
               className="w-full bg-[#5B2D91] text-white text-sm font-semibold py-3 rounded-full hover:bg-[#4a2478] transition-colors"
             >
-              Try for free →
+              Get started →
             </button>
           </div>
         </div>
@@ -989,6 +994,126 @@ function PriceFeature({ text, included }: { text: string; included: boolean }) {
           : <X className="w-3.5 h-3.5" />}
       </div>
       <span className={`text-sm ${included ? "text-[#0a0a0a]" : "text-[#aaaaaa]"}`}>{text}</span>
+    </div>
+  );
+}
+
+// ─── DEMO FRAME (scales the 1440×860 dashboard to fit the landing-page container) ─
+
+const CHROME_H = 44;
+
+function DemoFrame({ children }: { children: React.ReactNode }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.72);
+
+  useEffect(() => {
+    function update() {
+      if (containerRef.current) {
+        setScale(containerRef.current.offsetWidth / 1440);
+      }
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const DASH_H = 860;
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: CHROME_H + Math.round(DASH_H * scale),
+        borderRadius: 16,
+        border: "1px solid #e0e0e0",
+        boxShadow: "0 32px 80px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.08)",
+        overflow: "hidden",
+        position: "relative",
+        background: "#f5f5f5",
+      }}
+    >
+      {/* Browser chrome bar */}
+      <div
+        style={{
+          height: CHROME_H,
+          background: "#f0f0f0",
+          borderBottom: "1px solid #ddd",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "0 14px",
+          flexShrink: 0,
+        }}
+      >
+        {/* Traffic lights */}
+        <div style={{ display: "flex", gap: 6, marginRight: 4 }}>
+          {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
+            <div key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c }} />
+          ))}
+        </div>
+        {/* URL bar */}
+        <div
+          style={{
+            flex: 1,
+            height: 26,
+            background: "white",
+            border: "1px solid #ddd",
+            borderRadius: 6,
+            display: "flex",
+            alignItems: "center",
+            paddingLeft: 10,
+            paddingRight: 10,
+            gap: 6,
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span style={{ fontSize: 12, color: "#555", fontFamily: "system-ui, sans-serif", letterSpacing: 0 }}>
+            comly.ai/demo/dashboard
+          </span>
+        </div>
+        {/* Open full preview button */}
+        <a
+          href="/demo"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 16px",
+            borderRadius: 8,
+            background: "linear-gradient(135deg, #5B2D91, #7c3aed)",
+            color: "white",
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "system-ui, sans-serif",
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            boxShadow: "0 2px 12px rgba(91,45,145,0.45)",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          Open full preview
+        </a>
+      </div>
+
+      {/* Scaled dashboard */}
+      <div
+        style={{
+          width: 1440,
+          height: DASH_H,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          position: "absolute",
+          top: CHROME_H,
+          left: 0,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -1437,7 +1562,7 @@ export default function LandingPage() {
                 disabled={!url.trim()}
                 className="shrink-0 bg-[#5B2D91] text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-[#4a2478] transition-all hover:scale-[1.02] disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5"
               >
-                Try free <ArrowRight className="w-3.5 h-3.5" />
+                Run audit <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
             <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
@@ -1553,16 +1678,16 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Desktop full preview */}
+          {/* Interactive demo dashboard */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
-            className="hidden sm:block w-full mt-6"
+            className="hidden sm:block w-full mt-8"
           >
-            <ContainerScroll>
-              <HeroDashboardPreview />
-            </ContainerScroll>
+            <DemoFrame>
+              <DemoDashboard />
+            </DemoFrame>
           </motion.div>
 
         </div>
@@ -1582,18 +1707,39 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-6 gap-3">
 
-            {/* Card 1 — top-left: Score big stat */}
+            {/* Card 1 — top-left: Avg position ranking */}
             <FadeIn delay={0} className="col-span-full lg:col-span-2">
               <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="relative flex flex-col items-center justify-center py-10 px-6 h-full text-center">
-                  <div className="relative flex items-center justify-center mb-6">
-                    <svg className="text-[#e5e5e5] absolute inset-0 w-full h-full" viewBox="0 0 254 104" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M112.891 97.7022C140.366 97.0802 171.004 94.6715 201.087 87.5116C210.43 85.2881 219.615 82.6412 228.284 78.2473C232.198 76.3179 235.905 73.9942 239.348 71.3124C241.85 69.2557 243.954 66.7571 245.555 63.9408C249.34 57.3235 248.281 50.5341 242.498 45.6109C239.033 42.7237 235.228 40.2703 231.169 38.3054C219.443 32.7209 207.141 28.4382 194.482 25.534C184.013 23.1927 173.358 21.7755 162.64 21.2989C161.376 21.3512 160.113 21.181 158.908 20.796C158.034 20.399 156.857 19.1682 156.962 18.4535C157.115 17.8927 157.381 17.3689 157.743 16.9139C158.104 16.4588 158.555 16.0821 159.067 15.8066C160.14 15.4683 161.274 15.3733 162.389 15.5286C179.805 15.3566 196.626 18.8373 212.998 24.462C220.978 27.2494 228.798 30.4747 236.423 34.1232C240.476 36.1159 244.202 38.7131 247.474 41.8258C254.342 48.2578 255.745 56.9397 251.841 65.4892C249.793 69.8582 246.736 73.6777 242.921 76.6327C236.224 82.0192 228.522 85.4602 220.502 88.2924C205.017 93.7847 188.964 96.9081 172.738 99.2109C153.442 101.949 133.993 103.478 114.506 103.79C91.1468 104.161 67.9334 102.97 45.1169 97.5831C36.0094 95.5616 27.2626 92.1655 19.1771 87.5116C13.839 84.5746 9.1557 80.5802 5.41318 75.7725C-0.54238 67.7259 -1.13794 59.1763 3.25594 50.2827C5.82447 45.3918 9.29572 41.0315 13.4863 37.4319C24.2989 27.5721 37.0438 20.9681 50.5431 15.7272C68.1451 8.8849 86.4883 5.1395 105.175 2.83669C129.045 0.0992292 153.151 0.134761 177.013 2.94256C197.672 5.23215 218.04 9.01724 237.588 16.3889C240.089 17.3418 242.498 18.5197 244.933 19.6446C246.627 20.4387 247.725 21.6695 246.997 23.615C246.455 25.1105 244.814 25.5605 242.63 24.5811C230.322 18.9961 217.233 16.1904 204.117 13.4376C188.761 10.3438 173.2 8.36665 157.558 7.52174C129.914 5.70776 102.154 8.06792 75.2124 14.5228C60.6177 17.8788 46.5758 23.2977 33.5102 30.6161C26.6595 34.3329 20.4123 39.0673 14.9818 44.658C12.9433 46.8071 11.1336 49.1622 9.58207 51.6855C4.87056 59.5336 5.61172 67.2494 11.9246 73.7608C15.2064 77.0494 18.8775 79.925 22.8564 82.3236C31.6176 87.7101 41.3848 90.5291 51.3902 92.5804C70.6068 96.5773 90.0219 97.7419 112.891 97.7022Z" fill="currentColor" />
-                    </svg>
-                    <span className="relative text-5xl font-bold text-[#0a0a0a] px-8">68%</span>
+                <CardContent className="flex flex-col justify-center py-6 px-6 h-full">
+                  {/* Header */}
+                  <div className="mb-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#aaaaaa] mb-1">When AI mentions you</p>
+                    <div className="flex items-end gap-2">
+                      <span className="text-4xl font-black text-[#0a0a0a] leading-none">#2</span>
+                      <span className="text-[12px] font-medium text-[#10b981] mb-0.5">avg position</span>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-semibold text-[#0a0a0a]">Visibility Score</h2>
-                  <p className="text-sm text-[#6b6b6b] mt-2">One clear number that shows exactly where you stand in AI recommendations.</p>
+                  {/* Ranked list */}
+                  <div className="space-y-1.5">
+                    {[
+                      { rank: 1, name: "Confluence", you: false, pct: 34 },
+                      { rank: 2, name: "Your brand", you: true,  pct: 28 },
+                      { rank: 3, name: "Notion",     you: false, pct: 20 },
+                      { rank: 4, name: "Coda",       you: false, pct: 12 },
+                    ].map((r) => (
+                      <div key={r.rank} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg ${r.you ? "bg-[#f3eeff]" : "bg-[#fafafa]"}`}>
+                        <span className={`text-[10px] font-bold w-4 shrink-0 ${r.you ? "text-[#5B2D91]" : "text-[#cccccc]"}`}>#{r.rank}</span>
+                        <span className={`text-[12px] font-semibold flex-1 truncate ${r.you ? "text-[#5B2D91]" : "text-[#6b7280]"}`}>
+                          {r.name}
+                          {r.you && <span className="ml-1.5 text-[9px] font-bold bg-[#5B2D91] text-white px-1.5 py-0.5 rounded-full">YOU</span>}
+                        </span>
+                        <div className="w-14 h-1.5 bg-[#eeeeee] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${r.pct * 2.5}%`, background: r.you ? "#5B2D91" : "#d1d5db" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-[#aaaaaa] mt-3 leading-snug">Know exactly where you rank — not just whether you appear.</p>
                 </CardContent>
               </Card>
             </FadeIn>
@@ -1622,30 +1768,44 @@ export default function LandingPage() {
               </Card>
             </FadeIn>
 
-            {/* Card 3 — top-right: Fast audit */}
+            {/* Card 3 — top-right: Engagement */}
             <FadeIn delay={0.1} className="col-span-full sm:col-span-3 lg:col-span-2">
               <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="pt-6">
-                  <div className="px-2">
-                    <div className="flex items-center justify-between mb-2 text-[11px] text-[#6b6b6b]">
-                      <span className="font-semibold text-[#0a0a0a]">Audit progress</span>
-                      <span className="text-emerald-600 font-semibold">Done in 60s</span>
-                    </div>
-                    <svg className="w-full" viewBox="0 0 386 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="386" height="80" rx="8" fill="#f7f7f5" />
-                      <path fillRule="evenodd" clipRule="evenodd" d="M3 80C3 80 14 60 35 55C56 50 66 49 66 49C66 49 80 49 92 49C104 49 101 38 109 38C117 38 117 57 125 57C133 57 142 47 154 49C166 51 187 57 194 57C201 57 205 38 213 38C221 38 238 59 244 57C250 55 258 36 265 36C271 36 283 54 286 54C294 54 300 44 305 44C312 44 322 40 334 38C346 37 347 50 362 49C374 48 383 65 383 65L383 80Z" fill="url(#fg1)" />
-                      <path className="text-[#5B2D91]" d="M3 75C3 75 15 57 36 52C57 47 67 46 67 46C67 46 80 46 91 46C103 46 100 35 108 35C116 35 117 53 125 53C133 53 142 43 153 46C165 48 186 53 193 53C200 53 205 35 213 35C221 35 238 55 244 53C250 51 258 32 265 32C271 32 283 51 286 51C294 51 300 41 305 41C312 41 321 37 333 35C345 33 347 47 362 46C377 45 383 63 383 63" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                      <defs>
-                        <linearGradient id="fg1" x1="3" y1="35" x2="3" y2="80" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#5B2D91" stopOpacity="0.12" />
-                          <stop offset="1" stopColor="#5B2D91" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                <CardContent className="pt-4 pb-5">
+                  {/* Platform logos */}
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" alt="Reddit" width={14} height={14} className="rounded-sm" />
+                    <span className="text-[10px] font-semibold text-[#ff4500]">Reddit</span>
+                    <span className="text-[#e5e5e5] mx-0.5">·</span>
+                    <img src="https://www.google.com/s2/favicons?domain=quora.com&sz=32" alt="Quora" width={14} height={14} className="rounded-sm" />
+                    <span className="text-[10px] font-semibold text-[#b92b27]">Quora</span>
+                    <span className="ml-auto text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">Live</span>
                   </div>
-                  <div className="mt-10 space-y-1.5 text-center">
-                    <h2 className="text-lg font-semibold text-[#0a0a0a]">Audit in 60 seconds</h2>
-                    <p className="text-sm text-[#6b6b6b]">Paste your URL. We scrape, analyze, score and return your full report automatically.</p>
+                  {/* Message bars */}
+                  <div className="space-y-1.5">
+                    {[
+                      { platform: "reddit.com", text: "Honestly the best tool I've used for this — highly recommend", width: "100%" },
+                      { platform: "quora.com",  text: "Best answer: this product solves exactly what you're asking", width: "90%" },
+                      { platform: "reddit.com", text: "Switched to this and never looked back, check it out", width: "80%" },
+                    ].map((msg, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <img src={`https://www.google.com/s2/favicons?domain=${msg.platform}&sz=32`} alt="" width={12} height={12} className="rounded-sm shrink-0" />
+                        <div className="bg-[#f7f7f5] rounded-md px-2 py-1" style={{ width: msg.width }}>
+                          <p className="text-[9.5px] text-[#374151] leading-none truncate">{msg.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {/* LLM pickup indicator */}
+                    <div className="flex items-center gap-1.5 pt-0.5 pl-[20px]">
+                      {["chatgpt.com","claude.ai","perplexity.ai"].map((d) => (
+                        <img key={d} src={`https://www.google.com/s2/favicons?domain=${d}&sz=32`} alt="" width={11} height={11} className="rounded-sm" />
+                      ))}
+                      <span className="text-[9px] text-[#9ca3af] ml-0.5">LLMs pick this up</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-1 text-center">
+                    <h2 className="text-base font-semibold text-[#0a0a0a]">Engage. Get cited.</h2>
+                    <p className="text-[12px] text-[#6b6b6b] leading-snug">Find Reddit & Quora threads where your audience asks questions — reply, get seen, get recommended by AI.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1780,105 +1940,103 @@ export default function LandingPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section className="bg-white py-28 px-6 overflow-hidden" id="pricing">
         <div className="max-w-5xl mx-auto">
-          <FadeIn className="text-center mb-20">
-            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">Simple pricing, no hidden fees</h2>
-            <p className="mt-3 text-lg text-[#6b6b6b]">Start free. Upgrade when you&apos;re ready.</p>
+
+          <FadeIn className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 bg-[#f3eeff] border border-[#e8d8ff] rounded-full px-4 py-1.5 mb-6">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-[12px] text-[#5B2D91] font-medium">Early adopter pricing — limited spots</span>
+            </div>
+            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">One plan. Everything included.</h2>
+            <p className="mt-3 text-lg text-[#6b6b6b]">No feature tiers. No model limits. No BS.</p>
           </FadeIn>
 
-          {/* Staggered cards */}
-          <div className="flex flex-col items-center justify-center gap-6 md:flex-row md:items-end md:gap-0">
+          {/* Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ type: "spring", duration: 0.6 }}
+            className="relative rounded-3xl overflow-hidden border border-white/10"
+            style={{ background: "linear-gradient(135deg, #5B2D91 0%, #3b1270 45%, #1a0a3d 100%)" }}
+          >
+            {/* Decorative glows */}
+            <div className="pointer-events-none absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full opacity-25"
+              style={{ background: "radial-gradient(circle, #a855f7, transparent 70%)" }} />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 w-[320px] h-[320px] rounded-full opacity-15"
+              style={{ background: "radial-gradient(circle, #7c3aed, transparent 70%)" }} />
 
-            {/* ── Free (left, tilted back) ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 40, rotate: isMobile ? 0 : -6 }}
-              whileInView={{ opacity: 1, y: 0, rotate: isMobile ? 0 : -6 }}
-              viewport={{ once: true }}
-              transition={{ type: "spring", duration: 0.6, delay: 0 }}
-              className="relative z-10 w-full sm:w-72 rounded-2xl border border-[#e5e5e5] bg-white px-8 py-10 shadow-sm transition-transform hover:scale-105 md:-mr-4"
-            >
-              <div className="mb-1 text-base font-bold text-[#5B2D91]">Free</div>
-              <div className="mb-1 text-4xl font-extrabold text-[#0a0a0a]">$0</div>
-              <div className="mb-5 text-sm text-[#aaaaaa]">One audit, forever free</div>
-              <ul className="mb-7 space-y-2.5 text-sm text-[#6b6b6b]">
-                {["Full visibility audit", "Score out of 100", "Competitor ranking (one snapshot)", "To-do list with fixes", "llms.txt generator (one-time)"].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="text-emerald-500 shrink-0 mt-0.5">✔</span>{f}
-                  </li>
-                ))}
-                {["Daily automated tracking", "Score history", "Email alerts"].map((f) => (
-                  <li key={f} className="flex items-start gap-2 opacity-30">
-                    <span className="shrink-0 mt-0.5">✕</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => heroInputRef.current?.focus()}
-                className="w-full rounded-xl bg-[#5B2D91]/80 py-2.5 font-semibold text-white hover:bg-[#5B2D91] transition text-sm"
-              >
-                Run free audit →
-              </button>
-            </motion.div>
+            <div className="relative flex flex-col lg:flex-row">
 
-            {/* ── Starter (center, featured, elevated) ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ type: "spring", duration: 0.7, delay: 0.1 }}
-              className="relative z-20 w-full sm:w-80 scale-105 rounded-3xl border-2 border-[#7c3aed]/60 bg-gradient-to-b from-[#5B2D91] to-[#3b1a70] px-10 py-14 text-white shadow-2xl shadow-[#5B2D91]/30 transition-transform hover:scale-[1.07] md:-mt-8"
-            >
-              {/* Best Deal badge */}
-              <motion.div
-                animate={{ y: [0, -4, 0] }}
-                transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-                className="absolute -top-5 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-white px-5 py-1.5 text-[11px] font-extrabold text-[#5B2D91] shadow-lg whitespace-nowrap"
-              >
-                Most Popular
-              </motion.div>
-              <div className="mb-1 text-base font-bold text-white/70">Starter</div>
-              <div className="mb-1 text-5xl font-black tracking-tight">$49<span className="text-xl font-normal text-white/50">/mo</span></div>
-              <div className="mb-6 text-sm text-white/50">For growing SaaS founders</div>
-              <ul className="mb-8 space-y-2.5 text-sm">
-                {["Everything in Free", "Weekly automated audits", "Score history & trends", "Competitor tracking", "Email alerts on score changes", "llms.txt generator (weekly updated)", "ChatGPT tracking"].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="text-emerald-300 shrink-0 mt-0.5">✔</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <button disabled className="w-full rounded-xl bg-white/10 border border-white/20 py-2.5 font-bold text-white/50 cursor-not-allowed text-sm">
-                Coming soon
-              </button>
-              <p className="text-[11px] text-white/40 text-center mt-2">Early adopters get lifetime pricing lock 🔒</p>
-            </motion.div>
+              {/* ── Left: price ── */}
+              <div className="lg:w-[300px] shrink-0 px-10 py-14 flex flex-col justify-between gap-10 border-b lg:border-b-0 lg:border-r border-white/10">
+                <div className="space-y-5">
+                  <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-3 py-1">
+                    <span className="text-[11px] font-semibold text-white/80 tracking-wide">All in One</span>
+                    <span className="text-[10px] font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-full">For founders &amp; teams</span>
+                  </div>
 
-            {/* ── Pro (right, tilted back) ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 40, rotate: isMobile ? 0 : 6 }}
-              whileInView={{ opacity: 1, y: 0, rotate: isMobile ? 0 : 6 }}
-              viewport={{ once: true }}
-              transition={{ type: "spring", duration: 0.6, delay: 0.2 }}
-              className="relative z-10 w-full sm:w-72 rounded-2xl border border-[#e5e5e5] bg-white px-8 py-10 shadow-sm transition-transform hover:scale-105 md:-ml-4"
-            >
-              <div className="mb-1 text-base font-bold text-[#5B2D91]">Pro</div>
-              <div className="mb-1 text-4xl font-extrabold text-[#0a0a0a]">$249<span className="text-lg font-normal text-[#aaaaaa]">/mo</span></div>
-              <div className="mb-5 text-sm text-[#aaaaaa]">For teams serious about AI</div>
-              <ul className="mb-7 space-y-2.5 text-sm text-[#6b6b6b]">
-                {["Everything in Starter", "4 AI models (ChatGPT, Claude, Perplexity, Gemini)", "Advanced competitor intelligence", "Sentiment analysis per mention", "Priority support", "Monthly strategy call", "Done-with-you implementation"].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="text-emerald-400 shrink-0 mt-0.5">✔</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <button disabled className="w-full rounded-xl bg-[#5B2D91]/10 border border-[#5B2D91]/20 py-2.5 font-semibold text-[#5B2D91]/40 cursor-not-allowed text-sm">
-                Coming soon
-              </button>
-            </motion.div>
+                  <div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[18px] text-white/30 line-through mt-4 leading-none">$149</span>
+                      <div className="flex items-end gap-1">
+                        <span className="text-[76px] font-black text-white leading-none tracking-tight">$99</span>
+                        <span className="text-[16px] text-white/40 pb-3">/mo</span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full mt-3">
+                      🔒 Price locked for early adopters
+                    </span>
+                  </div>
+                </div>
 
-          </div>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => heroInputRef.current?.focus()}
+                    className="w-full rounded-2xl bg-white py-4 font-extrabold text-[#5B2D91] hover:bg-white/90 active:scale-[0.98] transition-all text-[15px] shadow-xl shadow-black/30"
+                  >
+                    Start 7-day Free Trial →
+                  </button>
+                  <div className="flex items-center justify-center gap-3 text-white/30 text-[11px]">
+                    <span>✓ No credit card</span>
+                    <span>·</span>
+                    <span>✓ Cancel anytime</span>
+                  </div>
+                </div>
+              </div>
 
-          <div className="mt-16 text-center">
-            <p className="text-sm text-[#aaaaaa]">All plans include a free audit. No credit card required to start.</p>
-          </div>
+              {/* ── Right: features ── */}
+              <div className="flex-1 px-10 py-14">
+                <p className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-7">Everything included</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
+                  {[
+                    { text: <><strong className="text-white">25 prompts</strong><span className="text-white/60"> tracked daily across 4 AI models</span></> },
+                    { text: <><strong className="text-white">All 4 AI models</strong><span className="text-white/60"> — ChatGPT, Claude, Perplexity, Gemini</span></> },
+                    { text: <><span className="text-white/60">Visibility score + </span><strong className="text-white">score history &amp; trends</strong></> },
+                    { text: <><strong className="text-white">Competitor tracking</strong><span className="text-white/60"> — up to 5 competitors</span></> },
+                    { text: <><strong className="text-white">llms.txt generator</strong><span className="text-white/60">, auto-updated weekly</span></> },
+                    { text: <><strong className="text-white">Comparison page</strong><span className="text-white/60"> generator</span></> },
+                    { text: <><strong className="text-white">Listicle generator</strong><span className="text-white/60"> — G2, Product Hunt, Capterra</span></> },
+                    { text: <><strong className="text-white">Hero rewrite</strong><span className="text-white/60"> suggestions</span></> },
+                    { text: <><strong className="text-white">Engagement Threads</strong><span className="text-white/60"> — Reddit finder &amp; reply drafts</span></> },
+                    { text: <><strong className="text-white">Email alerts</strong><span className="text-white/60"> on score changes</span></> },
+                    { text: <><span className="text-white/60">Export data as </span><strong className="text-white">CSV</strong></> },
+                    { text: <><strong className="text-white">Priority support</strong></> },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <span className="shrink-0 mt-0.5 text-emerald-400 text-[14px]">✔</span>
+                      <span className="text-[13px] leading-snug">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-8 pt-6 border-t border-white/10 text-[12px] text-white/30">
+                  Plus: AI crawlability checker, source tracking, and all future tools at no extra cost.
+                </p>
+              </div>
+
+            </div>
+          </motion.div>
+
+
         </div>
       </section>
 

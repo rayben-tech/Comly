@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -448,7 +448,7 @@ function AnimatedShowcase({ profile }: { profile: BrandProfile }) {
     <div>
       {/* Animated card */}
       <div
-        className="bg-white border border-[#e5e5e5] rounded-xl p-5 overflow-hidden cursor-default"
+        className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-5 overflow-hidden cursor-default"
         style={{ height: 280 }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
@@ -617,7 +617,7 @@ export function BrandProfileEditor({ profile: initialProfile, onConfirm, isAudit
             <AnimatedShowcase profile={profile} />
 
             {/* Compact feature grid */}
-            <div className="mt-6 bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
+            <div className="mt-6 bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
               <div className="grid grid-cols-2">
                 {COMPACT_FEATURES.map((f, i) => {
                   const isLastRow = i >= COMPACT_FEATURES.length - 2;
@@ -651,3 +651,4 @@ export function BrandProfileEditor({ profile: initialProfile, onConfirm, isAudit
     </div>
   );
 }
+

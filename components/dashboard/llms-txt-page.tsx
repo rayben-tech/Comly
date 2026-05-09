@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { BrandProfile } from "@/types";
@@ -321,7 +321,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
 
       {/* ── TOP BANNER: already have llms.txt ────────────────── */}
       {existingState === "checking" && (
-        <div className="bg-white border border-[#e5e5e5] rounded-xl px-5 py-4 flex items-center gap-3">
+        <div className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] px-5 py-4 flex items-center gap-3">
           <Loader2 className="w-4 h-4 animate-spin text-[#5B2D91] shrink-0" />
           <p className="text-[13px] text-[#6b6b6b]">Checking if you already have an llms.txt…</p>
         </div>
@@ -360,7 +360,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
       </div>
 
       {/* ── Education ────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-5">
         <h2 className="text-[16px] font-bold text-[#0a0a0a]">What is llms.txt?</h2>
 
         <p className="text-[13px] text-[#6b6b6b] leading-relaxed">
@@ -466,7 +466,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
       {hasFile && (
         <>
           {/* Current file preview */}
-          <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
             <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0]">
               <h2 className="text-[15px] font-bold text-[#0a0a0a]">How your llms.txt looks</h2>
               <button
@@ -489,7 +489,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
           </div>
 
           {/* Refine CTA */}
-          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-3">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-3">
             <div>
               <h2 className="text-[15px] font-bold text-[#0a0a0a]">Want to improve your llms.txt?</h2>
               <p className="text-[13px] text-[#6b6b6b] mt-1">
@@ -549,13 +549,13 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
       {!hasFile && (
         <>
           {/* Preview of what will be generated */}
-          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-4">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-4">
             <h2 className="text-[16px] font-bold text-[#0a0a0a]">What your llms.txt will contain</h2>
             <CodeBlock content={previewContent} />
           </div>
 
           {/* Generator form */}
-          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-[16px] font-bold text-[#0a0a0a]">Generate your llms.txt</h2>
@@ -672,7 +672,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
 
           {/* Result */}
           {(generatedContent || error) && (
-            <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5">
+            <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-5">
               {error && (
                 <div className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">{error}</div>
               )}
@@ -705,7 +705,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
           )}
 
           {/* How to publish */}
-          <div className="bg-white border border-[#e5e5e5] rounded-2xl p-6 space-y-5">
+          <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-5">
             <h2 className="text-[14px] font-bold text-[#0a0a0a]">How to add llms.txt to your website</h2>
 
             <div className="flex flex-wrap gap-0 border-b border-[#f0f0f0] -mx-1">
@@ -749,3 +749,4 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { PromptResult } from "@/types";
@@ -102,7 +102,7 @@ export function ModelBreakdown({ promptResults, brandName, onNavigate }: Props) 
   const hasMore = visibleCount < mentions.length;
 
   return (
-    <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
+    <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-[#e5e5e5]">
         <div>
@@ -178,3 +178,4 @@ export function ModelBreakdown({ promptResults, brandName, onNavigate }: Props) 
     </div>
   );
 }
+

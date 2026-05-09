@@ -44,6 +44,7 @@ export async function saveAuditForUser(userId: string, data: {
     url: data.url,
     brand_name: data.brand_name,
     score: data.score,
+    results: data.results,
   }).then(({ error: e }) => {
     if (e) console.warn("audit_history insert failed:", e.message);
   });
@@ -57,6 +58,50 @@ export async function getUserAudit(userId: string) {
     .single();
   if (error) return null;
   return data as { url: string; brand_name: string; score: number; profile: object; results: object } | null;
+}
+
+export async function getAuditHistory(userId: string, timeRange: "7d" | "yesterday" | "30d") {
+  const now = new Date();
+  let since: Date;
+  let until: Date | null = null;
+
+  if (timeRange === "yesterday") {
+    const y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    since = new Date(y.getFullYear(), y.getMonth(), y.getDate());
+    until = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  } else if (timeRange === "30d") {
+    since = new Date(now);
+    since.setDate(since.getDate() - 30);
+  } else {
+    since = new Date(now);
+    since.setDate(since.getDate() - 7);
+  }
+
+  const base = supabase
+    .from("audit_history")
+    .select("score, results, created_at")
+    .eq("user_id", userId)
+    .gte("created_at", since.toISOString())
+    .order("created_at", { ascending: true });
+
+  const { data, error } = await (until ? base.lt("created_at", until.toISOString()) : base);
+
+  if (error) {
+    // results column may not exist yet — retry without it
+    const baseNR = supabase
+      .from("audit_history")
+      .select("score, created_at")
+      .eq("user_id", userId)
+      .gte("created_at", since.toISOString())
+      .order("created_at", { ascending: true });
+
+    const { data: fbData, error: fbErr } = await (until ? baseNR.lt("created_at", until.toISOString()) : baseNR);
+    if (fbErr) { console.warn("getAuditHistory error:", fbErr.message); return []; }
+    return (fbData ?? []).map((d) => ({ score: d.score as number, results: null, created_at: d.created_at as string }));
+  }
+
+  return (data ?? []) as Array<{ score: number; results: unknown; created_at: string }>;
 }
 
 export async function saveEmailCapture(data: {

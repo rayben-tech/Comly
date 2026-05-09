@@ -118,6 +118,7 @@ function AuditFlow() {
   const [error, setError] = useState("");
   const [isAuditing, setIsAuditing] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const firingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auth guard + one-audit-per-account check
@@ -130,6 +131,7 @@ function AuditFlow() {
         return;
       }
 
+      setUserId(session.user.id);
       // Check if user already has a saved audit
       console.log("[comly] session.user.id:", session.user.id, "| isUnlimited:", UNLIMITED_IDS.includes(session.user.id));
       const isUnlimited = UNLIMITED_IDS.includes(session.user.id);
@@ -306,7 +308,7 @@ function AuditFlow() {
       if (firingTimerRef.current) clearTimeout(firingTimerRef.current);
       setError(err instanceof Error ? err.message : "Audit failed. Please try again.");
       setLoadingPhase(null);
-      setStep("profile");
+      setStep("auditing");
     } finally {
       setIsAuditing(false);
     }
@@ -349,18 +351,7 @@ function AuditFlow() {
   }
 
   if (step === "results" && auditResult && profile) {
-    return <AuditResults result={auditResult} profile={profile} onReset={handleReset} onRerun={handleRerun} />;
-  }
-
-  if (step === "profile" && profile) {
-    return (
-      <BrandProfileEditor
-        profile={profile}
-        onConfirm={handleConfirmProfile}
-        isAuditing={isAuditing}
-        onReset={handleReset}
-      />
-    );
+    return <AuditResults result={auditResult} profile={profile} onReset={handleReset} onRerun={handleRerun} userId={userId ?? undefined} />;
   }
 
   if (error) {
@@ -372,16 +363,37 @@ function AuditFlow() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h2 className="text-[#0a0a0a] font-semibold text-lg mb-2">Something went wrong</h2>
+          <h2 className="text-[#0a0a0a] font-semibold text-lg mb-2">Audit failed</h2>
           <p className="text-[#6b7280] text-sm mb-6 leading-relaxed">{error}</p>
-          <button
-            onClick={() => router.push("/")}
-            className="px-6 py-2.5 bg-[#5B2D91] text-white rounded-lg text-sm font-semibold hover:bg-[#4a2475] transition-colors"
-          >
-            Try again
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            {profile && (
+              <button
+                onClick={() => { setError(""); handleConfirmProfile(profile); }}
+                className="px-6 py-2.5 bg-[#5B2D91] text-white rounded-lg text-sm font-semibold hover:bg-[#4a2475] transition-colors"
+              >
+                Try again
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/")}
+              className="px-6 py-2.5 bg-white border border-[#e5e5e5] text-[#6b7280] rounded-lg text-sm font-semibold hover:border-[#d0d0d0] transition-colors"
+            >
+              Go home
+            </button>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  if (step === "profile" && profile) {
+    return (
+      <BrandProfileEditor
+        profile={profile}
+        onConfirm={handleConfirmProfile}
+        isAuditing={isAuditing}
+        onReset={handleReset}
+      />
     );
   }
 

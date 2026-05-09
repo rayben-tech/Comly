@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { BrandProfile } from "@/types";
@@ -270,7 +270,7 @@ export function BrandPage({ profile, onSave }: Props) {
         )}
       </div>
 
-      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5 space-y-4">
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-5 space-y-4">
         {/* Identity header */}
         <div className="flex items-center gap-3 pb-4 border-b border-[#f0f0f0]">
           <BrandFaviconLarge domain={editing ? domain : displayDomain} name={editing ? draft.brand_name : profile.brand_name} />
@@ -439,3 +439,4 @@ export function BrandPage({ profile, onSave }: Props) {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
@@ -9,13 +9,16 @@ import { CompetitorsTable } from "@/components/dashboard/competitors-table";
 import { DomainsTable } from "@/components/dashboard/domains-table";
 import { PromptsPage } from "@/components/dashboard/prompts-page";
 import { PromptsPerformance } from "@/components/dashboard/prompts-performance";
+import { ShareOfVoice } from "@/components/dashboard/share-of-voice";
+import { OverviewPanel } from "@/components/dashboard/overview-panel";
 import { BrandPage } from "@/components/dashboard/brand-page";
 import { ListiclesPage } from "@/components/dashboard/listicles-page";
 import { LlmsTxtPage } from "@/components/dashboard/llms-txt-page";
 import { ComparisonPagesPage } from "@/components/dashboard/comparison-pages";
-import { HeroRewritePage } from "@/components/dashboard/hero-rewrite-page";
+import { EngagementThreadsPage } from "@/components/dashboard/engagement-threads";
+import { QuoraThreadsPage } from "@/components/dashboard/quora-threads";
 import { EmailCapture } from "@/components/email-capture";
-import { Hash, Trophy, Sparkles, Radio, Lock, Code2, Star, MessageCircle, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu, PanelLeftOpen } from "lucide-react";
+import { Sparkles, Radio, Lock, Code2, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const VisibilityChart = dynamic(
@@ -32,13 +35,14 @@ interface AuditResultsProps {
   profile: BrandProfile;
   onReset: () => void;
   onRerun: () => void;
+  userId?: string;
 }
 
-type Page = "overview" | "prompts" | "sources" | "brand" | "crawlers" | "competitor-playbook" | `fixes:${string}`;
+type Page = "overview" | "prompts" | "sources" | "brand" | "crawlers" | "competitor-playbook" | "engagement-threads" | "quora-threads" | `fixes:${string}`;
 
 
 
-export function AuditResults({ result, profile: initialProfile, onReset, onRerun }: AuditResultsProps) {
+export function AuditResults({ result, profile: initialProfile, onReset, onRerun, userId }: AuditResultsProps) {
   const [activePage, setActivePage] = useState<Page>("overview");
   const [profile, setProfile] = useState<BrandProfile>(initialProfile);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -50,94 +54,53 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
     ? (() => { try { const u = profile.url.startsWith("http") ? profile.url : "https://" + profile.url; return new URL(u).hostname; } catch { return profile.url; } })()
     : profile.brand_name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "") + ".com";
 
-  return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#f7f4ff" }}>
-      <AnimatePresence initial={false}>
-        {sidebarOpen && (
-          <motion.div
-            key="sidebar"
-            initial={{ width: 0 }}
-            animate={{ width: 220 }}
-            exit={{ width: 0 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="hidden lg:block overflow-hidden shrink-0"
-            style={{ minWidth: 0 }}
-          >
-            <Sidebar
-              activePage={activePage}
-              onNavigate={(p) => setActivePage(p as Page)}
-              profile={profile}
-              onClose={() => setSidebarOpen(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+  const scoreColor = score >= 60 ? "#10b981" : score >= 30 ? "#f59e0b" : "#ef4444";
 
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-        {/* Persistent sidebar-open button — visible on all pages when sidebar is closed */}
-        {!sidebarOpen && (
-          <button
-            onClick={() => setSidebarOpen(true)}
-            title="Expand sidebar"
-            className="hidden lg:flex items-center justify-center absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-white border border-[#e5e5e5] shadow-sm text-[#aaaaaa] hover:text-[#5B2D91] hover:border-[#5B2D91]/30 transition-colors shrink-0"
-          >
-            <PanelLeftOpen className="w-4 h-4" />
-          </button>
-        )}
+  return (
+    <motion.div
+      className="flex h-screen overflow-hidden"
+      animate={{ backgroundColor: activePage === "engagement-threads" ? "#f5ddd0" : activePage === "quora-threads" ? "#f5b8b8" : "#ddd5f5" }}
+      transition={{ duration: 0.55, ease: "easeInOut" }}
+    >
+      <motion.div
+        animate={{ width: sidebarOpen ? 220 : 52 }}
+        transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+        className="hidden lg:block overflow-hidden shrink-0"
+        style={{ minWidth: 0 }}
+      >
+        <Sidebar
+          activePage={activePage}
+          onNavigate={(p) => setActivePage(p as Page)}
+          profile={profile}
+          collapsed={!sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onOpen={() => setSidebarOpen(true)}
+        />
+      </motion.div>
+
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activePage}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.17, ease: [0.4, 0, 0.2, 1] }}
+            >
 
           {/* OVERVIEW */}
           {activePage === "overview" && (
-            <>
-            {/* Sticky page title */}
-            <div className="flex items-center gap-3 px-6 pt-6 pb-3">
-              <div>
-                <h1 className="text-[20px] font-bold text-[#0a0a0a]">Dashboard</h1>
-                <p className="text-[13px] text-[#6b6b6b] mt-0.5">
-                  Monitor how <span className="font-semibold text-[#0a0a0a]">{profile.brand_name}</span> performs across AI models
-                </p>
-              </div>
-            </div>
-            <div className="px-6 pb-6 space-y-5">
-
-              {/* Visibility full width */}
-              <VisibilityChart
-                promptResults={prompt_results}
-                competitorRankings={competitor_rankings}
-                brandName={profile.brand_name}
-                brandDomain={domain}
-              />
-
-              {/* Two-column grid below */}
-              <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
-                <div className="xl:col-span-3 space-y-5">
-                  <ModelBreakdown
-                    promptResults={prompt_results}
-                    brandName={profile.brand_name}
-                    onNavigate={(p) => setActivePage(p as Page)}
-                  />
-                </div>
-                <div className="xl:col-span-2 space-y-5">
-                  <CompetitorsTable
-                    competitorRankings={competitor_rankings}
-                    promptResults={prompt_results}
-                    brandName={profile.brand_name}
-                    brandUrl={profile.url}
-                    totalMentions={total_mentions}
-                    specifiedCompetitors={profile.competitors}
-                  />
-                </div>
-              </div>
-
-              <PromptsPerformance
-                promptResults={prompt_results}
-                brandName={profile.brand_name}
-                brandDomain={domain}
-                onNavigate={(p) => setActivePage(p as Page)}
-              />
-
-            </div>
-            </>
+            <OverviewPanel
+              score={score}
+              totalMentions={total_mentions}
+              promptResults={prompt_results}
+              competitorRankings={competitor_rankings}
+              profile={profile}
+              domain={domain}
+              onNavigate={(p) => setActivePage(p as Page)}
+              userId={userId}
+            />
           )}
 
           {activePage === "prompts" && (
@@ -162,177 +125,15 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
             <ComparisonPagesPage profile={profile} locked={!!generatedFixes["comparison"]} onGenerated={() => markFixGenerated("comparison")} />
           )}
 
-          {activePage === "fixes:hero-rewrite" && (
-            <HeroRewritePage profile={profile} locked={!!generatedFixes["hero-rewrite"]} onGenerated={() => markFixGenerated("hero-rewrite")} />
+          {activePage === "engagement-threads" && (
+            <EngagementThreadsPage profile={profile} />
           )}
 
-          {activePage === "fixes:g2-checklist" && (
-            <div className="p-6">
-              <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
-                <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                      <Star className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2.5 mb-1.5">
-                        <h2 className="text-[18px] font-bold text-[#0a0a0a]">G2 Checklist</h2>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Pro</span>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#f3eeff] text-[#5B2D91]">Coming soon</span>
-                      </div>
-                      <p className="text-[14px] text-[#6b6b6b] leading-relaxed">
-                        When buyers ask ChatGPT or Perplexity to recommend tools in your category, a complete G2 page with strong reviews is one of the top signals they cite. Make sure yours is ready.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Blurred checklist preview */}
-                <div className="px-8 py-6 border-b border-[#f0f0f0]">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[12px] font-semibold text-[#aaaaaa] uppercase tracking-wide">Your G2 checklist</span>
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#aaaaaa]">
-                      <Lock className="w-3 h-3" />
-                      Unlock with Pro
-                    </div>
-                  </div>
-                  <div className="relative rounded-xl overflow-hidden border border-[#f0f0f0]">
-                    <div className="bg-[#fafafa] px-5 py-4 space-y-3 select-none blur-[3px] pointer-events-none">
-                      {["Claimed & verified G2 profile", "10+ recent reviews (last 6 months)", "All product features filled in", "Competitive comparisons enabled", "Category leader badge embedded on site", "Responded to every review publicly"].map((item) => (
-                        <div key={item} className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded border-2 border-[#d0d0d0] shrink-0" />
-                          <span className="text-[13px] text-[#3a3a3a]">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
-                      <div className="flex items-center gap-2 bg-white border border-[#e8e8e8] rounded-lg px-4 py-2 shadow-sm">
-                        <Lock className="w-3.5 h-3.5 text-[#5B2D91]" />
-                        <span className="text-[13px] font-semibold text-[#0a0a0a]">Available on Pro</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-8 py-6 border-b border-[#f0f0f0]">
-                  <p className="text-[12px] font-semibold text-[#aaaaaa] uppercase tracking-wide mb-4">What you&apos;ll get</p>
-                  <div className="space-y-3">
-                    {[
-                      { icon: "📋", text: "Step-by-step G2 optimization checklist tailored to your software category" },
-                      { icon: "⭐", text: "Review generation scripts to collect more authentic, AI-visible reviews" },
-                      { icon: "🏆", text: "Tips to rank higher in G2 category pages that AI tools frequently cite" },
-                      { icon: "🔗", text: "Badge integration guide to add social proof directly to your site" },
-                    ].map(({ icon, text }) => (
-                      <div key={text} className="flex items-start gap-3">
-                        <span className="text-[16px] shrink-0 mt-0.5">{icon}</span>
-                        <p className="text-[13px] text-[#3a3a3a] leading-snug">{text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="px-8 py-6">
-                  <button
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80"
-                    style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Upgrade to Pro — get early access
-                  </button>
-                  <p className="text-[11px] text-[#aaaaaa] text-center mt-2.5">We&apos;ll notify you as soon as G2 Checklist goes live.</p>
-                </div>
-              </div>
-            </div>
+          {activePage === "quora-threads" && (
+            <QuoraThreadsPage profile={profile} />
           )}
 
-          {activePage === "fixes:reddit-exposure" && (
-            <div className="p-6">
-              <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
-                <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#ff450012" }}>
-                      <MessageCircle className="w-5 h-5" style={{ color: "#ff4500" }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2.5 mb-1.5">
-                        <h2 className="text-[18px] font-bold text-[#0a0a0a]">Reddit Exposure</h2>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Pro</span>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#f3eeff] text-[#5B2D91]">Coming soon</span>
-                      </div>
-                      <p className="text-[14px] text-[#6b6b6b] leading-relaxed">
-                        Reddit is one of the most-cited sources by AI tools like Perplexity and ChatGPT. Find the subreddits where your buyers live and make sure your brand shows up in the conversations AI learns from.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Blurred Reddit thread preview */}
-                <div className="px-8 py-6 border-b border-[#f0f0f0]">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[12px] font-semibold text-[#aaaaaa] uppercase tracking-wide">Reddit thread preview</span>
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#aaaaaa]">
-                      <Lock className="w-3 h-3" />
-                      Unlock with Pro
-                    </div>
-                  </div>
-                  <div className="relative rounded-xl overflow-hidden border border-[#f0f0f0]">
-                    <div className="bg-[#fafafa] px-5 py-4 select-none blur-[3px] pointer-events-none space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-[#ff4500]">r/startuptools</span>
-                        <span className="text-[11px] text-[#aaaaaa]">• Posted by u/founder_dev</span>
-                      </div>
-                      <p className="text-[13px] font-semibold text-[#0a0a0a]">&ldquo;Best AI SEO tools in 2024? Looking for something that tracks LLM visibility&rdquo;</p>
-                      <div className="flex items-center gap-3 text-[11px] text-[#aaaaaa]">
-                        <span>↑ 847 points</span>
-                        <span>92 comments</span>
-                      </div>
-                      <div className="border-t border-[#f0f0f0] pt-3 space-y-2">
-                        {["u/seo_pro: I've been using [Brand] for a few months now, it's solid", "u/growth_hacker: Tried a few — [Brand] has the best prompt tracking by far", "u/startup_cto: [Brand] is legit, they have a free tier too"].map((c) => (
-                          <p key={c} className="text-[12px] text-[#6b6b6b]">{c}</p>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
-                      <div className="flex items-center gap-2 bg-white border border-[#e8e8e8] rounded-lg px-4 py-2 shadow-sm">
-                        <Lock className="w-3.5 h-3.5 text-[#5B2D91]" />
-                        <span className="text-[13px] font-semibold text-[#0a0a0a]">Available on Pro</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-8 py-6 border-b border-[#f0f0f0]">
-                  <p className="text-[12px] font-semibold text-[#aaaaaa] uppercase tracking-wide mb-4">What you&apos;ll get</p>
-                  <div className="space-y-3">
-                    {[
-                      { icon: "🎯", text: "Subreddit map — the exact communities your ideal buyers are already in" },
-                      { icon: "✍️", text: "Post and comment templates that drive authentic, AI-indexed engagement" },
-                      { icon: "📈", text: "Track which Reddit threads AI tools are actively pulling from for your keywords" },
-                      { icon: "🔍", text: "Monitor your brand mentions across Reddit in real time" },
-                    ].map(({ icon, text }) => (
-                      <div key={text} className="flex items-start gap-3">
-                        <span className="text-[16px] shrink-0 mt-0.5">{icon}</span>
-                        <p className="text-[13px] text-[#3a3a3a] leading-snug">{text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="px-8 py-6">
-                  <button
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80"
-                    style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Upgrade to Pro — get early access
-                  </button>
-                  <p className="text-[11px] text-[#aaaaaa] text-center mt-2.5">We&apos;ll notify you as soon as Reddit Exposure goes live.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activePage.startsWith("fixes:") && activePage !== "fixes:listicles" && activePage !== "fixes:llms-txt" && activePage !== "fixes:comparison" && activePage !== "fixes:hero-rewrite" && activePage !== "fixes:g2-checklist" && activePage !== "fixes:reddit-exposure" && (
+          {activePage.startsWith("fixes:") && activePage !== "fixes:listicles" && activePage !== "fixes:llms-txt" && activePage !== "fixes:comparison" && (
             <div className="p-6 flex flex-col items-center justify-center min-h-[400px] gap-3">
               <div className="w-12 h-12 rounded-xl bg-[#f3eeff] flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-[#5B2D91]" />
@@ -520,7 +321,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
                               <p className="text-[10px] font-semibold text-[#aaaaaa] uppercase tracking-wide mb-1">Key sources backing them</p>
                               <div className="flex gap-2">
                                 {["g2.com", "producthunt.com", "techcrunch.com"].map((d) => (
-                                  <span key={d} className="text-[11px] text-[#6b6b6b] bg-[#f7f7f5] px-2 py-0.5 rounded">{d}</span>
+                                  <span key={d} className="text-[11px] text-[#6b6b6b] bg-[#ddd5f5] px-2 py-0.5 rounded">{d}</span>
                                 ))}
                               </div>
                             </div>
@@ -570,6 +371,8 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
               </div>
             </div>
           )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Mobile more sheet backdrop */}
@@ -590,15 +393,13 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
                 { id: "fixes:llms-txt",        label: "llms.txt Generator",  badge: ""    },
                 { id: "fixes:comparison",      label: "Comparison Pages",    badge: ""    },
                 { id: "fixes:hero-rewrite",    label: "Hero Rewrite",        badge: ""    },
-                { id: "fixes:g2-checklist",    label: "G2 Checklist",        badge: "Pro" },
-                { id: "fixes:reddit-exposure", label: "Reddit Exposure",     badge: "Pro" },
               ] as const).map(({ id, label, badge }) => (
                 <button
                   key={id}
                   onClick={() => { setActivePage(id as Page); setMoreOpen(false); }}
                   className={cn(
                     "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[14px] font-medium text-left transition-colors",
-                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#f7f7f5]"
+                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#ddd5f5]"
                   )}
                 >
                   <span>{label}</span>
@@ -617,7 +418,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
                   onClick={() => { setActivePage(id as Page); setMoreOpen(false); }}
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-left transition-colors",
-                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#f7f7f5]"
+                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#ddd5f5]"
                   )}
                 >
                   <Icon className="w-4 h-4 shrink-0 text-[#bbb]" />
@@ -664,6 +465,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           </button>
         </nav>
       </div>
-    </div>
+    </motion.div>
   );
 }
+

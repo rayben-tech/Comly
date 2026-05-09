@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -9,7 +9,7 @@ import { PromptResult, CompetitorRanking } from "@/types";
 import { TrendingUp, BarChart2 } from "lucide-react";
 
 const LINE_COLORS = [
-  "#5B2D91", "#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#a855f7",
+  "#7c3aed", "#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#a855f7",
   "#ec4899", "#14b8a6", "#f97316", "#64748b", "#06b6d4", "#84cc16",
 ];
 
@@ -18,6 +18,7 @@ interface Props {
   competitorRankings: CompetitorRanking[];
   brandName: string;
   brandDomain?: string;
+  dark?: boolean;
 }
 
 function buildVisibilitySeries(
@@ -25,24 +26,22 @@ function buildVisibilitySeries(
   brandName: string,
   competitors: CompetitorRanking[]
 ) {
-  // Start every brand at 0 (P0), then build up
-  const zeroPoint: Record<string, number | string> = { label: "P0" };
-  zeroPoint[brandName] = 0;
-  competitors.forEach((c) => { zeroPoint[c.name] = 0; });
-
+  // Use a rolling 3-prompt window so values go up and down naturally
+  const windowSize = 3;
   const points = promptResults.map((_, i) => {
-    const window = promptResults.slice(0, i + 1);
+    const from = Math.max(0, i - windowSize + 1);
+    const slice = promptResults.slice(from, i + 1);
     const obj: Record<string, number | string> = { label: `P${i + 1}` };
-    obj[brandName] = Math.round((window.filter((p) => p.mentioned).length / (i + 1)) * 100);
+    obj[brandName] = Math.round((slice.filter((p) => p.mentioned).length / slice.length) * 100);
     competitors.forEach((comp) => {
       obj[comp.name] = Math.round(
-        (window.filter((p) => p.competitors_mentioned.some((m) => m.name.toLowerCase() === comp.name.toLowerCase())).length / (i + 1)) * 100
+        (slice.filter((p) => p.competitors_mentioned.some((m) => m.name.toLowerCase() === comp.name.toLowerCase())).length / slice.length) * 100
       );
     });
     return obj;
   });
 
-  return [zeroPoint, ...points];
+  return points;
 }
 
 interface TooltipProps {
@@ -56,8 +55,8 @@ function CustomTooltip({ active, payload, label, domainMap }: TooltipProps) {
   if (!active || !payload?.length) return null;
   const sorted = [...payload].sort((a, b) => b.value - a.value);
   return (
-    <div className="bg-[#5B2D91] rounded-xl px-4 py-3 shadow-2xl min-w-[200px]">
-      <p className="text-[#aaaaaa] text-[12px] mb-2.5 font-medium">{label}</p>
+    <div className="bg-[#1c1c2e] border border-[#353550] rounded-xl px-4 py-3 shadow-2xl min-w-[200px]">
+      <p className="text-[#7070888] text-[12px] mb-2.5 font-medium">{label}</p>
       {sorted.map((entry) => {
         const domain = domainMap.get(entry.dataKey) || "";
         return (
@@ -73,7 +72,7 @@ function CustomTooltip({ active, payload, label, domainMap }: TooltipProps) {
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}
-              <span className="text-white text-[13px]">{entry.dataKey}</span>
+              <span className="text-[#c0c0d8] text-[13px]">{entry.dataKey}</span>
             </div>
             <span className="text-[13px] font-semibold" style={{ color: entry.stroke }}>
               {entry.value}%
@@ -90,7 +89,7 @@ function BarTooltip({ active, payload, domainMap }: { active?: boolean; payload?
   const entry = payload[0];
   const domain = domainMap.get(entry.name) || "";
   return (
-    <div className="bg-[#5B2D91] rounded-xl px-3.5 py-2.5 shadow-2xl">
+    <div className="bg-[#1c1c2e] border border-[#353550] rounded-xl px-3.5 py-2.5 shadow-2xl">
       <div className="flex items-center gap-2 mb-1">
         {domain && (
           <img
@@ -102,14 +101,14 @@ function BarTooltip({ active, payload, domainMap }: { active?: boolean; payload?
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         )}
-        <span className="text-white text-[13px]">{entry.name}</span>
+        <span className="text-[#c0c0d8] text-[13px]">{entry.name}</span>
       </div>
       <p className="text-[13px] font-semibold" style={{ color: entry.fill }}>{entry.value}%</p>
     </div>
   );
 }
 
-export function VisibilityChart({ promptResults, competitorRankings, brandName, brandDomain }: Props) {
+export function VisibilityChart({ promptResults, competitorRankings, brandName, brandDomain, dark = false }: Props) {
   const [chartType, setChartType] = useState<"line" | "bar">("line");
 
   const topCompetitors = competitorRankings.slice(0, 3);
@@ -123,30 +122,36 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
   const seriesData = buildVisibilitySeries(promptResults, brandName, topCompetitors);
   const lastPoint = seriesData[seriesData.length - 1];
   const finalValue = lastPoint ? (lastPoint[brandName] as number) : 0;
-  const delta = finalValue; // delta from 0
+  const delta = finalValue;
 
-  // Bar chart data: final visibility per brand
   const barData = allBrands.map((brand, i) => ({
     name: brand,
     value: lastPoint ? (lastPoint[brand] as number) : 0,
     color: allColors[i],
   }));
 
+  const gridStroke = dark ? "#252535" : "#f3f4f6";
+  const tickFill = dark ? "#44445a" : "#aaaaaa";
+  const cursorFill = dark ? "#1e1e2e" : "#f7f7f5";
+
   return (
-    <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
+    <div className={dark
+      ? "bg-[#161622] border border-[#252535] rounded-2xl overflow-hidden"
+      : "bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden"
+    }>
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-5 pb-4">
         <div>
-          <h3 className="text-base font-semibold text-[#0a0a0a]">Visibility</h3>
-          <p className="text-[13px] text-[#6b6b6b] mt-0.5">Mention rate across prompts</p>
+          <h3 className={`text-base font-semibold ${dark ? "text-[#e0e0f0]" : "text-[#0a0a0a]"}`}>Visibility</h3>
+          <p className={`text-[13px] mt-0.5 ${dark ? "text-[#555570]" : "text-[#6b6b6b]"}`}>Mention rate across prompts</p>
         </div>
-        <div className="flex items-center gap-0.5 bg-[#f7f7f5] border border-[#e5e5e5] rounded-lg p-0.5">
+        <div className={`flex items-center gap-0.5 border rounded-lg p-0.5 ${dark ? "bg-[#1c1c2a] border-[#353548]" : "bg-[#f7f7f5] border-[#e5e5e5]"}`}>
           <button
             onClick={() => setChartType("line")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
               chartType === "line"
-                ? "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]"
-                : "text-[#aaaaaa] hover:text-[#6b6b6b]"
+                ? dark ? "bg-[#252535] text-[#e0e0f0] shadow-sm border border-[#353548]" : "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]"
+                : dark ? "text-[#555570] hover:text-[#9090a8]" : "text-[#aaaaaa] hover:text-[#6b6b6b]"
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
@@ -156,8 +161,8 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
             onClick={() => setChartType("bar")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
               chartType === "bar"
-                ? "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]"
-                : "text-[#aaaaaa] hover:text-[#6b6b6b]"
+                ? dark ? "bg-[#252535] text-[#e0e0f0] shadow-sm border border-[#353548]" : "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]"
+                : dark ? "text-[#555570] hover:text-[#9090a8]" : "text-[#aaaaaa] hover:text-[#6b6b6b]"
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5" />
@@ -168,9 +173,9 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
 
       {/* Big stat */}
       <div className="px-6 pb-4 flex items-end gap-3">
-        <span className="text-[48px] font-bold text-[#0a0a0a] leading-none">{finalValue}%</span>
+        <span className={`text-[48px] font-bold leading-none ${dark ? "text-[#e0e0f0]" : "text-[#0a0a0a]"}`}>{finalValue}%</span>
         <div className="mb-1.5">
-          <span className={`text-base font-semibold ${delta >= 0 ? "text-emerald-500" : "text-red-400"}`}>
+          <span className={`text-base font-semibold ${delta >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {delta >= 0 ? "+" : ""}{delta}%
           </span>
         </div>
@@ -183,78 +188,27 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
             <ComposedChart data={seriesData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="brandAreaFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#5B2D91" stopOpacity={0.12} />
-                  <stop offset="100%" stopColor="#5B2D91" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#7c3aed" stopOpacity={dark ? 0.2 : 0.12} />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} stroke="#f3f4f6" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 12, fill: "#aaaaaa" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 12, fill: "#aaaaaa" }}
-                axisLine={false}
-                tickLine={false}
-                width={36}
-                tickFormatter={(v) => `${v}%`}
-                ticks={[0, 25, 50, 75, 100]}
-                domain={[0, 100]}
-              />
-              <Tooltip
-                content={(props) => (
-                  <CustomTooltip {...(props as TooltipProps)} domainMap={domainMap} />
-                )}
-                cursor={{ stroke: "#e5e5e5", strokeWidth: 1 }}
-              />
-              {/* Competitor lines — rendered first so brand area sits on top */}
+              <CartesianGrid vertical={false} stroke={gridStroke} />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: tickFill }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: tickFill }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => `${v}%`} ticks={[0, 25, 50, 75, 100]} domain={[0, 100]} />
+              <Tooltip content={(props) => <CustomTooltip {...(props as TooltipProps)} domainMap={domainMap} />} cursor={{ stroke: dark ? "#353548" : "#e5e5e5", strokeWidth: 1 }} />
               {allBrands.slice(1).map((brand, i) => (
-                <Line
-                  key={brand}
-                  type="monotone"
-                  dataKey={brand}
-                  stroke={allColors[i + 1]}
-                  strokeWidth={1}
-                  strokeDasharray="4 3"
-                  strokeOpacity={0.35}
-                  dot={false}
-                  activeDot={{ r: 3, fill: allColors[i + 1], stroke: "white", strokeWidth: 2 }}
-                />
+                <Line key={brand} type="monotone" dataKey={brand} stroke={allColors[i + 1]} strokeWidth={1} strokeDasharray="4 3" strokeOpacity={0.4} dot={false} activeDot={{ r: 3, fill: allColors[i + 1], stroke: dark ? "#161622" : "white", strokeWidth: 2 }} />
               ))}
-              {/* Brand area — rendered last so it sits on top */}
-              <Area
-                type="monotone"
-                dataKey={brandName}
-                stroke={allColors[0]}
-                strokeWidth={2.5}
-                fill="url(#brandAreaFill)"
-                dot={false}
-                activeDot={{ r: 5, fill: allColors[0], stroke: "white", strokeWidth: 2 }}
-              />
+              <Area type="monotone" dataKey={brandName} stroke={allColors[0]} strokeWidth={2.5} fill="url(#brandAreaFill)" dot={false} activeDot={{ r: 5, fill: allColors[0], stroke: dark ? "#161622" : "white", strokeWidth: 2 }} />
             </ComposedChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={barData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }} barSize={28}>
-              <CartesianGrid vertical={false} stroke="#f3f4f6" />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 11, fill: "#aaaaaa" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 12, fill: "#aaaaaa" }}
-                axisLine={false}
-                tickLine={false}
-                width={36}
-                tickFormatter={(v) => `${v}%`}
-                ticks={[0, 25, 50, 75, 100]}
-                domain={[0, 100]}
-              />
-              <Tooltip content={<BarTooltip domainMap={domainMap} />} cursor={{ fill: "#f7f7f5" }} />
+              <CartesianGrid vertical={false} stroke={gridStroke} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: tickFill }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => `${v}%`} ticks={[0, 25, 50, 75, 100]} domain={[0, 100]} />
+              <Tooltip content={<BarTooltip domainMap={domainMap} />} cursor={{ fill: cursorFill }} />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                 {barData.map((entry, i) => (
                   <Cell key={`cell-${i}`} fill={entry.color} />
@@ -272,20 +226,10 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
           return (
             <div key={brand} className="flex items-center gap-1.5">
               {domain && (
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="w-4 h-4 rounded-sm shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
+                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt="" width={16} height={16} className="w-4 h-4 rounded-sm shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               )}
-              <div
-                className="rounded-full shrink-0"
-                style={{ backgroundColor: allColors[i], width: brand === brandName ? 10 : 8, height: brand === brandName ? 10 : 8 }}
-              />
-              <span className={`text-[13px] ${brand === brandName ? "font-semibold text-[#0a0a0a]" : "text-[#6b6b6b]"}`}>{brand}</span>
+              <div className="rounded-full shrink-0" style={{ backgroundColor: allColors[i], width: brand === brandName ? 10 : 8, height: brand === brandName ? 10 : 8 }} />
+              <span className={`text-[13px] ${brand === brandName ? "font-semibold" : ""} ${dark ? (brand === brandName ? "text-[#e0e0f0]" : "text-[#7070888]") : (brand === brandName ? "text-[#0a0a0a]" : "text-[#6b6b6b]")}`}>{brand}</span>
             </div>
           );
         })}
@@ -293,3 +237,4 @@ export function VisibilityChart({ promptResults, competitorRankings, brandName, 
     </div>
   );
 }
+

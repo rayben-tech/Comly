@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import { ExternalLink } from "lucide-react";
@@ -24,10 +24,11 @@ function classifyDomain(domain: string): DomainType {
 
 interface Props {
   promptResults: PromptResult[];
+  urlsOnly?: boolean;
 }
 
-export function DomainsTable({ promptResults }: Props) {
-  const [tab, setTab] = useState<"Domains" | "URLs">("Domains");
+export function DomainsTable({ promptResults, urlsOnly = false }: Props) {
+  const [tab, setTab] = useState<"Domains" | "URLs">(urlsOnly ? "URLs" : "Domains");
 
   const totalPrompts = promptResults.length || 1;
 
@@ -64,28 +65,30 @@ export function DomainsTable({ promptResults }: Props) {
   }, [promptResults, totalPrompts]);
 
   return (
-    <div className="bg-white border border-[#e5e5e5] rounded-2xl overflow-hidden">
+    <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-[#e5e5e5]">
         <div>
           <h3 className="text-base font-semibold text-[#0a0a0a]">Sources</h3>
           <p className="text-[13px] text-[#6b6b6b] mt-0.5">Domains that AI models frequently cite</p>
         </div>
-        <div className="flex items-center gap-0.5 bg-[#f7f7f5] border border-[#e5e5e5] rounded-lg p-0.5">
-          {(["Domains", "URLs"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
-                tab === t
-                  ? "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]"
-                  : "text-[#aaaaaa] hover:text-[#6b6b6b]"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+        {!urlsOnly && (
+          <div className="flex items-center gap-0.5 bg-[#f7f7f5] border border-[#e5e5e5] rounded-lg p-0.5">
+            {(["Domains", "URLs"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+                  tab === t
+                    ? "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]"
+                    : "text-[#aaaaaa] hover:text-[#6b6b6b]"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {tab === "Domains" ? (
@@ -180,3 +183,4 @@ export function DomainsTable({ promptResults }: Props) {
     </div>
   );
 }
+
