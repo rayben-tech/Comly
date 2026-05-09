@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const dodo = new DodoPayments({
     bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-    environment: "live_mode",
+    environment: "test_mode",
   });
 
   try {
