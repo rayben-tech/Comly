@@ -13,9 +13,9 @@ interface Thread {
   subreddit: string;
   title: string;
   url: string;
-  upvotes: number;
-  comments: number;
-  age: string;
+  upvotes?: number;
+  comments?: number;
+  age?: string;
 }
 
 interface Props {
@@ -265,8 +265,8 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
       case "oldest":         return arr.reverse();
       case "relevance-high": return arr.sort((a, b) => rel(b) - rel(a));
       case "relevance-low":  return arr.sort((a, b) => rel(a) - rel(b));
-      case "upvotes":        return arr.sort((a, b) => b.upvotes - a.upvotes);
-      case "comments":       return arr.sort((a, b) => b.comments - a.comments);
+      case "upvotes":        return arr.sort((a, b) => (b.upvotes ?? 0) - (a.upvotes ?? 0));
+      case "comments":       return arr.sort((a, b) => (b.comments ?? 0) - (a.comments ?? 0));
       default:               return arr;
     }
   })();
@@ -385,19 +385,23 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
                       <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" alt="" width={12} height={12} className="w-3 h-3 opacity-70" />
                       <span className="text-[11px] font-bold" style={{ color: "#ff4500" }}>{t.subreddit}</span>
                       <span className="text-[10px] text-[#cccccc]">·</span>
-                      <span className="text-[10px] text-[#aaaaaa]">{t.age} ago</span>
+                      {t.age && <span className="text-[10px] text-[#aaaaaa]">{t.age} ago</span>}
                     </div>
                     <p className="text-[13px] font-semibold text-[#0a0a0a] leading-snug mb-2">{t.title}</p>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ color: relevance.color, background: relevance.bg, border: `1px solid ${relevance.border}` }}>
                         {relevance.label}
                       </span>
-                      <span className="flex items-center gap-1 text-[10px] text-[#aaaaaa]">
-                        <ThumbsUp className="w-2.5 h-2.5" /> {fmt(t.upvotes)}
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px] text-[#aaaaaa]">
-                        <MessageCircle className="w-2.5 h-2.5" /> {t.comments}
-                      </span>
+                      {t.upvotes != null && (
+                        <span className="flex items-center gap-1 text-[10px] text-[#aaaaaa]">
+                          <ThumbsUp className="w-2.5 h-2.5" /> {fmt(t.upvotes)}
+                        </span>
+                      )}
+                      {t.comments != null && (
+                        <span className="flex items-center gap-1 text-[10px] text-[#aaaaaa]">
+                          <MessageCircle className="w-2.5 h-2.5" /> {t.comments}
+                        </span>
+                      )}
                       {keyword && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: "#fff1f2", color: "#f43f5e", border: "1px solid #fecdd3" }}>
                           {keyword}
