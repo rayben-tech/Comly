@@ -54,10 +54,43 @@ function AuthFlow() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/");
+        routeAfterAuth(session.access_token, session.user.email ?? "", session.user.user_metadata?.full_name ?? "", pendingUrl);
       }
     });
-  }, [router, pendingUrl]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function routeAfterAuth(accessToken: string, userEmail: string, userName: string, url: string) {
+    setLoading(true);
+    try {
+      const subRes = await fetch("/api/subscription/check", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const { isPaid } = await subRes.json();
+
+      const dest = url ? `/audit?url=${encodeURIComponent(url)}` : "/";
+
+      if (isPaid) {
+        router.replace(dest);
+        return;
+      }
+
+      // Not paid — send to Dodo checkout; return_url is the final destination
+      const checkoutRes = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userEmail, userName, returnTo: dest }),
+      });
+      const checkoutData = await checkoutRes.json();
+      if (checkoutData.url) {
+        window.location.href = checkoutData.url;
+      } else {
+        router.replace(dest);
+      }
+    } catch {
+      router.replace(url ? `/audit?url=${encodeURIComponent(url)}` : "/");
+    }
+  }
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -69,18 +102,18 @@ function AuthFlow() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         if (data.session) {
-          router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/");
+          await routeAfterAuth(data.session.access_token, data.session.user.email ?? "", data.session.user.user_metadata?.full_name ?? "", pendingUrl);
         } else {
           setSuccess("Check your email for a confirmation link, then come back to log in.");
+          setLoading(false);
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit");
+        await routeAfterAuth(data.session!.access_token, data.session!.user.email ?? "", data.session!.user.user_metadata?.full_name ?? "", pendingUrl);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
       setLoading(false);
     }
   }

@@ -8,17 +8,44 @@ export default function AuthCallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Supabase automatically handles the OAuth token from the URL hash.
-    // We just need to wait for the session to be established, then redirect.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         subscription.unsubscribe();
+
         const pendingUrl = localStorage.getItem("comly_pending_url") || "";
         localStorage.removeItem("comly_pending_url");
-        if (pendingUrl) {
-          router.replace(`/audit?url=${encodeURIComponent(pendingUrl)}`);
-        } else {
-          router.replace("/");
+
+        const dest = pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/";
+
+        try {
+          const subRes = await fetch("/api/subscription/check", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          const { isPaid } = await subRes.json();
+
+          if (isPaid) {
+            router.replace(dest);
+            return;
+          }
+
+          // Not paid — send to Dodo checkout
+          const checkoutRes = await fetch("/api/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userEmail: session.user.email ?? "",
+              userName: session.user.user_metadata?.full_name ?? "",
+              returnTo: dest,
+            }),
+          });
+          const checkoutData = await checkoutRes.json();
+          if (checkoutData.url) {
+            window.location.href = checkoutData.url;
+          } else {
+            router.replace(dest);
+          }
+        } catch {
+          router.replace(dest);
         }
       }
     });

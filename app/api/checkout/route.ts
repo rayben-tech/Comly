@@ -10,14 +10,15 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    const { userEmail, userName } = await req.json() as { userEmail?: string; userName?: string };
+    const { userEmail, userName, returnTo } = await req.json() as { userEmail?: string; userName?: string; returnTo?: string };
 
     const origin = req.headers.get("origin") ?? "https://trycomly.com";
+    const returnUrl = returnTo ? `${origin}${returnTo}` : `${origin}/`;
 
     const session = await dodo.checkoutSessions.create({
       product_cart: [{ product_id: process.env.NEXT_PUBLIC_DODO_PRODUCT_ID!, quantity: 1 }],
       ...(userEmail ? { customer: { email: userEmail, name: userName ?? "" } } : {}),
-      return_url: `${origin}/auth`,
+      return_url: returnUrl,
     });
 
     return NextResponse.json({ url: session.checkout_url });
