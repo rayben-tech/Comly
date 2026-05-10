@@ -119,6 +119,49 @@ interface Props {
   demoMode?: boolean;
 }
 
+function SparseScoreCard({
+  score, brandName, topCompNames, topComps, totalPrompts,
+}: {
+  score: number; brandName: string; topCompNames: string[];
+  topComps: CompetitorRanking[]; totalPrompts: number;
+}) {
+  const brands = [
+    { name: brandName, pct: score, isYou: true, color: "#5B2D91" as string },
+    ...topCompNames.slice(0, 3).map((name, i) => {
+      const comp = topComps.find(c => c.name === name);
+      const pct = comp ? Math.round((comp.mentions / totalPrompts) * 100) : 0;
+      return { name, pct, isYou: false, color: COMP_COLORS[i] };
+    }),
+  ];
+
+  return (
+    <div className="flex flex-col gap-2 py-2">
+      {brands.map(b => (
+        <div key={b.name} className="flex items-center gap-2.5">
+          <span className={`text-[11px] w-[90px] shrink-0 truncate ${b.isYou ? "font-bold text-[#0a0a0a]" : "text-[#9ca3af]"}`}>
+            {b.name}
+          </span>
+          <div className="flex-1 h-[7px] bg-[#f0f0f0] rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${b.pct}%`,
+                background: b.isYou ? "linear-gradient(90deg, #5B2D91, #7c3aed)" : b.color,
+                opacity: b.isYou ? 1 : 0.55,
+                transition: "width 700ms cubic-bezier(0.4,0,0.2,1)",
+              }}
+            />
+          </div>
+          <span className={`text-[11px] font-semibold w-8 text-right shrink-0 ${b.isYou ? "text-[#5B2D91]" : "text-[#c0c0c0]"}`}>
+            {b.pct}%
+          </span>
+        </div>
+      ))}
+      <p className="text-[10px] text-[#c0c0c0] mt-1.5">First audit · run again to unlock trend lines</p>
+    </div>
+  );
+}
+
 const cardVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
@@ -507,84 +550,94 @@ export function OverviewPanel({
             </div>
           </div>
 
-          {/* Chart */}
-          <div
-            className="h-[120px] -mx-1"
-            style={{
-              clipPath: chartRevealed ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-              transition: "clip-path 1100ms cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={finalChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="ovStroke" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#cc6666" />
-                    <stop offset="100%" stopColor="#5B2D91" />
-                  </linearGradient>
-                  <linearGradient id="ovFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#5B2D91" stopOpacity={0.08} />
-                    <stop offset="100%" stopColor="#5B2D91" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="#f0f0f0" strokeWidth={0.5} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10, fill: "#9ca3af" }}
-                  axisLine={false}
-                  tickLine={false}
-                  interval={xInterval}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "#9ca3af" }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={28}
-                  tickFormatter={(v) => `${v}%`}
-                  ticks={[0, 25, 50, 75]}
-                  domain={[0, 100]}
-                />
-                <RTooltip
-                  contentStyle={{ background: "white", border: "0.5px solid #e5e5e5", borderRadius: 8, fontSize: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-                  formatter={(v: number, name: string) => [`${v}%`, name === "value" ? brandName : name]}
-                  labelStyle={{ color: "#6b7280", marginBottom: 2 }}
-                />
-                {finalHasCompetitorData && finalTopCompNames.map((name, i) => (
-                  <Line
-                    key={name}
+          {/* Chart — score card when data is sparse, line chart when there's enough history */}
+          {showDots && !demoMode ? (
+            <SparseScoreCard
+              score={activeScore}
+              brandName={brandName}
+              topCompNames={topCompNames}
+              topComps={activeCompRankings}
+              totalPrompts={totalPrompts}
+            />
+          ) : (
+            <div
+              className="h-[120px] -mx-1"
+              style={{
+                clipPath: chartRevealed ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                transition: "clip-path 1100ms cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={finalChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="ovStroke" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#cc6666" />
+                      <stop offset="100%" stopColor="#5B2D91" />
+                    </linearGradient>
+                    <linearGradient id="ovFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#5B2D91" stopOpacity={0.08} />
+                      <stop offset="100%" stopColor="#5B2D91" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="#f0f0f0" strokeWidth={0.5} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: "#9ca3af" }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval={xInterval}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "#9ca3af" }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={28}
+                    tickFormatter={(v) => `${v}%`}
+                    ticks={[0, 25, 50, 75]}
+                    domain={[0, 100]}
+                  />
+                  <RTooltip
+                    contentStyle={{ background: "white", border: "0.5px solid #e5e5e5", borderRadius: 8, fontSize: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+                    formatter={(v: number, name: string) => [`${v}%`, name === "value" ? brandName : name]}
+                    labelStyle={{ color: "#6b7280", marginBottom: 2 }}
+                  />
+                  {finalHasCompetitorData && finalTopCompNames.map((name, i) => (
+                    <Line
+                      key={name}
+                      type="monotone"
+                      dataKey={name}
+                      stroke={COMP_COLORS[i % COMP_COLORS.length]}
+                      strokeWidth={1.5}
+                      strokeDasharray="3 2"
+                      strokeOpacity={0.65}
+                      connectNulls={false}
+                      dot={false}
+                      activeDot={{ r: 3 }}
+                      isAnimationActive
+                      animationDuration={650}
+                      animationEasing="ease-out"
+                    />
+                  ))}
+                  <Area
                     type="monotone"
-                    dataKey={name}
-                    stroke={COMP_COLORS[i % COMP_COLORS.length]}
-                    strokeWidth={1.5}
-                    strokeDasharray="3 2"
-                    strokeOpacity={0.65}
+                    dataKey="value"
+                    stroke="url(#ovStroke)"
+                    strokeWidth={2.5}
+                    fill="url(#ovFill)"
                     connectNulls={false}
-                    dot={showDots ? { r: 3, fill: COMP_COLORS[i % COMP_COLORS.length], stroke: "white", strokeWidth: 1.5 } : false}
-                    activeDot={{ r: 3 }}
+                    dot={false}
+                    activeDot={{ r: 4, fill: "#5B2D91", stroke: "white", strokeWidth: 2 }}
                     isAnimationActive
                     animationDuration={650}
                     animationEasing="ease-out"
                   />
-                ))}
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="url(#ovStroke)"
-                  strokeWidth={2.5}
-                  fill="url(#ovFill)"
-                  connectNulls={false}
-                  dot={showDots ? { r: 4, fill: "#5B2D91", stroke: "white", strokeWidth: 2 } : false}
-                  activeDot={{ r: 4, fill: "#5B2D91", stroke: "white", strokeWidth: 2 }}
-                  isAnimationActive
-                  animationDuration={650}
-                  animationEasing="ease-out"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-          {/* Chart legend */}
-          {finalChartData.length > 0 && finalHasCompetitorData && finalTopCompNames.length > 0 && (
+          {/* Chart legend — only shown with the line chart, not the sparse score card */}
+          {!showDots && finalChartData.length > 0 && finalHasCompetitorData && finalTopCompNames.length > 0 && (
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#5B2D91" }} />
