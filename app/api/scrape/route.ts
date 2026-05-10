@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isPrivateUrl } from "@/lib/validate-url";
+import { checkRateLimit, getIp } from "@/lib/ratelimit";
 
 export const maxDuration = 60;
 
@@ -79,11 +81,20 @@ async function scrapeWithFallback(url: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const allowed = await checkRateLimit(getIp(req), "general");
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   try {
     const { url } = await req.json();
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    }
+
+    if (isPrivateUrl(url)) {
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
     const apiKey = process.env.FIRECRAWL_API_KEY;

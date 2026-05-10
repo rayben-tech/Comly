@@ -3,7 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const UNLIMITED_EMAIL = "rayanebenchaalal@gmail.com";
+function isUnlimitedUser(email: string | undefined, userId: string | undefined): boolean {
+  const unlimitedEmails = (process.env.UNLIMITED_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const unlimitedIds = (process.env.UNLIMITED_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (email && unlimitedEmails.includes(email)) return true;
+  if (userId && unlimitedIds.includes(userId)) return true;
+  return false;
+}
 
 export async function GET(req: NextRequest) {
   const supabase = createClient(
@@ -12,13 +18,13 @@ export async function GET(req: NextRequest) {
   );
 
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) return NextResponse.json({ isPaid: false });
+  if (!token) return NextResponse.json({ isPaid: false, isUnlimited: false });
 
   const { data: { user } } = await supabase.auth.getUser(token);
-  if (!user?.email) return NextResponse.json({ isPaid: false });
+  if (!user) return NextResponse.json({ isPaid: false, isUnlimited: false });
 
-  if (user.email === UNLIMITED_EMAIL) {
-    return NextResponse.json({ isPaid: true });
+  if (isUnlimitedUser(user.email, user.id)) {
+    return NextResponse.json({ isPaid: true, isUnlimited: true });
   }
 
   const { data: sub } = await supabase
@@ -29,5 +35,6 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     isPaid: sub?.plan === "pro" && sub?.status === "active",
+    isUnlimited: false,
   });
 }

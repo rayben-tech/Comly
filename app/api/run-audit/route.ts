@@ -4,6 +4,7 @@ import { generateAuditPrompts, OPENAI_INDICES, GEMINI_INDICES } from "@/lib/gene
 import { calculateScore, calculateCompetitorRankings } from "@/lib/score";
 import { normalizeBrand } from "@/lib/brand-normalizations";
 import { BrandProfile, PromptResult } from "@/types";
+import { checkRateLimit, getIp } from "@/lib/ratelimit";
 
 export const maxDuration = 60;
 
@@ -85,10 +86,10 @@ function parseResults(parsed: { results: RawResult[] }, brandName: string): Prom
 }
 
 async function callGemini(prompt: string): Promise<{ results: RawResult[] }> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`;
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: "application/json" },
@@ -107,6 +108,11 @@ async function callGemini(prompt: string): Promise<{ results: RawResult[] }> {
 }
 
 export async function POST(req: NextRequest) {
+  const allowed = await checkRateLimit(getIp(req), "audit");
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   try {
     const { profile, customPrompts }: { profile: BrandProfile; customPrompts?: string[] } = await req.json();
 

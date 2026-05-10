@@ -95,10 +95,6 @@ function RedirectingAnimation() {
 }
 
 const SESSION_KEY = "comly_audit_session";
-const UNLIMITED_IDS = [
-  "a2d1b248-a9e0-486a-91ef-32bed2c9758c",
-  ...(process.env.NEXT_PUBLIC_UNLIMITED_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
-];
 
 function withMinDuration<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.all([
@@ -122,6 +118,7 @@ function AuditFlow() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [reviewPrompts, setReviewPrompts] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isUnlimited, setIsUnlimited] = useState(false);
   const firingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auth guard + one-audit-per-account check
@@ -135,11 +132,13 @@ function AuditFlow() {
       }
 
       setUserId(session.user.id);
-      // Check if user already has a saved audit
-      console.log("[comly] session.user.id:", session.user.id, "| isUnlimited:", UNLIMITED_IDS.includes(session.user.id));
-      const isUnlimited = UNLIMITED_IDS.includes(session.user.id);
+      const subCheck = await fetch("/api/subscription/check", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      }).then((r) => r.json()).catch(() => ({ isUnlimited: false }));
+      const unlimited = Boolean(subCheck.isUnlimited);
+      setIsUnlimited(unlimited);
       const existing = await getUserAudit(session.user.id);
-      if (existing && !isUnlimited) {
+      if (existing && !unlimited) {
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
         setIsRedirecting(true);
@@ -152,7 +151,7 @@ function AuditFlow() {
 
       // Fallback: session completed but Supabase save may not have landed yet
       // Skip for unlimited users so they always run a fresh audit
-      if (!isUnlimited) {
+      if (!unlimited) {
         try {
           const cached = sessionStorage.getItem(SESSION_KEY);
           if (cached) {
@@ -254,7 +253,7 @@ function AuditFlow() {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const existing = await getUserAudit(session.user.id);
-      if (existing && !UNLIMITED_IDS.includes(session.user.id)) {
+      if (existing && !isUnlimited) {
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
         setIsRedirecting(true);
