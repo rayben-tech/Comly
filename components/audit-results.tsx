@@ -20,6 +20,7 @@ import { QuoraThreadsPage } from "@/components/dashboard/quora-threads";
 import { EmailCapture } from "@/components/email-capture";
 import { Sparkles, Radio, Lock, Code2, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FaviconImg } from "@/components/ui/favicon-img";
 
 const VisibilityChart = dynamic(
   () => import("@/components/dashboard/visibility-chart").then((m) => ({ default: m.VisibilityChart })),
@@ -283,19 +284,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
                       <div key={comp.name} className="border border-[#f0f0f0] rounded-xl overflow-hidden">
                         {/* Visible: name + mention count */}
                         <div className="flex items-center gap-3 px-4 py-3 bg-[#fafafa] border-b border-[#f0f0f0]">
-                          {comp.domain ? (
-                            <img
-                              src={`https://www.google.com/s2/favicons?domain=${comp.domain}&sz=32`}
-                              alt={comp.name}
-                              width={20} height={20}
-                              className="w-5 h-5 rounded object-contain shrink-0"
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                            />
-                          ) : (
-                            <div className="w-5 h-5 rounded bg-gradient-to-br from-[#5B2D91] to-[#8B5CF6] flex items-center justify-center text-white text-[9px] font-bold shrink-0">
-                              {comp.name.charAt(0)}
-                            </div>
-                          )}
+                          <FaviconImg domain={comp.domain || comp.name} name={comp.name} size={20} className="w-5 h-5" />
                           <span className="text-[13px] font-semibold text-[#0a0a0a] flex-1">{comp.name}</span>
                           <span className="text-[11px] font-semibold text-[#ef4444] bg-red-50 px-2 py-0.5 rounded-full">
                             {comp.mentions} mention{comp.mentions !== 1 ? "s" : ""}

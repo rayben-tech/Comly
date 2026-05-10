@@ -657,6 +657,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
                   src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`}
                   alt={model.name}
                   className="w-6 h-6 mx-auto mb-1 rounded"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
                 <motion.p
                   key={model.name + "-label"}

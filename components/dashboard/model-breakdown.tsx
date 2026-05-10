@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PromptResult } from "@/types";
 import { MessageSquareQuote, ChevronDown, ChevronUp, FileText, ChevronRight } from "lucide-react";
 import { PROMPT_MODELS } from "@/lib/prompt-models";
+import { FaviconImg } from "@/components/ui/favicon-img";
 
 const PROMPT_LABELS: Record<number, string> = {
   0: "Direct Brand", 1: "Direct Brand",
@@ -42,13 +43,7 @@ function ResponseCard({ result, index, brandName }: { result: PromptResult; inde
     <div className="border border-[#e5e5e5] rounded-xl overflow-hidden">
       {/* Card header */}
       <div className="flex items-start gap-3 px-5 py-4 bg-[#fafafa] border-b border-[#f0f0f0]">
-        <img
-          src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`}
-          alt={model.name}
-          width={20}
-          height={20}
-          className="w-5 h-5 object-contain rounded-md shrink-0 mt-0.5"
-        />
+        <FaviconImg domain={model.domain} name={model.name} size={20} className="mt-0.5" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[13px] font-semibold text-[#0a0a0a]">{model.name}</span>

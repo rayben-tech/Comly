@@ -2,6 +2,7 @@
 
 import { Download, RefreshCw, PanelLeftOpen } from "lucide-react";
 import { PromptResult } from "@/types";
+import { FaviconImg } from "@/components/ui/favicon-img";
 
 interface TopBarProps {
   brandName: string;
@@ -76,15 +77,7 @@ export function TopBar({
 
       {/* Brand identity */}
       <div className="flex items-center gap-2 min-w-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
-          alt={brandName}
-          width={18}
-          height={18}
-          className="w-[18px] h-[18px] rounded-md object-contain shrink-0"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-        />
+        <FaviconImg domain={domain} name={brandName} size={18} className="w-[18px] h-[18px]" rounded="md" />
         <span className="text-[14px] font-bold text-[#e0e0f0] truncate">{brandName}</span>
         <span className="text-[#2e2e42] hidden sm:inline shrink-0">·</span>
         <span className="text-[12px] text-[#4e4e6a] hidden sm:inline shrink-0 whitespace-nowrap">
