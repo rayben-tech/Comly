@@ -11,13 +11,13 @@ export const maxDuration = 60;
 function buildSystemPrompt(brandName: string): string {
   return `You are a neutral AI assistant answering product discovery queries honestly. Your process for each query is strictly two steps:
 
-STEP 1 — Write the response_text. Imagine a real user typed this query with zero context about any brand being audited. Answer exactly as you would to that user: natural, honest, comprehensive. For list questions name 8-12 genuinely relevant brands. Only include a brand if it would naturally appear in an honest, unbiased answer. Do NOT let the audit context influence what you write.
+STEP 1 — Write the response_text. Imagine a real user typed this query with zero context about any brand being audited. Answer exactly as you would to that user: natural, honest. Keep response_text to 2-3 sentences maximum. For list questions name 4-6 genuinely relevant brands. Only include a brand if it would naturally appear in an honest, unbiased answer. Do NOT let the audit context influence what you write.
 
 STEP 2 — After writing the response, analyze what you actually wrote:
 - mentioned: is "${brandName}" present in the response_text you just wrote? (boolean — look at your actual text)
 - position: if mentioned, what rank/position (1 = first brand named) — else null
 - competitors_mentioned: every real software brand you named, each with their correct primary domain and their position in the response (1 = first brand named, 2 = second, etc.)
-- sources: 3-5 real domains an AI would cite for this query type — review sites, forums, publications. Format: { domain, title }
+- sources: 2-3 real domains an AI would cite for this query type — review sites, forums, publications. Format: { domain, title }
 
 Critical rules:
 - response_text is ground truth — mentioned/position must reflect what is actually in it, not what you wish were in it
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 6000,
       }).then((r) => JSON.parse(r.choices[0].message.content!)),
 
       // Gemini — 10 prompts at interleaved indices
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 2500,
+        max_tokens: 4000,
       }).then((r) => JSON.parse(r.choices[0].message.content!));
       geminiParsed = fallback;
     } else {
