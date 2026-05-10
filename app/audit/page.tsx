@@ -291,8 +291,12 @@ function AuditFlow() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ profile, customPrompts }),
         }).then(async (r) => {
-          const d = await r.json();
-          if (!r.ok) throw new Error(d.error || "Failed to run audit");
+          const text = await r.text();
+          let d: Record<string, unknown>;
+          try { d = JSON.parse(text); } catch {
+            throw new Error(`Server error (${r.status}): ${text.slice(0, 300)}`);
+          }
+          if (!r.ok) throw new Error((d.error as string) || "Failed to run audit");
           return d;
         }),
         MIN_FIRING_MS

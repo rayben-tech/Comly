@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Globe,
-  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen,
+  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen, Clock,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 import { cn } from "@/lib/utils";
@@ -480,8 +480,13 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                 </svg>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">Comly</p>
-                  <p className="text-[11px] text-[#9ca3af] truncate">Free plan</p>
+                  <p className="text-[11px] text-[#9ca3af] truncate">Pro plan</p>
                 </div>
+              </div>
+              <div className="flex items-center gap-1.5 mt-2 px-2">
+                <Clock className="w-3 h-3 text-[#5B2D91] shrink-0" />
+                <span className="text-[11px] text-[#6b7280]">Next audit in</span>
+                <span className="text-[11px] font-bold text-[#5B2D91]">20h 12m</span>
               </div>
             </div>
           </motion.div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ChevronDown, TrendingUp, Eye, ChevronsUpDown } from "lucide-react";
+import { ChevronDown, TrendingUp, Eye, ChevronsUpDown } from "lucide-react";
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, ResponsiveContainer,
@@ -382,18 +382,11 @@ export function OverviewPanel({
     <div className="bg-[#ddd5f5] min-h-full">
 
       {/* Welcome header */}
-      <div className="px-6 pt-3 pb-2 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-[#0a0a0a]">Welcome back, {brandName} 👋</h1>
-          <p className="text-[12px] text-[#6b7280] mt-0.5">
-            Your AI visibility — {TIME_RANGE_LABELS[timeRange].toLowerCase()}.
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 shrink-0" style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-          <Clock className="w-3.5 h-3.5 text-[#5B2D91]" />
-          <span className="text-[11px] text-[#6b7280]">Next audit in</span>
-          <span className="text-[11px] font-bold text-[#5B2D91]">20h 12m</span>
-        </div>
+      <div className="px-6 pt-3 pb-2">
+        <h1 className="text-[16px] font-bold text-[#0a0a0a]">Welcome back, {brandName} 👋</h1>
+        <p className="text-[12px] text-[#6b7280] mt-0.5">
+          Your AI visibility — {TIME_RANGE_LABELS[timeRange].toLowerCase()}.
+        </p>
       </div>
 
       {/* Filter pills */}
