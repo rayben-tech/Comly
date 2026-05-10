@@ -139,14 +139,14 @@ export async function POST(req: NextRequest) {
     const [openaiResult, geminiResult] = await Promise.allSettled([
       // OpenAI — 15 prompts at interleaved indices
       openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: buildUserPrompt(openaiPrompts, profile) },
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 10000,
+        max_tokens: 4000,
       }).then((r) => JSON.parse(r.choices[0].message.content!)),
 
       // Gemini — 10 prompts at interleaved indices
@@ -163,14 +163,14 @@ export async function POST(req: NextRequest) {
     if (geminiResult.status === "rejected") {
       console.warn("Gemini failed, falling back to OpenAI:", geminiResult.reason);
       const fallback = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: buildUserPrompt(geminiPrompts, profile) },
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 6000,
+        max_tokens: 2500,
       }).then((r) => JSON.parse(r.choices[0].message.content!));
       geminiParsed = fallback;
     } else {
