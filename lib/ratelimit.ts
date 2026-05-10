@@ -11,7 +11,7 @@ function makeRedis() {
 const redis = makeRedis();
 
 export const auditRatelimit = redis
-  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 h"), analytics: false })
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(50, "1 h"), analytics: false })
   : null;
 
 export const generalRatelimit = redis
