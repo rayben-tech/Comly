@@ -75,6 +75,31 @@ Return ONLY valid JSON.`;
   return Array.isArray(parsed.queries) ? parsed.queries.slice(0, 4) : [];
 }
 
+async function generateFallbackQuestions(profile: BrandProfile): Promise<Array<{ title: string; url: string }>> {
+  try {
+    const res = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{
+        role: "user",
+        content: `Generate 8 realistic Quora questions that potential users of "${profile.brand_name}" (${profile.category}, for ${profile.target_users}) would ask. Focus on pain points and problems the product solves — not the product name itself.
+
+Return JSON: { "questions": ["question 1", "question 2", ...] }
+Make them natural Quora-style questions, 8-15 words each.`,
+      }],
+      response_format: { type: "json_object" },
+      max_tokens: 300,
+    });
+    const parsed = JSON.parse(res.choices[0].message.content ?? "{}");
+    const questions: string[] = Array.isArray(parsed.questions) ? parsed.questions.slice(0, 8) : [];
+    return questions.map(q => ({
+      title: q,
+      url: `https://www.quora.com/search?q=${encodeURIComponent(q)}`,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { profile }: { profile: BrandProfile } = await req.json();
@@ -82,25 +107,27 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) {
       console.warn("[quora] FIRECRAWL_API_KEY is not set");
-      return NextResponse.json({ threads: [] });
+      return NextResponse.json({ threads: await generateFallbackQuestions(profile) });
     }
 
     const queries = await getQueries(profile);
     console.log("[quora] queries:", queries);
-    if (queries.length === 0) return NextResponse.json({ threads: [] });
+    if (queries.length === 0) {
+      return NextResponse.json({ threads: await generateFallbackQuestions(profile) });
+    }
+
+    // Run all searches in parallel to stay under Hobby 10s limit
+    const searchResults = await Promise.allSettled(
+      queries.map(q => searchQuora(q, apiKey).catch(() => []))
+    );
 
     const allResults: Array<{ title: string; url: string }> = [];
-
-    for (const query of queries) {
-      try {
-        const results = await searchQuora(query, apiKey);
-        console.log(`[quora] "${query}" → ${results.length} results`);
-        allResults.push(...results);
-      } catch (e) {
-        console.error(`[quora] exception for "${query}":`, e);
-        continue;
+    searchResults.forEach((r, i) => {
+      if (r.status === "fulfilled") {
+        console.log(`[quora] "${queries[i]}" → ${r.value.length} results`);
+        allResults.push(...r.value);
       }
-    }
+    });
 
     const seen = new Set<string>();
     const threads = [];
@@ -108,11 +135,23 @@ export async function POST(req: NextRequest) {
     for (const result of allResults) {
       if (seen.has(result.url)) continue;
       seen.add(result.url);
-
       threads.push({
         id: Buffer.from(result.url).toString("base64").slice(0, 20),
         title: result.title,
         url: result.url,
+      });
+    }
+
+    // Quora restricts crawling so Firecrawl often returns nothing — fall back to AI-generated questions
+    if (threads.length === 0) {
+      console.log("[quora] no real results, using AI fallback");
+      const fallback = await generateFallbackQuestions(profile);
+      return NextResponse.json({
+        threads: fallback.map(f => ({
+          id: Buffer.from(f.url).toString("base64").slice(0, 20),
+          title: f.title,
+          url: f.url,
+        })),
       });
     }
 
