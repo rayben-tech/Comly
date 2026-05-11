@@ -3,13 +3,14 @@
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { BrandProfile, AuditResult, AuditStep } from "@/types";
+import { BrandProfile, AuditResult, AuditStep, PromptResult } from "@/types";
 import { BrandProfileEditor } from "@/components/brand-profile-editor";
 import { AuditResults } from "@/components/audit-results";
 import { AuditLoadingView, LoadingPhase } from "@/components/audit-loading";
 import { PromptReview } from "@/components/prompt-review";
 import { supabase, getUserAudit, saveAuditForUser } from "@/lib/supabase";
 import { generateAuditPrompts } from "@/lib/generate-prompts";
+import { calculateScore, calculateCompetitorRankings } from "@/lib/score";
 
 function RedirectingAnimation() {
   const [progress, setProgress] = useState(0);
@@ -281,15 +282,23 @@ function AuditFlow() {
     setStep("auditing");
     setIsAuditing(true);
 
-    // Min firing time: 25 prompts × 400ms + buffers ≈ 11s
     const MIN_FIRING_MS = 11000;
 
     try {
-      const auditData = await withMinDuration(
+      // Split into 3 parallel batches of ~8 prompts — each call finishes within 10s on Hobby plan
+      const allPrompts = customPrompts.length > 0 ? customPrompts : generateAuditPrompts(profile);
+      const batchSize = Math.ceil(allPrompts.length / 3);
+      const batches = [
+        allPrompts.slice(0, batchSize),
+        allPrompts.slice(batchSize, batchSize * 2),
+        allPrompts.slice(batchSize * 2),
+      ].filter(b => b.length > 0);
+
+      const callBatch = (batchPrompts: string[]) =>
         fetch("/api/run-audit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ profile, customPrompts }),
+          body: JSON.stringify({ profile, customPrompts: batchPrompts }),
         }).then(async (r) => {
           const text = await r.text();
           let d: Record<string, unknown>;
@@ -297,11 +306,23 @@ function AuditFlow() {
             throw new Error(`Server error (${r.status}): ${text.slice(0, 300)}`);
           }
           if (!r.ok) throw new Error((d.error as string) || "Failed to run audit");
-          return d;
+          return (d as { prompt_results: PromptResult[] }).prompt_results;
+        });
+
+      const auditData = await withMinDuration(
+        Promise.all(batches.map(callBatch)).then((batchResults) => {
+          const promptResults = batchResults.flat();
+          return {
+            prompt_results: promptResults,
+            score: calculateScore(promptResults),
+            competitor_rankings: calculateCompetitorRankings(promptResults, profile!.brand_name),
+            total_mentions: promptResults.filter(r => r.mentioned).length,
+          };
         }),
         MIN_FIRING_MS
       );
-      setAuditResult(auditData);
+
+      setAuditResult(auditData as AuditResult);
       setLoadingPhase(null);
       setStep("results");
       try {
