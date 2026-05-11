@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { supabase, getUserAudit } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe, ArrowRight, Check, X, Menu, ChevronDown, Plus,
@@ -547,10 +547,11 @@ const FAQ_ITEMS = [
 
 // ─── NAVBAR ───────────────────────────────────────────────────────────────────
 
-function Navbar({ onCta, visible = true, user }: {
+function Navbar({ onCta, visible = true, user, hasAudit }: {
   onCta: () => void;
   visible?: boolean;
   user?: { email: string; avatar_url?: string; name?: string } | null;
+  hasAudit?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const scrolled = useScroll(10);
@@ -614,7 +615,14 @@ function Navbar({ onCta, visible = true, user }: {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-2">
-          {user ? (
+          {user && hasAudit ? (
+            <a
+              href="/audit"
+              className="flex items-center gap-1.5 bg-[#5B2D91] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#4a2478] transition-all hover:scale-[1.02]"
+            >
+              Dashboard <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          ) : user ? (
             <div className="w-8 h-8 rounded-full overflow-hidden border border-[#e5e5e5] shrink-0">
               {user.avatar_url ? (
                 <img src={user.avatar_url} alt={user.name ?? user.email} className="w-full h-full object-cover" />
@@ -670,14 +678,21 @@ function Navbar({ onCta, visible = true, user }: {
             ))}
           </div>
           <div className="flex flex-col gap-2">
-            {!user && (
+            {user && hasAudit ? (
+              <a
+                href="/audit"
+                className="w-full text-center bg-[#5B2D91] text-white text-sm font-semibold py-3 rounded-full hover:bg-[#4a2478] transition-colors"
+              >
+                Dashboard →
+              </a>
+            ) : !user ? (
               <button
                 onClick={() => { onCta(); setMenuOpen(false); }}
                 className="w-full bg-[#5B2D91] text-white text-sm font-semibold py-3 rounded-full hover:bg-[#4a2478] transition-colors"
               >
                 Get started →
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -1466,6 +1481,7 @@ export default function LandingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
   const [sessionUser, setSessionUser] = useState<{ email: string; avatar_url?: string; name?: string } | null>(null);
+  const [hasAudit, setHasAudit] = useState(false);
   const router = useRouter();
 
   const startCheckout = async (userEmail?: string, userName?: string) => {
@@ -1502,7 +1518,13 @@ export default function LandingPage() {
   useEffect(() => {
     const toUser = (s: { user: { email?: string | null; user_metadata?: Record<string, unknown> } } | null) =>
       s ? { email: s.user.email ?? "", avatar_url: s.user.user_metadata?.avatar_url as string | undefined, name: s.user.user_metadata?.full_name as string | undefined } : null;
-    supabase.auth.getSession().then(({ data: { session } }) => setSessionUser(toUser(session)));
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSessionUser(toUser(session));
+      if (session) {
+        const existing = await getUserAudit(session.user.id).catch(() => null);
+        setHasAudit(!!existing);
+      }
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSessionUser(toUser(session)));
     return () => subscription.unsubscribe();
   }, []);
@@ -1563,7 +1585,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white text-[#0a0a0a] font-sans antialiased">
-      <Navbar onCta={handleCheckout} visible={navVisible} user={sessionUser} />
+      <Navbar onCta={handleCheckout} visible={navVisible} user={sessionUser} hasAudit={hasAudit} />
 
       {/* ═══════════════════════════════════════════════════════════════════════
           HERO
