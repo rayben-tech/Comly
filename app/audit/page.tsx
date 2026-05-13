@@ -150,8 +150,32 @@ function AuditFlow() {
         return;
       }
 
-      // Fallback: session completed but Supabase save may not have landed yet
-      // Skip for unlimited users so they always run a fresh audit
+      // For unlimited users: check if this is a refresh or same-URL revisit
+      if (existing && unlimited) {
+        const paramUrl = searchParams.get("url") || sessionStorage.getItem("comly_pending_url") || "";
+        const norm = (u: string) => { let s = u.trim(); if (!s.startsWith("http")) s = "https://" + s; try { return new URL(s).origin + new URL(s).pathname; } catch { return s; } };
+        const existingUrl = (existing.profile as BrandProfile)?.url ?? "";
+        const isSameOrNoUrl = !paramUrl || norm(paramUrl) === norm(existingUrl);
+
+        if (isSameOrNoUrl) {
+          // Refresh or same-URL revisit — just show existing dashboard
+          try { sessionStorage.removeItem("comly_pending_url"); } catch {}
+          try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+          setProfile(existing.profile as BrandProfile);
+          setAuditResult(existing.results as AuditResult);
+          setStep("results");
+          return;
+        }
+
+        // Different URL — run fresh audit
+        try { sessionStorage.removeItem("comly_pending_url"); } catch {}
+        try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+        setUrl(paramUrl);
+        handleRunAuditWithUrl(paramUrl);
+        return;
+      }
+
+      // No existing audit — fallback to sessionStorage cache (non-unlimited only)
       if (!unlimited) {
         try {
           const cached = sessionStorage.getItem(SESSION_KEY);
