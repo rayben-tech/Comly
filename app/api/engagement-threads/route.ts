@@ -4,43 +4,51 @@ import { openai } from "@/lib/openai";
 
 export const maxDuration = 45;
 
-interface RedditPost {
-  id: string;
-  subreddit: string;
-  title: string;
-  permalink: string;
-  score: number;
-  num_comments: number;
+interface FirecrawlSearchResult {
   url: string;
+  title: string;
+  description?: string;
 }
 
-async function searchRedditNative(
+async function searchRedditViaFirecrawl(
   query: string
 ): Promise<Array<{ id: string; subreddit: string; title: string; url: string }>> {
-  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&type=link&limit=10&sort=relevance&t=year`;
-  const response = await fetch(url, {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) return [];
+
+  const res = await fetch("https://api.firecrawl.dev/v1/search", {
+    method: "POST",
     headers: {
-      "User-Agent": "Comly/1.0 (AI visibility audit tool; contact hello@comly.ai)",
-      "Accept": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      query: `site:reddit.com ${query}`,
+      limit: 8,
+      scrapeOptions: { formats: [] },
+    }),
   });
 
-  if (!response.ok) return [];
-  const data = await response.json();
-  const children: { data: RedditPost }[] = data?.data?.children ?? [];
+  if (!res.ok) {
+    console.error(`[reddit] Firecrawl search HTTP ${res.status} for: ${query}`);
+    return [];
+  }
 
-  return children
-    .filter((child) => {
-      const post = child.data;
-      return post?.title?.length >= 10 && post?.subreddit && post?.permalink;
-    })
-    .map((child) => {
-      const post = child.data;
+  const data = await res.json();
+  const items: FirecrawlSearchResult[] = data.data ?? [];
+
+  return items
+    .filter((item) => item.url?.includes("reddit.com/r/") && item.title)
+    .map((item) => {
+      const match = item.url.match(/reddit\.com\/(r\/[^/?#]+)/);
+      const subreddit = match ? match[1] : "reddit";
+      const parts = item.url.replace(/\/$/, "").split("/");
+      const id = parts[parts.length - 1] || Math.random().toString(36).slice(2);
       return {
-        id: post.id,
-        subreddit: `r/${post.subreddit}`,
-        title: post.title.trim(),
-        url: `https://www.reddit.com${post.permalink}`,
+        id,
+        subreddit,
+        title: item.title.trim(),
+        url: item.url,
       };
     });
 }
@@ -82,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     // Run all searches in parallel
     const results = await Promise.allSettled(
-      queries.map((q) => searchRedditNative(q))
+      queries.map((q) => searchRedditViaFirecrawl(q))
     );
 
     const allResults: Array<{ id: string; subreddit: string; title: string; url: string }> = [];
