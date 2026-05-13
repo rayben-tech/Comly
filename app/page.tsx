@@ -9,6 +9,7 @@ import {
   Globe, ArrowRight, Check, X, Menu, ChevronDown, Plus,
   BarChart3, TrendingUp, Target, Eye, Bell, Shield,
   ExternalLink, Search, RefreshCw, Users,
+  CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HowItWorksAnimated } from "@/components/ui/animated-scroll";
@@ -1480,6 +1481,8 @@ export default function LandingPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [urlStatus, setUrlStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
+  const [urlErrorMsg, setUrlErrorMsg] = useState("");
   const [sessionUser, setSessionUser] = useState<{ email: string; avatar_url?: string; name?: string } | null>(null);
   const [hasAudit, setHasAudit] = useState(false);
   const router = useRouter();
@@ -1535,6 +1538,40 @@ export default function LandingPage() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  useEffect(() => {
+    const trimmed = url.trim();
+    if (!trimmed) { setUrlStatus("idle"); return; }
+    setUrlStatus("checking");
+    const timer = setTimeout(async () => {
+      let u = trimmed;
+      if (!u.startsWith("http://") && !u.startsWith("https://")) u = "https://" + u;
+      try {
+        const res = await fetch("/api/verify-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: u }),
+        });
+        const data = await res.json();
+        if (data.live) {
+          setUrlStatus("ok");
+          setUrlErrorMsg("");
+        } else {
+          setUrlStatus("error");
+          setUrlErrorMsg(
+            data.status === 404  ? "Page not found (404)" :
+            data.status === -1   ? "Website took too long to respond" :
+            data.status === 0    ? "Website couldn't be reached" :
+            `Website returned an error (${data.status})`
+          );
+        }
+      } catch {
+        setUrlStatus("error");
+        setUrlErrorMsg("Could not connect to this website");
+      }
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [url]);
 
   useEffect(() => {
     function onScroll() {
@@ -1646,19 +1683,39 @@ export default function LandingPage() {
                   placeholder="https://yourcompany.com"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleAudit(); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && urlStatus === "ok") handleAudit(); }}
                   className="w-full pl-9 pr-3 py-2.5 text-sm bg-transparent outline-none placeholder-[#c5c5c5]"
                 />
               </div>
               <button
                 onClick={handleAudit}
-                disabled={!url.trim() || auditLoading}
+                disabled={!url.trim() || auditLoading || urlStatus === "checking" || urlStatus === "error"}
                 className="shrink-0 bg-[#5B2D91] text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-[#4a2478] transition-all hover:scale-[1.02] disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5"
               >
-                {auditLoading ? "Checking…" : <><span>Run audit</span><ArrowRight className="w-3.5 h-3.5" /></>}
+                {auditLoading ? "Running…" : <><span>Run audit</span><ArrowRight className="w-3.5 h-3.5" /></>}
               </button>
             </div>
-            <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
+            {urlStatus === "idle" && (
+              <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
+            )}
+            {urlStatus === "checking" && (
+              <div className="flex items-center justify-center gap-1.5">
+                <Loader2 className="w-3 h-3 text-[#aaaaaa] animate-spin" />
+                <p className="text-xs text-[#aaaaaa]">Checking website…</p>
+              </div>
+            )}
+            {urlStatus === "ok" && (
+              <div className="flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <p className="text-xs text-emerald-500">Website accessible · Results in 60 seconds</p>
+              </div>
+            )}
+            {urlStatus === "error" && (
+              <div className="flex items-center justify-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                <p className="text-xs text-red-500">{urlErrorMsg}</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Mobile enhanced preview */}
