@@ -1479,7 +1479,7 @@ export default function LandingPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [navVisible, setNavVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false); // kept for compat
   const [auditLoading, setAuditLoading] = useState(false);
   const [urlStatus, setUrlStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
   const [urlErrorMsg, setUrlErrorMsg] = useState("");
@@ -1503,12 +1503,19 @@ export default function LandingPage() {
   };
 
   const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    try {
-      await startCheckout();
-    } catch (err) {
-      console.error("Checkout error:", err);
-      setCheckoutLoading(false);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push("/auth");
+      return;
+    }
+    const subRes = await fetch("/api/subscription/check", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const { isPaid } = await subRes.json();
+    if (isPaid) {
+      router.push("/audit");
+    } else {
+      router.push("/subscribe");
     }
   };
   const heroInputRef = useRef<HTMLInputElement>(null);

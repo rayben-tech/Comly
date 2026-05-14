@@ -28,22 +28,9 @@ export default function AuthCallbackPage() {
             return;
           }
 
-          // Not paid — send to Dodo checkout
-          const checkoutRes = await fetch("/api/checkout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userEmail: session.user.email ?? "",
-              userName: session.user.user_metadata?.full_name ?? "",
-              returnTo: dest,
-            }),
-          });
-          const checkoutData = await checkoutRes.json();
-          if (checkoutData.url) {
-            window.location.href = checkoutData.url;
-          } else {
-            router.replace(dest);
-          }
+          // Not paid — send to /subscribe paywall
+          const pendingUrlParam = pendingUrl ? `?url=${encodeURIComponent(pendingUrl)}` : "";
+          router.replace(`/subscribe${pendingUrlParam}`);
         } catch {
           router.replace(dest);
         }

@@ -60,7 +60,7 @@ function AuthFlow() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function routeAfterAuth(accessToken: string, userEmail: string, userName: string, url: string) {
+  async function routeAfterAuth(accessToken: string, _userEmail: string, _userName: string, url: string) {
     setLoading(true);
     try {
       const subRes = await fetch("/api/subscription/check", {
@@ -68,25 +68,15 @@ function AuthFlow() {
       });
       const { isPaid } = await subRes.json();
 
-      const dest = url ? `/audit?url=${encodeURIComponent(url)}` : "/";
-
       if (isPaid) {
+        const dest = url ? `/audit?url=${encodeURIComponent(url)}` : "/audit";
         router.replace(dest);
         return;
       }
 
-      // Not paid — send to Dodo checkout; return_url is the final destination
-      const checkoutRes = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userEmail, userName, returnTo: dest }),
-      });
-      const checkoutData = await checkoutRes.json();
-      if (checkoutData.url) {
-        window.location.href = checkoutData.url;
-      } else {
-        router.replace(dest);
-      }
+      // Not paid — send to /subscribe paywall
+      const subscribeUrl = url ? `/subscribe?url=${encodeURIComponent(url)}` : "/subscribe";
+      router.replace(subscribeUrl);
     } catch {
       router.replace(url ? `/audit?url=${encodeURIComponent(url)}` : "/");
     }
