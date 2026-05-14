@@ -60,7 +60,11 @@ function SubscribePage() {
         body: JSON.stringify({ userEmail, userName, returnTo: dest }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setLoading(false);
+      }
     } catch {
       setLoading(false);
     }
