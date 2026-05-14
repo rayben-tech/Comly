@@ -1104,7 +1104,7 @@ function DemoFrame({ children }: { children: React.ReactNode }) {
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span style={{ fontSize: 12, color: "#555", fontFamily: "system-ui, sans-serif", letterSpacing: 0 }}>
-            comly.ai/demo/dashboard
+            trycomly.com/demo/dashboard
           </span>
         </div>
         {/* Open full preview button */}
@@ -1180,7 +1180,7 @@ function HeroDashboardPreview() {
           <div className="w-2.5 h-2.5 rounded-full bg-[#e5e5e5]" />
         </div>
         <div className="flex-1 mx-4 bg-white border border-[#e5e5e5] rounded-md px-3 py-1 text-[11px] text-[#aaaaaa]">
-          app.comly.io/dashboard
+          trycomly.com/dashboard
         </div>
       </div>
 
@@ -1733,7 +1733,7 @@ export default function LandingPage() {
                 <div className="w-2 h-2 rounded-full bg-[#e5e5e5]" />
               </div>
               <div className="flex-1 mx-2 bg-white border border-[#e5e5e5] rounded px-2 py-0.5 text-[10px] text-[#aaaaaa]">
-                app.comly.io/dashboard
+                trycomly.com/dashboard
               </div>
             </div>
 
