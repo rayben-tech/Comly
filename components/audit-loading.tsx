@@ -510,9 +510,9 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
       setVisibleCount(count);
       if (count >= 25) {
         clearInterval(iv);
-        setTimeout(() => setDone(true), 400);
+        setTimeout(() => setDone(true), 600);
       }
-    }, 150);
+    }, 240);
     return () => clearInterval(iv);
   }, []);
 
@@ -582,9 +582,9 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
       count++;
       setFiredCount(count);
       setShowResponse(true);
-      setTimeout(() => setShowResponse(false), 700);
-      if (count < 25) setTimeout(fire, 400);
-      else setTimeout(() => setAllDone(true), 900);
+      setTimeout(() => setShowResponse(false), 1100);
+      if (count < 25) setTimeout(fire, 700);
+      else setTimeout(() => setAllDone(true), 1400);
     };
     const t = setTimeout(fire, 400);
     return () => clearTimeout(t);
