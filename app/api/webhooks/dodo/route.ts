@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const dodo = new DodoPayments({
     bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
     webhookKey: process.env.DODO_WEBHOOK_SECRET!,
-    environment: "test_mode",
+    environment: "live_mode",
   });
 
   const supabase = createClient(
