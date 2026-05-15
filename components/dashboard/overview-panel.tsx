@@ -119,45 +119,35 @@ interface Props {
   demoMode?: boolean;
 }
 
-function SparseScoreCard({
-  score, brandName, topCompNames, topComps, totalPrompts,
-}: {
-  score: number; brandName: string; topCompNames: string[];
-  topComps: CompetitorRanking[]; totalPrompts: number;
-}) {
-  const brands = [
-    { name: brandName, pct: score, isYou: true, color: "#5B2D91" as string },
-    ...topCompNames.slice(0, 3).map((name, i) => {
-      const comp = topComps.find(c => c.name === name);
-      const pct = comp ? Math.round((comp.mentions / totalPrompts) * 100) : 0;
-      return { name, pct, isYou: false, color: COMP_COLORS[i] };
-    }),
-  ];
-
+function ChartLockedPlaceholder() {
+  const [tip, setTip] = useState(false);
   return (
-    <div className="flex flex-col gap-2 py-2">
-      {brands.map(b => (
-        <div key={b.name} className="flex items-center gap-2.5">
-          <span className={`text-[11px] w-[90px] shrink-0 truncate ${b.isYou ? "font-bold text-[#0a0a0a]" : "text-[#9ca3af]"}`}>
-            {b.name}
-          </span>
-          <div className="flex-1 h-[7px] bg-[#f0f0f0] rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${b.pct}%`,
-                background: b.isYou ? "linear-gradient(90deg, #5B2D91, #7c3aed)" : b.color,
-                opacity: b.isYou ? 1 : 0.55,
-                transition: "width 700ms cubic-bezier(0.4,0,0.2,1)",
-              }}
-            />
-          </div>
-          <span className={`text-[11px] font-semibold w-8 text-right shrink-0 ${b.isYou ? "text-[#5B2D91]" : "text-[#c0c0c0]"}`}>
-            {b.pct}%
-          </span>
+    <div className="flex flex-col items-center justify-center h-[120px] gap-2 select-none">
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] font-semibold text-[#9ca3af]">
+          Unlock line chart after 3 audits (3 days)
+        </span>
+        <div className="relative">
+          <button
+            onMouseEnter={() => setTip(true)}
+            onMouseLeave={() => setTip(false)}
+            className="w-4 h-4 rounded-full border border-[#d1d5db] text-[#9ca3af] text-[10px] font-bold flex items-center justify-center hover:border-[#5B2D91] hover:text-[#5B2D91] transition-colors"
+          >
+            i
+          </button>
+          {tip && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[200px] bg-[#1a1a2e] text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl pointer-events-none z-50">
+              Not enough data yet. Run your audit daily — the trend chart unlocks automatically after 3 audits.
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1a1a2e]" />
+            </div>
+          )}
         </div>
-      ))}
-      <p className="text-[10px] text-[#c0c0c0] mt-1.5">First audit · run again to unlock trend lines</p>
+      </div>
+      <div className="flex items-end gap-1 opacity-20">
+        {[40, 55, 48, 62, 58, 70, 65].map((h, i) => (
+          <div key={i} className="w-2 rounded-sm bg-[#5B2D91]" style={{ height: h * 0.6 }} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -543,15 +533,9 @@ export function OverviewPanel({
             </div>
           </div>
 
-          {/* Chart — score card when data is sparse, line chart when there's enough history */}
+          {/* Chart — locked placeholder when data is sparse, line chart when there's enough history */}
           {showDots && !demoMode ? (
-            <SparseScoreCard
-              score={activeScore}
-              brandName={brandName}
-              topCompNames={topCompNames}
-              topComps={activeCompRankings}
-              totalPrompts={totalPrompts}
-            />
+            <ChartLockedPlaceholder />
           ) : (
             <div
               className="h-[120px] -mx-1"
