@@ -13,12 +13,12 @@ export const metadata: Metadata = {
   title: "Comly — AI Visibility Audit for Your Brand",
   description:
     "Find out if AI recommends your brand. Run an AI visibility audit and see how you rank against competitors in AI-generated responses.",
-  metadataBase: new URL("https://trycomly.com"),
+  metadataBase: new URL("https://www.trycomly.com"),
   openGraph: {
     title: "Comly — AI Visibility Audit for Your Brand",
     description: "See how ChatGPT, Claude, Gemini & Perplexity talk about you — and outrank competitors.",
     type: "website",
-    url: "https://trycomly.com",
+    url: "https://www.trycomly.com",
   },
   twitter: {
     card: "summary_large_image",
