@@ -131,7 +131,7 @@ export function DemoDashboard({ fullScreen = false }: { fullScreen?: boolean }) 
             {/* CRAWLERS */}
             {activePage === "crawlers" && (
               <div className="p-6">
-                <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
+                <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}>
                   <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-xl bg-[#f3eeff] flex items-center justify-center shrink-0">
@@ -208,7 +208,7 @@ export function DemoDashboard({ fullScreen = false }: { fullScreen?: boolean }) 
             {/* COMPETITOR PLAYBOOK */}
             {activePage === "competitor-playbook" && (
               <div className="p-6">
-                <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
+                <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}>
                   <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-xl bg-[#f3eeff] flex items-center justify-center shrink-0">

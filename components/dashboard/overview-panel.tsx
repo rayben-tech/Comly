@@ -400,7 +400,7 @@ export function OverviewPanel({
           <button
             onClick={() => setTimeRangeOpen(v => !v)}
             className="relative z-20 flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[11px] text-[#6b7280] transition-colors"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             📅 {TIME_RANGE_LABELS[timeRange]}
             <ChevronDown className="w-2.5 h-2.5 opacity-60 ml-0.5" />
@@ -434,7 +434,7 @@ export function OverviewPanel({
           <button
             onClick={() => { if (demoMode) setModelDropOpen(v => !v); }}
             className="relative z-20 flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[11px] text-[#6b7280] transition-colors"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             {demoModelFilter === "all" ? "All models" : demoModelFilter}
             <ChevronDown className="w-2.5 h-2.5 opacity-60 ml-0.5" />
@@ -471,7 +471,7 @@ export function OverviewPanel({
           <button
             onClick={() => { if (demoMode) setBrandDropOpen(v => !v); }}
             className="relative z-20 flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[11px] text-[#6b7280] transition-colors"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             {demoBrandFilter === "all" ? "Brand" : `vs ${demoBrandFilter}`}
             <ChevronDown className="w-2.5 h-2.5 opacity-60 ml-0.5" />
@@ -510,7 +510,7 @@ export function OverviewPanel({
         <motion.div
           custom={0} initial="hidden" animate="visible" variants={cardVariants}
           className="bg-white rounded-xl p-4 flex flex-col gap-3"
-          style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+          style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
         >
           {/* Card header */}
           <div className="flex items-start justify-between">
@@ -735,7 +735,7 @@ export function OverviewPanel({
           <motion.div
             custom={1} initial="hidden" animate="visible" variants={cardVariants}
             className="bg-white rounded-xl p-4"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             <h3 className="text-[12px] font-bold text-[#0a0a0a]">AI Mentions</h3>
             <p className="text-[10px] text-[#6b7280] mt-0.5">How often AI mentions your brand</p>
@@ -791,7 +791,7 @@ export function OverviewPanel({
           <motion.div
             custom={2} initial="hidden" animate="visible" variants={cardVariants}
             className="bg-white rounded-xl overflow-hidden flex-1"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             {/* Header */}
             <div className="px-4 pt-4 pb-3">
@@ -899,7 +899,7 @@ export function OverviewPanel({
           <motion.div
             custom={3} initial="hidden" animate="visible" variants={cardVariants}
             className="bg-white rounded-xl overflow-hidden"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             <div className="px-4 pt-4 pb-3">
               <h3 className="text-[12px] font-bold text-[#0a0a0a]">Improve AI Visibility</h3>
@@ -956,7 +956,7 @@ export function OverviewPanel({
                       <button
                         onClick={() => onNavigate(item.page)}
                         className="mt-1.5 text-[10px] font-semibold text-[#6b7280] rounded px-2 py-0.5 hover:text-[#5B2D91] hover:border-[#5B2D91] transition-colors"
-                        style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+                        style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
                       >
                         {item.btnLabel}
                       </button>
@@ -971,7 +971,7 @@ export function OverviewPanel({
           <motion.div
             custom={4} initial="hidden" animate="visible" variants={cardVariants}
             className="bg-white rounded-xl overflow-hidden flex-1"
-            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
             <div className="px-4 pt-4 pb-3">
               <h3 className="text-[12px] font-bold text-[#0a0a0a]">What AI says about you</h3>
@@ -1014,7 +1014,7 @@ export function OverviewPanel({
       <motion.div
         custom={5} initial="hidden" animate="visible" variants={cardVariants}
         className="mx-6 mb-6 bg-white rounded-xl overflow-hidden"
-        style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+        style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
       >
         {/* Card header */}
         <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: "0.5px solid #f0f0f0" }}>
