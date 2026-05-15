@@ -16,46 +16,43 @@ export default function OGImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0d0d1a 0%, #1a0a3d 50%, #0d0d1a 100%)",
+          backgroundColor: "#0d0d1a",
           position: "relative",
-          overflow: "hidden",
         }}
       >
-        {/* Background glow */}
+        {/* Purple center glow */}
         <div
           style={{
             position: "absolute",
-            top: "-100px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            top: "0px",
+            left: "200px",
             width: "800px",
-            height: "500px",
+            height: "400px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(91,45,145,0.4) 0%, transparent 70%)",
+            background: "rgba(91,45,145,0.35)",
+            filter: "blur(80px)",
             display: "flex",
           }}
         />
 
-        {/* Logo + name row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "32px" }}>
-          {/* SVG logo */}
-          <svg width="52" height="58" viewBox="0 0 100 110" fill="none">
-            <path
-              d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z"
-              fill="#ffffff"
-            />
-            <path
-              d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z"
-              fill="url(#g)"
-            />
-            <defs>
-              <linearGradient id="g" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#5b21b6" />
-                <stop offset="100%" stopColor="#a855f7" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <span style={{ fontSize: "42px", fontWeight: "800", color: "#ffffff", letterSpacing: "-1px" }}>
+        {/* Logo + name */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "28px" }}>
+          {/* Simple triangle logo — flat colors, no gradients */}
+          <div
+            style={{
+              width: "48px",
+              height: "52px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#1a1a2e",
+              borderRadius: "10px",
+              border: "2px solid rgba(167,85,247,0.4)",
+            }}
+          >
+            <div style={{ width: "24px", height: "24px", backgroundColor: "#a855f7", borderRadius: "4px", display: "flex" }} />
+          </div>
+          <span style={{ fontSize: "40px", fontWeight: "800", color: "#ffffff", letterSpacing: "-1px", display: "flex" }}>
             Comly
           </span>
         </div>
@@ -63,72 +60,61 @@ export default function OGImage() {
         {/* Headline */}
         <div
           style={{
-            fontSize: "58px",
-            fontWeight: "900",
-            color: "#ffffff",
-            textAlign: "center",
-            lineHeight: "1.1",
-            maxWidth: "900px",
-            letterSpacing: "-2px",
-            marginBottom: "20px",
             display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginBottom: "20px",
           }}
         >
-          AI Visibility Audit
-          <br />
-          for Your Brand.
+          <span style={{ fontSize: "62px", fontWeight: "900", color: "#ffffff", letterSpacing: "-2px", lineHeight: "1.05", display: "flex" }}>
+            AI Visibility Audit
+          </span>
+          <span style={{ fontSize: "62px", fontWeight: "900", color: "#a78bfa", letterSpacing: "-2px", lineHeight: "1.05", display: "flex" }}>
+            for Your Brand.
+          </span>
         </div>
 
         {/* Subtext */}
-        <div
-          style={{
-            fontSize: "22px",
-            color: "rgba(255,255,255,0.5)",
-            textAlign: "center",
-            maxWidth: "640px",
-            lineHeight: "1.5",
-            marginBottom: "40px",
-            display: "flex",
-          }}
-        >
-          See how ChatGPT, Claude, Gemini & Perplexity talk about you — and outrank competitors.
+        <div style={{ display: "flex", marginBottom: "40px" }}>
+          <span style={{ fontSize: "22px", color: "rgba(255,255,255,0.45)", textAlign: "center", display: "flex" }}>
+            See how ChatGPT, Claude, Gemini &amp; Perplexity talk about you.
+          </span>
         </div>
 
-        {/* Score badge row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        {/* Score badges */}
+        <div style={{ display: "flex", gap: "16px" }}>
           {[
-            { label: "ChatGPT", score: "74" },
-            { label: "Claude", score: "68" },
-            { label: "Gemini", score: "71" },
-            { label: "Perplexity", score: "65" },
-          ].map(({ label, score }) => (
+            { label: "ChatGPT", score: "74", color: "#10b981" },
+            { label: "Claude",  score: "68", color: "#a78bfa" },
+            { label: "Gemini",  score: "71", color: "#60a5fa" },
+            { label: "Perplexity", score: "65", color: "#f59e0b" },
+          ].map(({ label, score, color }) => (
             <div
               key={label}
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                background: "rgba(255,255,255,0.07)",
+                backgroundColor: "rgba(255,255,255,0.07)",
                 border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: "16px",
-                padding: "14px 22px",
+                padding: "14px 24px",
                 gap: "4px",
               }}
             >
-              <span style={{ fontSize: "28px", fontWeight: "800", color: "#a78bfa", display: "flex" }}>{score}</span>
+              <span style={{ fontSize: "30px", fontWeight: "800", color, display: "flex" }}>{score}</span>
               <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", display: "flex" }}>{label}</span>
             </div>
           ))}
         </div>
 
-        {/* Domain pill */}
+        {/* Domain */}
         <div
           style={{
             position: "absolute",
             bottom: "32px",
             display: "flex",
-            alignItems: "center",
-            background: "rgba(255,255,255,0.06)",
+            backgroundColor: "rgba(255,255,255,0.06)",
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "100px",
             padding: "8px 20px",
