@@ -109,7 +109,7 @@ export function PromptsPage({ promptResults, profile }: Props) {
         {catStats.map(({ cat, hit, total }) => {
           const style = LABEL_STYLES[cat];
           return (
-            <div key={cat} className="bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] px-4 py-3">
+            <div key={cat} className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-3" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}>
               <div className="flex items-center gap-1.5 mb-2">
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${style.dot}`} />
                 <span className="text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide truncate">{cat}</span>
@@ -164,9 +164,10 @@ export function PromptsPage({ promptResults, profile }: Props) {
               key={r.index}
               className={`bg-white rounded-xl overflow-hidden transition-all border ${
                 r.mentioned
-                  ? isOpen ? "border-[#5B2D91]/20 shadow-sm" : "border-[#e5e5e5]"
+                  ? isOpen ? "border-[#5B2D91]/20" : "border-[#e5e5e5]"
                   : "border-[#f0f0f0]"
               }`}
+              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
             >
               <button
                 className="w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-[#fafafa] transition-colors"
