@@ -91,6 +91,8 @@ const HOW_IT_WORKS = [
 // ── component ─────────────────────────────────────────────────────────────
 
 export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
+  const slug = slugify(profile.brand_name);
+
   const [threads,    setThreads]    = useState<Thread[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,9 +103,15 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
   const [sortOpen,     setSortOpen]     = useState(false);
   const [sortPos,      setSortPos]      = useState({ top: 0, right: 0 });
 
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [saved,     setSaved]     = useState<Set<string>>(new Set());
-  const [repliedTo, setRepliedTo] = useState<Set<string>>(new Set());
+  const [dismissed, setDismissed] = useState<Set<string>>(() =>
+    typeof window !== "undefined" ? loadSet(`comly_quora_dismissed_${slug}`) : new Set()
+  );
+  const [saved, setSaved] = useState<Set<string>>(() =>
+    typeof window !== "undefined" ? loadSet(`comly_quora_saved_${slug}`) : new Set()
+  );
+  const [repliedTo, setRepliedTo] = useState<Set<string>>(() =>
+    typeof window !== "undefined" ? loadSet(`comly_quora_replied_${slug}`) : new Set()
+  );
 
   const [activeThread,   setActiveThread]   = useState<Thread | null>(null);
   const [replies,        setReplies]        = useState<string[]>([]);
@@ -113,13 +121,8 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
 
   const sortBtnRef = useRef<HTMLButtonElement>(null);
 
-  // ── init: load from localStorage, auto-fetch if empty ──────────────────
+  // ── init: load threads from localStorage, auto-fetch if empty ──────────
   useEffect(() => {
-    const slug = slugify(profile.brand_name);
-    setSaved(loadSet(`comly_quora_saved_${slug}`));
-    setRepliedTo(loadSet(`comly_quora_replied_${slug}`));
-    setDismissed(loadSet(`comly_quora_dismissed_${slug}`));
-
     if (demoMode && demoThreads) {
       setThreads(demoThreads);
       setLoading(false);
@@ -151,16 +154,16 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
 
   // ── persist state ───────────────────────────────────────────────────────
   useEffect(() => {
-    saveSet(`comly_quora_saved_${slugify(profile.brand_name)}`, saved);
-  }, [saved, profile.brand_name]);
+    saveSet(`comly_quora_saved_${slug}`, saved);
+  }, [saved, slug]);
 
   useEffect(() => {
-    saveSet(`comly_quora_replied_${slugify(profile.brand_name)}`, repliedTo);
-  }, [repliedTo, profile.brand_name]);
+    saveSet(`comly_quora_replied_${slug}`, repliedTo);
+  }, [repliedTo, slug]);
 
   useEffect(() => {
-    saveSet(`comly_quora_dismissed_${slugify(profile.brand_name)}`, dismissed);
-  }, [dismissed, profile.brand_name]);
+    saveSet(`comly_quora_dismissed_${slug}`, dismissed);
+  }, [dismissed, slug]);
 
   // ── how-it-works first-time ─────────────────────────────────────────────
   useEffect(() => {
@@ -172,7 +175,6 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
 
   // ── actions ─────────────────────────────────────────────────────────────
   async function handleRefresh() {
-    const slug = slugify(profile.brand_name);
     setRefreshing(true);
     setError(false);
     try {
