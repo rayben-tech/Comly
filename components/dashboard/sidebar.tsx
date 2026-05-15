@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Globe,
@@ -204,6 +204,22 @@ function IconBtn({
 export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const isFixesActive = activePage.startsWith("fixes:");
+
+  const [secondsLeft, setSecondsLeft] = useState(86400);
+  useEffect(() => {
+    if (!demoMode) return;
+    const id = setInterval(() => {
+      setSecondsLeft(s => (s <= 1 ? 86400 : s - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [demoMode]);
+
+  const demoH = Math.floor(secondsLeft / 3600);
+  const demoM = Math.floor((secondsLeft % 3600) / 60);
+  const demoS = secondsLeft % 60;
+  const timerLabel = demoMode
+    ? `${String(demoH).padStart(2, "0")}:${String(demoM).padStart(2, "0")}:${String(demoS).padStart(2, "0")}`
+    : "20h 12m";
   const [brandContentOpen, setBrandContentOpen] = useState(isFixesActive);
 
   return (
@@ -486,7 +502,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               <div className="flex items-center gap-1.5 mt-2 px-2">
                 <Clock className="w-3 h-3 text-[#5B2D91] shrink-0" />
                 <span className="text-[11px] text-[#6b7280]">Next audit in</span>
-                <span className="text-[11px] font-bold text-[#5B2D91]">20h 12m</span>
+                <span className="text-[11px] font-bold text-[#5B2D91]">{timerLabel}</span>
               </div>
             </div>
           </motion.div>
