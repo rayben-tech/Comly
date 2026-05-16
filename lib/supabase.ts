@@ -33,7 +33,7 @@ export async function saveAuditForUser(userId: string, data: {
   results: object;
 }) {
   const { error } = await supabase.from("audits").upsert(
-    { user_id: userId, ...data },
+    { user_id: userId, ...data, daily_reaudit: true },
     { onConflict: "user_id" }
   );
   if (error) throw error;

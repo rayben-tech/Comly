@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
   // Fetch every user who has a saved audit (one row per user)
   const { data: auditRows, error: auditErr } = await supabase
     .from("audits")
-    .select("user_id, url, brand_name, profile");
+    .select("user_id, url, brand_name, profile")
+    .eq("daily_reaudit", true);
 
   if (auditErr || !auditRows?.length) {
     console.log("daily-audit: no audit rows found", auditErr?.message);
