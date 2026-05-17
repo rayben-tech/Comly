@@ -214,8 +214,11 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ thread: { title: thread.title, subreddit: thread.subreddit }, profile }),
       });
-      setReplies((await res.json()).replies ?? []);
-    } catch {
+      const data = await res.json();
+      if (data.error) console.error("generate-reply:", data.error);
+      setReplies(data.replies ?? []);
+    } catch (err) {
+      console.error("generate-reply fetch error:", err);
       setReplies([]);
     } finally {
       setRepliesLoading(false);

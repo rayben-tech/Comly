@@ -45,7 +45,8 @@ Return ONLY a valid JSON array of 3 strings, nothing else. Example format:
     const replies = JSON.parse(content);
     return NextResponse.json({ replies });
   } catch (err) {
-    console.error("generate-reply error:", err);
-    return NextResponse.json({ replies: [] });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("generate-reply error:", msg);
+    return NextResponse.json({ replies: [], error: msg });
   }
 }
