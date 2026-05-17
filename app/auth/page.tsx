@@ -198,7 +198,7 @@ function AuthFlow() {
 
           {/* Heading */}
           <div className="mb-6">
-            <div className="w-9 h-9 rounded-xl bg-[#5B2D91]/10 flex items-center justify-center mb-4">
+            <div className="mb-4">
               <ComlyLogo size={22} />
             </div>
             <h1 className="text-[24px] font-bold text-[#0a0a0a] mb-1">
