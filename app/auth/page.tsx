@@ -89,6 +89,18 @@ function AuthFlow() {
     setLoading(true);
     try {
       if (tab === "signup") {
+        const verifyRes = await fetch("/api/verify-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const { valid, error: verifyError } = await verifyRes.json();
+        if (!valid) {
+          setError(verifyError || "Please enter a valid email address.");
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         if (data.session) {
