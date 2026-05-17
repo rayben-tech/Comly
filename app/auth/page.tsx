@@ -199,7 +199,7 @@ function AuthFlow() {
           {/* Heading */}
           <div className="mb-6">
             <div className="mb-4">
-              <ComlyLogo size={22} />
+              <ComlyLogo size={40} />
             </div>
             <h1 className="text-[24px] font-bold text-[#0a0a0a] mb-1">
               {tab === "signup" ? "Get Started" : "Welcome back"}
