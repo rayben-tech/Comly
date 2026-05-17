@@ -40,10 +40,12 @@ Return ONLY a valid JSON array of 3 strings, nothing else. Example format:
       max_tokens: 600,
     });
 
-    const content = response.choices[0].message.content ?? "[]";
+    const raw = response.choices[0].message.content ?? "[]";
+    const content = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
     const replies = JSON.parse(content);
     return NextResponse.json({ replies });
-  } catch {
+  } catch (err) {
+    console.error("generate-reply error:", err);
     return NextResponse.json({ replies: [] });
   }
 }

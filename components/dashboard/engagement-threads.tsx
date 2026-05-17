@@ -104,14 +104,22 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
   const [refreshing,setRefreshing]= useState(false);
   const [error,     setError]     = useState(false);
   const [showHiW,   setShowHiW]   = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("new");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [sortOption,   setSortOption]   = useState<SortOption>("newest");
   const [sortOpen,     setSortOpen]     = useState(false);
   const [sortPos,      setSortPos]      = useState({ top: 0, right: 0 });
 
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [saved,     setSaved]     = useState<Set<string>>(new Set());
-  const [repliedTo, setRepliedTo] = useState<Set<string>>(new Set());
+  const slug = slugify(profile.brand_name);
+
+  const [dismissed, setDismissed] = useState<Set<string>>(() =>
+    typeof window !== "undefined" ? loadSet(`comly_reddit_dismissed_${slug}`) : new Set()
+  );
+  const [saved, setSaved] = useState<Set<string>>(() =>
+    typeof window !== "undefined" ? loadSet(`comly_reddit_saved_${slug}`) : new Set()
+  );
+  const [repliedTo, setRepliedTo] = useState<Set<string>>(() =>
+    typeof window !== "undefined" ? loadSet(`comly_reddit_replied_${slug}`) : new Set()
+  );
 
   const [activeThread,   setActiveThread]   = useState<Thread | null>(null);
   const [replies,        setReplies]        = useState<string[]>([]);
@@ -121,13 +129,8 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
 
   const sortBtnRef = useRef<HTMLButtonElement>(null);
 
-  // ── init: load from localStorage, auto-fetch if empty ──────────────────
+  // ── init: load threads from localStorage, auto-fetch if empty ──────────
   useEffect(() => {
-    const slug = slugify(profile.brand_name);
-    setSaved(loadSet(`comly_reddit_saved_${slug}`));
-    setRepliedTo(loadSet(`comly_reddit_replied_${slug}`));
-    setDismissed(loadSet(`comly_reddit_dismissed_${slug}`));
-
     if (demoMode && demoThreads) {
       setThreads(demoThreads);
       setLoading(false);
@@ -159,16 +162,16 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
 
   // ── persist state ───────────────────────────────────────────────────────
   useEffect(() => {
-    saveSet(`comly_reddit_saved_${slugify(profile.brand_name)}`, saved);
-  }, [saved, profile.brand_name]);
+    saveSet(`comly_reddit_saved_${slug}`, saved);
+  }, [saved, slug]);
 
   useEffect(() => {
-    saveSet(`comly_reddit_replied_${slugify(profile.brand_name)}`, repliedTo);
-  }, [repliedTo, profile.brand_name]);
+    saveSet(`comly_reddit_replied_${slug}`, repliedTo);
+  }, [repliedTo, slug]);
 
   useEffect(() => {
-    saveSet(`comly_reddit_dismissed_${slugify(profile.brand_name)}`, dismissed);
-  }, [dismissed, profile.brand_name]);
+    saveSet(`comly_reddit_dismissed_${slug}`, dismissed);
+  }, [dismissed, slug]);
 
   // ── how-it-works first-time ─────────────────────────────────────────────
   useEffect(() => {
@@ -180,7 +183,6 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
 
   // ── actions ─────────────────────────────────────────────────────────────
   async function handleRefresh() {
-    const slug = slugify(profile.brand_name);
     setRefreshing(true);
     setError(false);
     try {
@@ -233,8 +235,8 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
   function toggleSave(id: string) {
     setSaved(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   }
-  function markReplied(id: string) {
-    setRepliedTo(prev => new Set([...prev, id]));
+  function toggleReplied(id: string) {
+    setRepliedTo(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   }
   function dismiss(id: string) {
     setDismissed(prev => new Set([...prev, id]));
@@ -417,8 +419,8 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
 
                   <div className="shrink-0 flex items-center gap-0.5">
                     <button
-                      onClick={() => markReplied(t.id)}
-                      title="Mark as replied"
+                      onClick={() => toggleReplied(t.id)}
+                      title={isReplied ? "Unmark as replied" : "Mark as replied"}
                       className={`p-1.5 rounded-lg transition-colors ${isReplied ? "text-emerald-600 bg-emerald-50" : "text-[#cccccc] hover:text-[#0a0a0a] hover:bg-[#f5f5f5]"}`}
                     >
                       <Check className="w-3.5 h-3.5" />
