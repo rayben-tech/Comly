@@ -98,7 +98,7 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [error,      setError]      = useState(false);
   const [showHiW,    setShowHiW]    = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("new");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [sortOption,   setSortOption]   = useState<SortOption>("newest");
   const [sortOpen,     setSortOpen]     = useState(false);
   const [sortPos,      setSortPos]      = useState({ top: 0, right: 0 });
@@ -227,8 +227,8 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
   function toggleSave(id: string) {
     setSaved(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   }
-  function markReplied(id: string) {
-    setRepliedTo(prev => new Set([...prev, id]));
+  function toggleReplied(id: string) {
+    setRepliedTo(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   }
   function dismiss(id: string) {
     setDismissed(prev => new Set([...prev, id]));
@@ -397,8 +397,8 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
 
                   <div className="shrink-0 flex items-center gap-0.5">
                     <button
-                      onClick={() => markReplied(t.id)}
-                      title="Mark as answered"
+                      onClick={() => toggleReplied(t.id)}
+                      title={isReplied ? "Unmark as answered" : "Mark as answered"}
                       className={`p-1.5 rounded-lg transition-colors ${isReplied ? "text-emerald-600 bg-emerald-50" : "text-[#cccccc] hover:text-[#0a0a0a] hover:bg-[#f5f5f5]"}`}
                     >
                       <Check className="w-3.5 h-3.5" />
