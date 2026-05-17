@@ -501,8 +501,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               </div>
               <div className="flex items-center gap-1.5 mt-2 px-2">
                 <Clock className="w-3 h-3 text-[#5B2D91] shrink-0" />
-                <span className="text-[11px] text-[#6b7280]">Next audit in</span>
-                <span className="text-[11px] font-bold text-[#5B2D91]">{timerLabel}</span>
+                <span className="text-[11px] text-[#6b7280]">Re-audited daily at 2:00 AM UTC</span>
               </div>
             </div>
           </motion.div>
