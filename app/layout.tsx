@@ -20,13 +20,13 @@ export const metadata: Metadata = {
     description: "See how ChatGPT, Claude, Gemini & Perplexity talk about you — and outrank competitors.",
     type: "website",
     url: "https://www.trycomly.com",
-    images: [{ url: "/og-image.png?v=2", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.png?v=3", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Comly — AI Visibility Audit for Your Brand",
     description: "See how ChatGPT, Claude, Gemini & Perplexity talk about you — and outrank competitors.",
-    images: ["/og-image.png?v=2"],
+    images: ["/og-image.png?v=3"],
   },
 };
 
