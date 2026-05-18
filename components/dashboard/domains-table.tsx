@@ -93,12 +93,12 @@ export function DomainsTable({ promptResults, urlsOnly = false }: Props) {
 
       {tab === "Domains" ? (
         <>
-          <div className="grid grid-cols-[20px_1fr_80px_60px_80px] gap-3 px-6 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa]">
-            {["#", "Domain", "Type", "Used", "Avg. Citations"].map((h, i) => (
-              <span key={h} className={`text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide ${i >= 3 ? "text-right" : ""}`}>
-                {h}
-              </span>
-            ))}
+          <div className="grid grid-cols-[20px_1fr_55px] sm:grid-cols-[20px_1fr_80px_60px_80px] gap-3 px-6 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa]">
+            <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide">#</span>
+            <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide">Domain</span>
+            <span className="hidden sm:block text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide">Type</span>
+            <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide text-right">Used</span>
+            <span className="hidden sm:block text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide text-right">Avg. Citations</span>
           </div>
           <div className="divide-y divide-[#f7f7f5]">
             {domains.length === 0 ? (
@@ -107,7 +107,7 @@ export function DomainsTable({ promptResults, urlsOnly = false }: Props) {
               domains.map((row, i) => {
                 const type = classifyDomain(row.domain);
                 return (
-                  <div key={row.domain} className="grid grid-cols-[20px_1fr_80px_60px_80px] gap-3 items-center px-6 py-3 hover:bg-[#fafafa] transition-colors">
+                  <div key={row.domain} className="grid grid-cols-[20px_1fr_55px] sm:grid-cols-[20px_1fr_80px_60px_80px] gap-3 items-center px-6 py-3 hover:bg-[#fafafa] transition-colors">
                     <span className="text-[12px] font-semibold text-[#aaaaaa]">{i + 1}</span>
                     <div className="flex items-center gap-2.5 min-w-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,13 +121,13 @@ export function DomainsTable({ promptResults, urlsOnly = false }: Props) {
                       />
                       <span className="text-[13px] font-semibold text-[#0a0a0a] truncate">{row.domain}</span>
                     </div>
-                    <div>
+                    <div className="hidden sm:block">
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${TYPE_STYLES[type]}`}>
                         {type}
                       </span>
                     </div>
                     <span className="text-[13px] font-semibold text-[#6b6b6b] text-right">{row.pct}%</span>
-                    <span className="text-[13px] font-semibold text-[#6b6b6b] text-right">{row.pct}%</span>
+                    <span className="hidden sm:block text-[13px] font-semibold text-[#6b6b6b] text-right">{row.pct}%</span>
                   </div>
                 );
               })
