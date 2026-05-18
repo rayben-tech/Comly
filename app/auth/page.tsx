@@ -14,14 +14,8 @@ function ComlyLogo({ size = 32 }: { size?: number }) {
       />
       <path
         d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z"
-        fill="url(#swooshGradAuth)"
+        fill="#7c3aed"
       />
-      <defs>
-        <linearGradient id="swooshGradAuth" x1="28" y1="65" x2="70" y2="65" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#5b21b6" />
-          <stop offset="100%" stopColor="#a855f7" />
-        </linearGradient>
-      </defs>
     </svg>
   );
 }
@@ -198,7 +192,7 @@ function AuthFlow() {
 
           {/* Heading */}
           <div className="mb-6">
-            <div className="mb-4">
+            <div className="hidden lg:block mb-4">
               <ComlyLogo size={40} />
             </div>
             <h1 className="text-[24px] font-bold text-[#0a0a0a] mb-1">

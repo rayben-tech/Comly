@@ -13,16 +13,9 @@ import {
 function ComlyLogo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <defs>
-        <linearGradient id="comlySwsh" x1="8" y1="22" x2="24" y2="18" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#3b0764" />
-          <stop offset="55%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#a78bfa" />
-        </linearGradient>
-      </defs>
       <rect width="32" height="32" rx="7" fill="white" />
       <path d="M16 4C17.5 4 23 10.5 26.5 16.5C30 22.5 30.5 27 28.5 28.5C26.5 30 22 30 16 30C10 30 5.5 30 3.5 28.5C1.5 27 2 22.5 5.5 16.5C9 10.5 14.5 4 16 4Z" fill="#131320" />
-      <path d="M9.5 23.5C10 20.5 14 18 18.5 19.2C22 20.1 24 21.5 23.5 23C23 24.5 19.5 24.5 15 24.5C12 24.5 9 25 9.5 23.5Z" fill="url(#comlySwsh)" />
+      <path d="M9.5 23.5C10 20.5 14 18 18.5 19.2C22 20.1 24 21.5 23.5 23C23 24.5 19.5 24.5 15 24.5C12 24.5 9 25 9.5 23.5Z" fill="#7c3aed" />
     </svg>
   );
 }
