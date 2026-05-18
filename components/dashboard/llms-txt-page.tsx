@@ -371,12 +371,10 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
         {/* robots.txt vs llms.txt comparison */}
         <div className="grid grid-cols-2 gap-3">
           <div className="border border-[#e5e5e5] rounded-xl overflow-hidden">
-            <div className="bg-[#f7f7f5] px-3 py-2 border-b border-[#e5e5e5] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#cccccc]" />
-                <span className="text-[11px] font-semibold text-[#888]">robots.txt</span>
-              </div>
-              <span className="text-[10px] text-[#aaaaaa]">for search bots</span>
+            <div className="bg-[#f7f7f5] px-3 py-2 border-b border-[#e5e5e5] flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#cccccc] shrink-0" />
+              <span className="text-[11px] font-semibold text-[#888] truncate">robots.txt</span>
+              <span className="text-[10px] text-[#aaaaaa] ml-auto shrink-0">for bots</span>
             </div>
             <div className="p-3 font-mono text-[11px] space-y-1 text-[#6b6b6b]">
               <div>User-agent: *</div>
@@ -388,12 +386,10 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
             </div>
           </div>
           <div className="border-2 border-[#5B2D91]/30 rounded-xl overflow-hidden">
-            <div className="bg-[#f3eeff] px-3 py-2 border-b border-[#5B2D91]/20 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#5B2D91]" />
-                <span className="text-[11px] font-semibold text-[#5B2D91]">llms.txt</span>
-              </div>
-              <span className="text-[10px] text-[#5B2D91]/70">for AI models ✨</span>
+            <div className="bg-[#f3eeff] px-3 py-2 border-b border-[#5B2D91]/20 flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#5B2D91] shrink-0" />
+              <span className="text-[11px] font-semibold text-[#5B2D91] truncate">llms.txt</span>
+              <span className="text-[10px] text-[#5B2D91]/70 ml-auto shrink-0">for AI ✨</span>
             </div>
             <div className="p-3 font-mono text-[11px] space-y-1">
               <div className="text-[#79c0ff]"># YourBrand</div>

@@ -257,7 +257,7 @@ export function ComparisonPagesPage({ profile, locked, onGenerated }: Props) {
         </p>
 
         {/* Mini VS page card mockups */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { a: "Notion", b: "Coda",       slug: "/blog/notion-vs-coda" },
             { a: "Notion", b: "Obsidian",   slug: "/blog/notion-vs-obsidian" },
@@ -311,7 +311,7 @@ export function ComparisonPagesPage({ profile, locked, onGenerated }: Props) {
         {/* AI query flow */}
         <div>
           <p className="text-[13px] font-semibold text-[#0a0a0a] mb-3">Why this works</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
               { emoji: "💬", label: "Buyer asks",      sub: '"Which is better, X or Y?"',           bg: "#f7f7f5", border: "#e5e5e5",  text: "#6b6b6b" },
               { emoji: "🔍", label: "AI searches",     sub: "scans for comparison pages",            bg: "#fffbeb", border: "#fde68a",  text: "#92400e" },
@@ -362,7 +362,7 @@ export function ComparisonPagesPage({ profile, locked, onGenerated }: Props) {
         {competitors.length === 0 ? (
           <p className="text-[13px] text-[#aaaaaa]">No competitors found in your audit. Add a custom comparison below.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {competitors.map((comp) => {
               const card = {
                 key: `vs:${comp}`,
