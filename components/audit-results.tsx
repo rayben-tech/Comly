@@ -376,7 +376,25 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
         {moreOpen && (
           <div className="lg:hidden fixed inset-x-0 bottom-14 z-50 bg-white border-t border-[#e8e8e8] shadow-2xl rounded-t-2xl max-h-[70vh] overflow-y-auto">
             <div className="px-4 py-4 space-y-1">
-              <p className="text-[10px] font-bold text-[#cccccc] uppercase tracking-widest px-2 pb-1">Fixes</p>
+              <p className="text-[10px] font-bold text-[#cccccc] uppercase tracking-widest px-2 pb-1">Optimize</p>
+              {([
+                { id: "engagement-threads", label: "Reddit",  favicon: "reddit.com" },
+                { id: "quora-threads",      label: "Quora",   favicon: "quora.com"  },
+              ] as const).map(({ id, label, favicon }) => (
+                <button
+                  key={id}
+                  onClick={() => { setActivePage(id as Page); setMoreOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-left transition-colors",
+                    activePage === id ? "bg-[#5B2D91]/[0.06] text-[#5B2D91]" : "text-[#333] active:bg-[#ddd5f5]"
+                  )}
+                >
+                  <img src={`https://www.google.com/s2/favicons?domain=${favicon}&sz=32`} className="w-4 h-4 rounded-sm shrink-0" alt="" />
+                  <span>{label}</span>
+                </button>
+              ))}
+
+              <p className="text-[10px] font-bold text-[#cccccc] uppercase tracking-widest px-2 pb-1 pt-3">Fixes</p>
               {([
                 { id: "fixes:listicles",       label: "Listicles Generator", badge: ""    },
                 { id: "fixes:llms-txt",        label: "llms.txt Generator",  badge: ""    },
