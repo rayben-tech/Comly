@@ -201,7 +201,7 @@ export function ListiclesPage({ profile, locked, onGenerated }: Props) {
 
         <div>
           <p className="text-[13px] text-[#6b6b6b] mb-3">Listicles are articles like:</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { title: "Best note-taking apps for remote teams in 2026", slug: "/blog/best-note-taking-apps", items: ["Notion", "Obsidian", "Roam Research"] },
               { title: "Top alternatives to Notion", slug: "/blog/notion-alternatives", items: ["Coda", "Confluence", "ClickUp"] },
@@ -255,17 +255,17 @@ export function ListiclesPage({ profile, locked, onGenerated }: Props) {
         {/* Why this works */}
         <div>
           <p className="text-[13px] font-semibold text-[#0a0a0a] mb-3">Why this works</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[
               { emoji: "📈", value: "3.2×", label: "more AI citations", sub: "vs pages without listicles", color: "#10b981", bg: "#f0fdf4", border: "#bbf7d0" },
               { emoji: "🎯", value: "10+", label: "buyer queries hit", sub: "per published listicle page", color: "#5B2D91", bg: "#f3eeff", border: "#e0d4f7" },
               { emoji: "⚡", value: "2–4 wks", label: "AI discovery time", sub: "after you publish & index", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
             ].map((stat, i) => (
-              <div key={i} className="rounded-xl p-4 border" style={{ background: stat.bg, borderColor: stat.border }}>
-                <span className="text-[22px]">{stat.emoji}</span>
-                <p className="text-[24px] font-bold mt-2 leading-none" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-[12px] font-semibold text-[#0a0a0a] mt-1.5">{stat.label}</p>
-                <p className="text-[11px] text-[#6b6b6b] mt-0.5">{stat.sub}</p>
+              <div key={i} className="rounded-xl p-3 sm:p-4 border" style={{ background: stat.bg, borderColor: stat.border }}>
+                <span className="text-[18px] sm:text-[22px]">{stat.emoji}</span>
+                <p className="text-[20px] sm:text-[24px] font-bold mt-1.5 sm:mt-2 leading-none" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-[11px] sm:text-[12px] font-semibold text-[#0a0a0a] mt-1 sm:mt-1.5 leading-tight">{stat.label}</p>
+                <p className="hidden sm:block text-[11px] text-[#6b6b6b] mt-0.5">{stat.sub}</p>
               </div>
             ))}
           </div>
@@ -446,7 +446,7 @@ export function ListiclesPage({ profile, locked, onGenerated }: Props) {
       <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-4">
         <h2 className="text-[14px] font-bold text-[#0a0a0a]">How to publish these pages</h2>
 
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { icon: Copy,     label: "Copy markdown",   sub: "from the generated output above" },
             { icon: FileText, label: "Create a page",   sub: "in Webflow, WordPress, Notion…" },

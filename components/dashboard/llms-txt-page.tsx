@@ -576,7 +576,7 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
             )}
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FieldRow label="Brand name">
                   <input className={inputCls} value={brandName} onChange={(e) => setBrandName(e.target.value)} />
                 </FieldRow>
