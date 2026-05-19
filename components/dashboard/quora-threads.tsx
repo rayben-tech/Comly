@@ -364,13 +364,14 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
             </div>
           ) : (
             displayed.map((t) => {
+              const tid = t.id || btoa(t.url).slice(-24);
               const relevance = getRelevanceTag(t.title);
               const keyword   = extractKeyword(t.title);
-              const isSaved   = saved.has(t.id);
-              const isReplied = repliedTo.has(t.id);
+              const isSaved   = saved.has(tid);
+              const isReplied = repliedTo.has(tid);
 
               return (
-                <div key={t.id} className="bg-white border border-[#eeeeee] rounded-xl p-4 flex items-start gap-3 hover:border-[#e0e0e0] transition-colors">
+                <div key={tid} className="bg-white border border-[#eeeeee] rounded-xl p-4 flex items-start gap-3 hover:border-[#e0e0e0] transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -397,14 +398,14 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
 
                   <div className="shrink-0 flex items-center gap-0.5">
                     <button
-                      onClick={() => toggleReplied(t.id)}
+                      onClick={() => toggleReplied(tid)}
                       title={isReplied ? "Unmark as answered" : "Mark as answered"}
                       className={`p-1.5 rounded-lg transition-colors ${isReplied ? "text-emerald-600 bg-emerald-50" : "text-[#cccccc] hover:text-[#0a0a0a] hover:bg-[#f5f5f5]"}`}
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => toggleSave(t.id)}
+                      onClick={() => toggleSave(tid)}
                       title="Save question"
                       className={`p-1.5 rounded-lg transition-colors ${isSaved ? "text-amber-500 bg-amber-50" : "text-[#cccccc] hover:text-[#0a0a0a] hover:bg-[#f5f5f5]"}`}
                     >
@@ -418,7 +419,7 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
                       <CornerUpLeft className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => dismiss(t.id)}
+                      onClick={() => dismiss(tid)}
                       title="Dismiss"
                       className="p-1.5 rounded-lg text-[#cccccc] hover:text-[#ef4444] hover:bg-red-50 transition-colors"
                     >

@@ -107,7 +107,14 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) {
       console.warn("[quora] FIRECRAWL_API_KEY is not set");
-      return NextResponse.json({ threads: await generateFallbackQuestions(profile) });
+      const fallback = await generateFallbackQuestions(profile);
+      return NextResponse.json({
+        threads: fallback.map(f => ({
+          id: Buffer.from(f.url).toString("base64").slice(-24),
+          title: f.title,
+          url: f.url,
+        })),
+      });
     }
 
     const queries = await getQueries(profile);
@@ -136,7 +143,7 @@ export async function POST(req: NextRequest) {
       if (seen.has(result.url)) continue;
       seen.add(result.url);
       threads.push({
-        id: Buffer.from(result.url).toString("base64").slice(0, 20),
+        id: Buffer.from(result.url).toString("base64").slice(-24),
         title: result.title,
         url: result.url,
       });
@@ -148,7 +155,7 @@ export async function POST(req: NextRequest) {
       const fallback = await generateFallbackQuestions(profile);
       return NextResponse.json({
         threads: fallback.map(f => ({
-          id: Buffer.from(f.url).toString("base64").slice(0, 20),
+          id: Buffer.from(f.url).toString("base64").slice(-24),
           title: f.title,
           url: f.url,
         })),
