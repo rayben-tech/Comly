@@ -123,7 +123,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           )}
 
           {activePage === "fixes:comparison" && (
-            <ComparisonPagesPage profile={profile} locked={!!generatedFixes["comparison"]} onGenerated={() => markFixGenerated("comparison")} />
+            <ComparisonPagesPage profile={profile} competitorRankings={competitor_rankings} locked={!!generatedFixes["comparison"]} onGenerated={() => markFixGenerated("comparison")} />
           )}
 
           {activePage === "engagement-threads" && (

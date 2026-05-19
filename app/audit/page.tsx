@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { BrandProfile, AuditResult, AuditStep, PromptResult } from "@/types";
 import { BrandProfileEditor } from "@/components/brand-profile-editor";
 import { AuditResults } from "@/components/audit-results";
@@ -392,84 +392,111 @@ function AuditFlow() {
     handleConfirmProfile(profile);
   }
 
-  if (isRedirecting) {
-    return <RedirectingAnimation />;
-  }
-
-  // Active loading phase — show the new animated loading view
-  if (loadingPhase) {
-    return (
-      <AuditLoadingView
-        phase={loadingPhase}
-        url={normalizedUrl || normalize(url)}
-        profile={profile}
-        heroData={heroData}
-        onReset={handleReset}
-      />
-    );
-  }
-
-  if (step === "results" && auditResult && profile) {
-    return <AuditResults result={auditResult} profile={profile} onReset={handleReset} onRerun={handleRerun} userId={userId ?? undefined} />;
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#fafaf8] flex flex-col items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <h2 className="text-[#0a0a0a] font-semibold text-lg mb-2">Audit failed</h2>
-          <p className="text-[#6b7280] text-sm mb-6 leading-relaxed">{error}</p>
-          <div className="flex items-center justify-center gap-3">
-            {profile && (
-              <button
-                onClick={() => { setError(""); handleConfirmProfile(profile); }}
-                className="px-6 py-2.5 bg-[#5B2D91] text-white rounded-lg text-sm font-semibold hover:bg-[#4a2475] transition-colors"
-              >
-                Try again
-              </button>
-            )}
-            <button
-              onClick={() => router.push("/")}
-              className="px-6 py-2.5 bg-white border border-[#e5e5e5] text-[#6b7280] rounded-lg text-sm font-semibold hover:border-[#d0d0d0] transition-colors"
-            >
-              Go home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "review-prompts" && reviewPrompts.length > 0) {
-    return (
-      <PromptReview
-        prompts={reviewPrompts}
-        onConfirm={handleStartAudit}
-        onReset={handleReset}
-      />
-    );
-  }
-
-  if (step === "profile" && profile) {
-    return (
-      <BrandProfileEditor
-        profile={profile}
-        onConfirm={handleConfirmProfile}
-        isAuditing={isAuditing}
-        onReset={handleReset}
-      />
-    );
-  }
+  const screenKey = isRedirecting
+    ? "redirecting"
+    : loadingPhase
+    ? "loading"
+    : step === "results" && auditResult && profile
+    ? "results"
+    : error
+    ? "error"
+    : step === "review-prompts" && reviewPrompts.length > 0
+    ? "review"
+    : step === "profile" && profile
+    ? "profile"
+    : "spinner";
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
-    </div>
+    <AnimatePresence mode="wait">
+      {screenKey === "redirecting" && (
+        <motion.div key="redirecting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+          <RedirectingAnimation />
+        </motion.div>
+      )}
+
+      {screenKey === "loading" && (
+        <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
+          <AuditLoadingView
+            phase={loadingPhase!}
+            url={normalizedUrl || normalize(url)}
+            profile={profile}
+            heroData={heroData}
+            onReset={handleReset}
+          />
+        </motion.div>
+      )}
+
+      {screenKey === "results" && (
+        <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+          <AuditResults result={auditResult!} profile={profile!} onReset={handleReset} onRerun={handleRerun} userId={userId ?? undefined} />
+        </motion.div>
+      )}
+
+      {screenKey === "error" && (
+        <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+          className="min-h-screen bg-[#fafaf8] flex flex-col items-center justify-center px-4"
+        >
+          <div className="max-w-md w-full text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h2 className="text-[#0a0a0a] font-semibold text-lg mb-2">Audit failed</h2>
+            <p className="text-[#6b7280] text-sm mb-6 leading-relaxed">{error}</p>
+            <div className="flex items-center justify-center gap-3">
+              {profile && (
+                <button
+                  onClick={() => { setError(""); handleConfirmProfile(profile); }}
+                  className="px-6 py-2.5 bg-[#5B2D91] text-white rounded-lg text-sm font-semibold hover:bg-[#4a2475] transition-colors"
+                >
+                  Try again
+                </button>
+              )}
+              <button
+                onClick={() => router.push("/")}
+                className="px-6 py-2.5 bg-white border border-[#e5e5e5] text-[#6b7280] rounded-lg text-sm font-semibold hover:border-[#d0d0d0] transition-colors"
+              >
+                Go home
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {screenKey === "review" && (
+        <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+          <PromptReview
+            prompts={reviewPrompts}
+            onConfirm={handleStartAudit}
+            onReset={handleReset}
+          />
+        </motion.div>
+      )}
+
+      {screenKey === "profile" && (
+        <motion.div
+          key="profile"
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <BrandProfileEditor
+            profile={profile!}
+            onConfirm={handleConfirmProfile}
+            isAuditing={isAuditing}
+            onReset={handleReset}
+          />
+        </motion.div>
+      )}
+
+      {screenKey === "spinner" && (
+        <motion.div key="spinner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

@@ -6,6 +6,7 @@ import {
   Copy, Download, Check, Loader2, Plus, X,
   RefreshCw, Trash2, Sparkles, ExternalLink, Lock,
 } from "lucide-react";
+import { CompetitorRanking } from "@/types";
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -89,6 +90,7 @@ interface TrackedUrl {
 
 interface Props {
   profile: BrandProfile;
+  competitorRankings?: CompetitorRanking[];
   locked?: boolean;
   onGenerated?: () => void;
 }
@@ -102,8 +104,12 @@ function matchesCompetitor(url: string, competitor: string): boolean {
   return hasVsContext && hasCompName;
 }
 
-export function ComparisonPagesPage({ profile, locked, onGenerated }: Props) {
-  const competitors = profile.competitors.slice(0, 5);
+export function ComparisonPagesPage({ profile, competitorRankings, locked, onGenerated }: Props) {
+  const competitors = (
+    competitorRankings && competitorRankings.length > 0
+      ? competitorRankings.map((r) => r.name)
+      : profile.competitors
+  ).slice(0, 5);
   const brandSlug = slugify(profile.brand_name);
 
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
