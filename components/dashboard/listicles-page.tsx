@@ -139,11 +139,31 @@ export function ListiclesPage({ profile, locked, onGenerated }: Props) {
   const suggestions = buildSuggestions(profile);
 
   function triggerDownload(content: string, title: string) {
-    const blob = new Blob([content], { type: "text/markdown" });
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; max-width: 820px; margin: 48px auto; padding: 0 24px; color: #1a1a1a; line-height: 1.75; font-size: 16px; }
+  h1 { font-size: 2em; font-weight: 700; margin: 0 0 0.4em; }
+  h2 { font-size: 1.4em; font-weight: 700; margin: 2em 0 0.5em; padding-bottom: 0.3em; border-bottom: 1px solid #e5e5e5; }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 1.5em 0 0.4em; }
+  p  { margin: 0 0 1em; }
+  ul { padding-left: 1.6em; margin: 0 0 1em; }
+  li { margin-bottom: 0.4em; }
+  strong { font-weight: 700; }
+</style>
+</head>
+<body>
+${toHtml(content)}
+</body>
+</html>`;
+    const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${slugify(title)}.md`;
+    a.download = `${slugify(title)}.html`;
     a.click();
     URL.revokeObjectURL(url);
   }
