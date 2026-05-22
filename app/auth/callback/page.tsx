@@ -14,26 +14,8 @@ export default function AuthCallbackPage() {
 
         const pendingUrl = localStorage.getItem("comly_pending_url") || "";
         localStorage.removeItem("comly_pending_url");
-
-        const dest = pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/";
-
-        try {
-          const subRes = await fetch("/api/subscription/check", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          });
-          const { isPaid } = await subRes.json();
-
-          if (isPaid) {
-            router.replace(dest);
-            return;
-          }
-
-          // Not paid — send to /subscribe paywall
-          const pendingUrlParam = pendingUrl ? `?url=${encodeURIComponent(pendingUrl)}` : "";
-          router.replace(`/subscribe${pendingUrlParam}`);
-        } catch {
-          router.replace(dest);
-        }
+        const dest = pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit";
+        router.replace(dest);
       }
     });
 

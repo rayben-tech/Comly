@@ -34,7 +34,6 @@ function RedirectingAnimation() {
         transition={{ duration: 0.35, ease: "easeOut" }}
         className="bg-white rounded-2xl border border-[#e5e5e5] shadow-sm p-10 flex flex-col items-center text-center max-w-sm w-full"
       >
-        {/* Animated checkmark circle */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [0, 1.25, 1] }}
@@ -76,7 +75,6 @@ function RedirectingAnimation() {
           Taking you back to your dashboard...
         </motion.p>
 
-        {/* Progress bar */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -95,7 +93,33 @@ function RedirectingAnimation() {
   );
 }
 
+function ConfirmingPaymentScreen() {
+  return (
+    <div className="min-h-screen bg-[#f7f7f5] flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="bg-white rounded-2xl border border-[#e5e5e5] shadow-sm p-10 flex flex-col items-center text-center max-w-sm w-full"
+      >
+        <div className="w-12 h-12 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin mb-5" />
+        <h2 className="text-[#0a0a0a] font-bold text-lg mb-1.5">Confirming payment…</h2>
+        <p className="text-[#6b7280] text-sm leading-relaxed">This usually takes a few seconds</p>
+      </motion.div>
+    </div>
+  );
+}
+
+
 const SESSION_KEY = "comly_audit_session";
+const PENDING_AUDIT_KEY = "comly_pending_audit";
+
+interface PendingAudit {
+  profile: BrandProfile;
+  prompts: string[];
+  url: string;
+  expiresAt: number;
+}
 
 function withMinDuration<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.all([
@@ -120,7 +144,19 @@ function AuditFlow() {
   const [reviewPrompts, setReviewPrompts] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [isUnlimited, setIsUnlimited] = useState(false);
+  const [resumeReady, setResumeReady] = useState(false);
   const firingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingResumeRef = useRef<PendingAudit | null>(null);
+
+  // After payment: once profile is set and resumeReady fires, run the audit
+  useEffect(() => {
+    if (!resumeReady || !pendingResumeRef.current) return;
+    const pending = pendingResumeRef.current;
+    pendingResumeRef.current = null;
+    setResumeReady(false);
+    runAuditFiring(pending.profile, pending.prompts, pending.url);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeReady]);
 
   // Auth guard + one-audit-per-account check
   useEffect(() => {
@@ -135,9 +171,65 @@ function AuditFlow() {
       setUserId(session.user.id);
       const subCheck = await fetch("/api/subscription/check", {
         headers: { Authorization: `Bearer ${session.access_token}` },
-      }).then((r) => r.json()).catch(() => ({ isUnlimited: false }));
+      }).then((r) => r.json()).catch(() => ({ isUnlimited: false, isPaid: false }));
       const unlimited = Boolean(subCheck.isUnlimited);
       setIsUnlimited(unlimited);
+
+      // Resume after payment: poll until subscription is confirmed
+      const isResume = searchParams.get("resume") === "true";
+      if (isResume && !unlimited) {
+        setStep("confirming-payment");
+        const startTime = Date.now();
+
+        const poll = async () => {
+          const res = await fetch("/api/subscription/check", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }).then((r) => r.json()).catch(() => ({})) as { isPaid?: boolean; isUnlimited?: boolean };
+
+          if (res.isPaid || res.isUnlimited) {
+            let pending: PendingAudit | null = null;
+            try {
+              const raw = localStorage.getItem(PENDING_AUDIT_KEY);
+              if (raw) {
+                const parsed = JSON.parse(raw) as PendingAudit;
+                if (Date.now() < parsed.expiresAt) pending = parsed;
+              }
+            } catch {}
+            localStorage.removeItem(PENDING_AUDIT_KEY);
+
+            if (pending) {
+              setProfile(pending.profile);
+              setNormalizedUrl(pending.url);
+              setUrl(pending.url);
+              setUserId(session.user.id);
+              pendingResumeRef.current = pending;
+              setResumeReady(true);
+            } else {
+              // Paid but no saved state — start fresh
+              const paramUrl = searchParams.get("url") || "";
+              if (paramUrl) {
+                setUrl(paramUrl);
+                handleRunAuditWithUrl(paramUrl);
+              } else {
+                router.replace("/audit");
+              }
+            }
+            return;
+          }
+
+          if (Date.now() - startTime < 15000) {
+            setTimeout(poll, 2000);
+          } else {
+            setError("Payment confirmation is taking longer than expected. Please check your email.");
+            setStep("input");
+            router.replace("/");
+          }
+        };
+
+        setTimeout(poll, 1500);
+        return;
+      }
+
       const existing = await getUserAudit(session.user.id);
       if (existing && !unlimited) {
         setProfile(existing.profile as BrandProfile);
@@ -150,7 +242,6 @@ function AuditFlow() {
         return;
       }
 
-      // For unlimited users: check if this is a refresh or same-URL revisit
       if (existing && unlimited) {
         const paramUrl = searchParams.get("url") || sessionStorage.getItem("comly_pending_url") || "";
         const norm = (u: string) => { let s = u.trim(); if (!s.startsWith("http")) s = "https://" + s; try { return new URL(s).origin + new URL(s).pathname; } catch { return s; } };
@@ -158,7 +249,6 @@ function AuditFlow() {
         const isSameOrNoUrl = !paramUrl || norm(paramUrl) === norm(existingUrl);
 
         if (isSameOrNoUrl) {
-          // Refresh or same-URL revisit — just show existing dashboard
           try { sessionStorage.removeItem("comly_pending_url"); } catch {}
           try { sessionStorage.removeItem(SESSION_KEY); } catch {}
           setProfile(existing.profile as BrandProfile);
@@ -167,7 +257,6 @@ function AuditFlow() {
           return;
         }
 
-        // Different URL — run fresh audit
         try { sessionStorage.removeItem("comly_pending_url"); } catch {}
         try { sessionStorage.removeItem(SESSION_KEY); } catch {}
         setUrl(paramUrl);
@@ -175,7 +264,6 @@ function AuditFlow() {
         return;
       }
 
-      // No existing audit — fallback to sessionStorage cache (non-unlimited only)
       if (!unlimited) {
         try {
           const cached = sessionStorage.getItem(SESSION_KEY);
@@ -218,7 +306,6 @@ function AuditFlow() {
     setLoadingPhase("scraping");
     setStep("scraping");
     try {
-      // Scraping: minimum 5s so the browser animation plays fully
       const scrapeData = await withMinDuration(
         fetch("/api/scrape", {
           method: "POST",
@@ -237,7 +324,6 @@ function AuditFlow() {
 
       setLoadingPhase("extracting");
 
-      // Extracting: minimum 3.5s so all 5 profile rows animate in
       const extractData = await withMinDuration(
         fetch("/api/extract-profile", {
           method: "POST",
@@ -257,7 +343,6 @@ function AuditFlow() {
       );
 
       setProfile(extractData.profile);
-      // Brief pause so profile animation is visible before editor
       setTimeout(() => {
         setLoadingPhase(null);
         setStep("profile");
@@ -269,12 +354,7 @@ function AuditFlow() {
     }
   }
 
-  async function handleRunAudit() {
-    await handleRunAuditWithUrl(url);
-  }
-
   async function handleConfirmProfile(confirmedProfile: BrandProfile) {
-    // Hard guard: re-check before spending API budget
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const existing = await getUserAudit(session.user.id);
@@ -291,7 +371,6 @@ function AuditFlow() {
     setLoadingPhase("prompts");
     setStep("auditing");
 
-    // After prompts animation plays, transition to the review step
     firingTimerRef.current = setTimeout(() => {
       const prompts = generateAuditPrompts(confirmedProfile);
       setReviewPrompts(prompts);
@@ -300,8 +379,8 @@ function AuditFlow() {
     }, 3800);
   }
 
-  async function handleStartAudit(customPrompts: string[]) {
-    if (!profile) return;
+  // Core firing logic — called with explicit args to avoid stale closure issues
+  async function runAuditFiring(activeProfile: BrandProfile, allPrompts: string[], auditUrl: string) {
     setLoadingPhase("firing");
     setStep("auditing");
     setIsAuditing(true);
@@ -309,20 +388,18 @@ function AuditFlow() {
     const MIN_FIRING_MS = 11000;
 
     try {
-      // Split into 3 parallel batches of ~8 prompts — each call finishes within 10s on Hobby plan
-      const allPrompts = customPrompts.length > 0 ? customPrompts : generateAuditPrompts(profile);
       const batchSize = Math.ceil(allPrompts.length / 3);
       const batches = [
         allPrompts.slice(0, batchSize),
         allPrompts.slice(batchSize, batchSize * 2),
         allPrompts.slice(batchSize * 2),
-      ].filter(b => b.length > 0);
+      ].filter((b) => b.length > 0);
 
       const callBatch = (batchPrompts: string[]) =>
         fetch("/api/run-audit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ profile, customPrompts: batchPrompts }),
+          body: JSON.stringify({ profile: activeProfile, customPrompts: batchPrompts }),
         }).then(async (r) => {
           const text = await r.text();
           let d: Record<string, unknown>;
@@ -339,8 +416,8 @@ function AuditFlow() {
           return {
             prompt_results: promptResults,
             score: calculateScore(promptResults),
-            competitor_rankings: calculateCompetitorRankings(promptResults, profile!.brand_name),
-            total_mentions: promptResults.filter(r => r.mentioned).length,
+            competitor_rankings: calculateCompetitorRankings(promptResults, activeProfile.brand_name),
+            total_mentions: promptResults.filter((r) => r.mentioned).length,
           };
         }),
         MIN_FIRING_MS
@@ -349,21 +426,22 @@ function AuditFlow() {
       setAuditResult(auditData as AuditResult);
       setLoadingPhase(null);
       setStep("results");
+
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await saveAuditForUser(session.user.id, {
-            url: normalizedUrl,
-            brand_name: profile.brand_name,
+            url: auditUrl,
+            brand_name: activeProfile.brand_name,
             score: auditData.score,
-            profile,
+            profile: activeProfile,
             results: auditData,
           });
         }
       } catch (saveErr) {
         console.error("Supabase save failed:", saveErr);
       }
-      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ profile, auditResult: auditData })); } catch {}
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ profile: activeProfile, auditResult: auditData })); } catch {}
     } catch (err) {
       setError(err instanceof Error ? err.message : "Audit failed. Please try again.");
       setLoadingPhase(null);
@@ -371,6 +449,37 @@ function AuditFlow() {
     } finally {
       setIsAuditing(false);
     }
+  }
+
+  async function handleStartAudit(customPrompts: string[], skipPaywallCheck = false) {
+    if (!profile) return;
+
+    // Subscription gate — intercept right before firing
+    if (!skipPaywallCheck && !isUnlimited) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { isPaid } = await fetch("/api/subscription/check", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).then((r) => r.json()).catch(() => ({ isPaid: false })) as { isPaid: boolean };
+
+        if (!isPaid) {
+          const allPrompts = customPrompts.length > 0 ? customPrompts : generateAuditPrompts(profile);
+          try {
+            localStorage.setItem(PENDING_AUDIT_KEY, JSON.stringify({
+              profile,
+              prompts: allPrompts,
+              url: normalizedUrl,
+              expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+            } as PendingAudit));
+          } catch {}
+          router.replace("/subscribe");
+          return;
+        }
+      }
+    }
+
+    const allPrompts = customPrompts.length > 0 ? customPrompts : generateAuditPrompts(profile);
+    await runAuditFiring(profile, allPrompts, normalizedUrl);
   }
 
   function handleReset() {
@@ -394,6 +503,8 @@ function AuditFlow() {
 
   const screenKey = isRedirecting
     ? "redirecting"
+    : step === "confirming-payment"
+    ? "confirming-payment"
     : loadingPhase
     ? "loading"
     : step === "results" && auditResult && profile
@@ -411,6 +522,12 @@ function AuditFlow() {
       {screenKey === "redirecting" && (
         <motion.div key="redirecting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
           <RedirectingAnimation />
+        </motion.div>
+      )}
+
+      {screenKey === "confirming-payment" && (
+        <motion.div key="confirming-payment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+          <ConfirmingPaymentScreen />
         </motion.div>
       )}
 
@@ -474,7 +591,7 @@ function AuditFlow() {
         </motion.div>
       )}
 
-      {screenKey === "profile" && (
+{screenKey === "profile" && (
         <motion.div
           key="profile"
           initial={{ opacity: 0, y: 28 }}

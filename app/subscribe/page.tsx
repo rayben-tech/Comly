@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Lock, Clock } from "lucide-react";
 
 const FAQS = [
   {
@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     q: "What happens right after I subscribe?",
-    a: "You get instant access to your full AI visibility dashboard. Run your first audit in under 60 seconds.",
+    a: "You get instant access to your full AI visibility dashboard. Your audit results load automatically — no need to re-run anything.",
   },
   {
     q: "Do I need a credit card to try it?",
@@ -20,17 +20,55 @@ const FAQS = [
   },
 ];
 
+function useCountdown(expiresAt: number | null) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const tick = () => {
+      const diff = expiresAt - Date.now();
+      if (diff <= 0) { setTimeLeft("expired"); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setTimeLeft(`${h}h ${m}m`);
+    };
+    tick();
+    const iv = setInterval(tick, 30000);
+    return () => clearInterval(iv);
+  }, [expiresAt]);
+
+  return timeLeft;
+}
+
 function SubscribePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pendingUrl = searchParams.get("url") || "";
 
   const [loading, setLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+
+  const timeLeft = useCountdown(expiresAt);
+  const hasPendingAudit = Boolean(brandName && expiresAt && Date.now() < expiresAt);
 
   useEffect(() => {
+    // Read pending audit from localStorage for contextual UI
+    try {
+      const raw = localStorage.getItem("comly_pending_audit");
+      if (raw) {
+        const { profile, expiresAt: exp } = JSON.parse(raw) as { profile: { brand_name: string }; expiresAt: number };
+        if (Date.now() < exp) {
+          setBrandName(profile?.brand_name || "");
+          setExpiresAt(exp);
+        }
+      }
+    } catch {}
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         router.replace(`/auth${pendingUrl ? `?url=${encodeURIComponent(pendingUrl)}` : ""}`);
@@ -52,20 +90,33 @@ function SubscribePage() {
 
   async function handleCheckout() {
     setLoading(true);
+    setCheckoutError("");
     try {
-      const dest = pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit";
+      let dest = pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit";
+      try {
+        const raw = localStorage.getItem("comly_pending_audit");
+        if (raw) {
+          const { expiresAt: exp } = JSON.parse(raw) as { expiresAt: number };
+          if (Date.now() < exp) dest = "/audit?resume=true";
+        }
+      } catch {}
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userEmail, userName, returnTo: dest }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { url?: string; error?: string } = {};
+      try { data = JSON.parse(text); } catch { data = { error: `Server error (${res.status})` }; }
       if (data.url) {
         window.location.href = data.url;
       } else {
+        setCheckoutError(data.error || "Checkout failed — please try again.");
         setLoading(false);
       }
-    } catch {
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Something went wrong.");
       setLoading(false);
     }
   }
@@ -73,18 +124,56 @@ function SubscribePage() {
   return (
     <div className="min-h-screen bg-[#f0eff0] flex flex-col items-center justify-start px-6 py-10">
 
-      {/* Compact headline */}
-      <div className="text-center mb-8 max-w-xl">
-        <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] bg-[#5B2D91]/8 px-3 py-1 rounded-full mb-3">
-          Early Access
-        </span>
-        <h1 className="text-[32px] font-extrabold text-[#0a0a0a] leading-tight">
-          One plan. Everything included.
-        </h1>
-        <p className="text-[14px] text-[#6b6b6b] mt-2">No feature tiers. No model limits.</p>
+      {/* Headline */}
+      <div className="text-center mb-6 max-w-xl">
+        {hasPendingAudit ? (
+          <>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full mb-3">
+              <Clock className="w-3 h-3" />
+              Results expire in {timeLeft}
+            </div>
+            <h1 className="text-[32px] font-extrabold text-[#0a0a0a] leading-tight">
+              Your <span className="text-[#5B2D91]">{brandName}</span> audit is ready.
+            </h1>
+            <p className="text-[14px] text-[#6b6b6b] mt-2">Subscribe to unlock your AI visibility score and full report.</p>
+          </>
+        ) : (
+          <>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] bg-[#5B2D91]/8 px-3 py-1 rounded-full mb-3">
+              Early Access
+            </span>
+            <h1 className="text-[32px] font-extrabold text-[#0a0a0a] leading-tight">
+              One plan. Everything included.
+            </h1>
+            <p className="text-[14px] text-[#6b6b6b] mt-2">No feature tiers. No model limits.</p>
+          </>
+        )}
       </div>
 
-      {/* Pricing card — same form as landing page, heavy shadow */}
+      {/* Locked results card — only when pending audit exists */}
+      {hasPendingAudit && (
+        <div className="w-full max-w-4xl mb-4 bg-white border border-[#e8e8e8] rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[#f3eeff] flex items-center justify-center shrink-0">
+            <Lock className="w-4.5 h-4.5 text-[#5B2D91]" style={{ width: 18, height: 18 }} />
+          </div>
+          <div className="flex-1">
+            <p className="text-[13px] font-semibold text-[#0a0a0a] mb-1">Locked: your {brandName} audit results</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {["AI visibility score", "25 AI responses across 4 models", "Competitor rankings", "Improvement recommendations"].map((item) => (
+                <span key={item} className="text-[12px] text-[#6b7280] flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-[#5B2D91] inline-block" />
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full shrink-0">
+            Expires in {timeLeft}
+          </span>
+        </div>
+      )}
+
+      {/* Pricing card */}
       <div
         className="w-full max-w-4xl rounded-3xl overflow-hidden border border-white/10 relative"
         style={{
@@ -92,7 +181,6 @@ function SubscribePage() {
           boxShadow: "0 40px 100px rgba(91, 45, 145, 0.55), 0 20px 50px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255,255,255,0.06)",
         }}
       >
-        {/* Decorative glows */}
         <div className="pointer-events-none absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full opacity-25"
           style={{ background: "radial-gradient(circle, #a855f7, transparent 70%)" }} />
         <div className="pointer-events-none absolute -bottom-20 -left-20 w-[320px] h-[320px] rounded-full opacity-15"
@@ -132,13 +220,19 @@ function SubscribePage() {
                     <span className="w-4 h-4 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
                     Redirecting…
                   </span>
-                ) : "Get started →"}
+                ) : hasPendingAudit ? "Unlock my results →" : "Get started →"}
               </button>
+              {checkoutError && (
+                <p className="text-center text-[12px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">{checkoutError}</p>
+              )}
               <div className="flex items-center justify-center gap-3 text-white/30 text-[11px]">
                 <span>✓ Cancel anytime</span>
                 <span>·</span>
                 <span>✓ Instant access</span>
               </div>
+              <p className="text-center text-white/20 text-[11px]">
+                Joined by 200+ founders tracking AI visibility
+              </p>
             </div>
           </div>
 
@@ -174,7 +268,7 @@ function SubscribePage() {
         </div>
       </div>
 
-      {/* FAQ — scrollable below the fold */}
+      {/* FAQ */}
       <div className="w-full max-w-4xl mt-10">
         <h2 className="text-[16px] font-bold text-[#0a0a0a] mb-3">Questions</h2>
         <div className="space-y-2">

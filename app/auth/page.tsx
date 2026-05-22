@@ -54,26 +54,10 @@ function AuthFlow() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function routeAfterAuth(accessToken: string, _userEmail: string, _userName: string, url: string) {
+  async function routeAfterAuth(_accessToken: string, _userEmail: string, _userName: string, url: string) {
     setLoading(true);
-    try {
-      const subRes = await fetch("/api/subscription/check", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const { isPaid } = await subRes.json();
-
-      if (isPaid) {
-        const dest = url ? `/audit?url=${encodeURIComponent(url)}` : "/audit";
-        router.replace(dest);
-        return;
-      }
-
-      // Not paid — send to /subscribe paywall
-      const subscribeUrl = url ? `/subscribe?url=${encodeURIComponent(url)}` : "/subscribe";
-      router.replace(subscribeUrl);
-    } catch {
-      router.replace(url ? `/audit?url=${encodeURIComponent(url)}` : "/");
-    }
+    const dest = url ? `/audit?url=${encodeURIComponent(url)}` : "/audit";
+    router.replace(dest);
   }
 
   async function handleEmailAuth(e: React.FormEvent) {

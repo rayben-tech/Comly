@@ -4,12 +4,11 @@ import DodoPayments from "dodopayments";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const dodo = new DodoPayments({
-    bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-    environment: "live_mode",
-  });
-
   try {
+    const dodo = new DodoPayments({
+      bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
+      environment: "live_mode",
+    });
     const { userEmail, returnTo } = await req.json() as { userEmail?: string; userName?: string; returnTo?: string };
 
     const origin = req.headers.get("origin") ?? "https://trycomly.com";

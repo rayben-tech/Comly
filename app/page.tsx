@@ -1474,6 +1474,7 @@ export default function LandingPage() {
   const [urlErrorMsg, setUrlErrorMsg] = useState("");
   const [sessionUser, setSessionUser] = useState<{ email: string; avatar_url?: string; name?: string } | null>(null);
   const [hasAudit, setHasAudit] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
   const router = useRouter();
 
   const startCheckout = async (userEmail?: string, userName?: string) => {
@@ -1497,15 +1498,27 @@ export default function LandingPage() {
       router.push("/auth");
       return;
     }
-    const subRes = await fetch("/api/subscription/check", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const { isPaid } = await subRes.json();
     if (isPaid) {
       router.push("/audit");
-    } else {
-      router.push("/subscribe");
+      return;
     }
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: session.user.email ?? "",
+          userName: session.user.user_metadata?.full_name ?? "",
+          returnTo: "/",
+        }),
+      });
+      const text = await res.text();
+      let data: { url?: string } = {};
+      try { data = JSON.parse(text); } catch {}
+      if (data.url) window.location.href = data.url;
+    } catch {}
+    setCheckoutLoading(false);
   };
   const heroInputRef = useRef<HTMLInputElement>(null);
 
@@ -1520,8 +1533,12 @@ export default function LandingPage() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSessionUser(toUser(session));
       if (session) {
-        const existing = await getUserAudit(session.user.id).catch(() => null);
+        const [existing, subRes] = await Promise.all([
+          getUserAudit(session.user.id).catch(() => null),
+          fetch("/api/subscription/check", { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.json()).catch(() => ({})),
+        ]);
         setHasAudit(!!existing);
+        setIsPaid(Boolean(subRes.isPaid || subRes.isUnlimited));
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSessionUser(toUser(session)));
@@ -1594,21 +1611,7 @@ export default function LandingPage() {
       return;
     }
 
-    setAuditLoading(true);
-    try {
-      const res = await fetch("/api/subscription/check", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const { isPaid } = await res.json() as { isPaid: boolean };
-
-      if (isPaid) {
-        router.push(`/audit?url=${encodeURIComponent(u)}`);
-      } else {
-        await startCheckout(session.user.email, session.user.user_metadata?.full_name as string);
-      }
-    } catch {
-      setAuditLoading(false);
-    }
+    router.push(`/audit?url=${encodeURIComponent(u)}`);
   }
 
   function scrollToAudit() {
@@ -2141,7 +2144,7 @@ export default function LandingPage() {
                     disabled={checkoutLoading}
                     className="w-full rounded-2xl bg-white py-4 font-extrabold text-[#5B2D91] hover:bg-white/90 active:scale-[0.98] transition-all text-[15px] shadow-xl shadow-black/30 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {checkoutLoading ? "Redirecting…" : "Get started →"}
+                    {checkoutLoading ? "Redirecting…" : isPaid ? "View dashboard →" : "Get started →"}
                   </button>
                   <div className="flex items-center justify-center gap-3 text-white/30 text-[11px]">
                     <span>✓ No credit card</span>
