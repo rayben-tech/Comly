@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Globe,
-  ListChecks, ChevronDown, ChevronRight, Tag, Radio, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen, Clock,
+  ListChecks, ChevronDown, ChevronRight, Tag, Users, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen, Clock,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 import { cn } from "@/lib/utils";
@@ -289,7 +289,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               {demoMode ? (
                 <>
                   <IconBtn title="Know exactly when AI crawls your website" disabled>
-                    <Radio className="w-4 h-4" />
+                    <Users className="w-4 h-4" />
                   </IconBtn>
                   <IconBtn title="See exactly why AI recommended your competition" disabled>
                     <Swords className="w-4 h-4" />
@@ -297,8 +297,8 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                 </>
               ) : (
                 <>
-                  <IconBtn title="Crawlers" active={activePage === "crawlers"} onClick={() => onNavigate("crawlers")}>
-                    <Radio className="w-4 h-4" />
+                  <IconBtn title="Visitors" active={activePage === "visitors"} onClick={() => onNavigate("visitors")}>
+                    <Users className="w-4 h-4" />
                   </IconBtn>
                   <IconBtn title="Competitor Playbook" active={activePage === "competitor-playbook"} onClick={() => onNavigate("competitor-playbook")}>
                     <Swords className="w-4 h-4" />
@@ -462,12 +462,12 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                 <div className="space-y-0.5">
                   {demoMode ? (
                     <>
-                      <LockedNavItem icon={Radio} label="Crawlers" title="Know exactly when AI crawls your website" />
+                      <LockedNavItem icon={Users} label="Visitors" title="Track real humans arriving from ChatGPT, Perplexity & more" />
                       <LockedNavItem icon={Swords} label="Competitor Playbook" title="See exactly why AI recommended your competition" />
                     </>
                   ) : (
                     <>
-                      <NavItem active={activePage === "crawlers"} icon={Radio} label="Crawlers" onClick={() => onNavigate("crawlers")} />
+                      <NavItem active={activePage === "visitors"} icon={Users} label="Visitors" onClick={() => onNavigate("visitors")} />
                       <NavItem active={activePage === "competitor-playbook"} icon={Swords} label="Competitor Playbook" onClick={() => onNavigate("competitor-playbook")} />
                     </>
                   )}
