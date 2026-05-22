@@ -277,6 +277,19 @@ function AuditFlow() {
             }
           }
         } catch {}
+
+        // Block new audits when a valid pending audit already exists — send straight to subscribe
+        try {
+          const raw = localStorage.getItem(PENDING_AUDIT_KEY);
+          if (raw) {
+            const { expiresAt } = JSON.parse(raw) as { expiresAt: number };
+            if (Date.now() < expiresAt) {
+              router.replace("/subscribe");
+              return;
+            }
+            localStorage.removeItem(PENDING_AUDIT_KEY);
+          }
+        } catch {}
       } else {
         try { sessionStorage.removeItem(SESSION_KEY); } catch {}
       }
