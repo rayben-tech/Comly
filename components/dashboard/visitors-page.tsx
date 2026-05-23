@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Users, Bot, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Users, Bot, Copy, Check, TrendingUp, Zap, Globe, X, Code2 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { BrandProfile } from "@/types";
 
-interface VisitRow { source: string; count: number; }
-interface VisitsData { visitors: VisitRow[]; bots: VisitRow[]; total: number; }
+interface VisitRow  { source: string; type: string; created_at: string; page_url: string | null; }
+interface ChartPoint { date: string; [source: string]: number | string; }
+interface SparkPoint { v: number; }
 
 const LLM_COLORS: Record<string, string> = {
   ChatGPT:    "#10a37f",
@@ -23,21 +26,7 @@ const LLM_ICONS: Record<string, string> = {
   Copilot:    "https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=32",
 };
 
-const DEMO_VISITORS: VisitRow[] = [
-  { source: "ChatGPT",    count: 47 },
-  { source: "Perplexity", count: 23 },
-  { source: "Gemini",     count: 12 },
-  { source: "Claude",     count:  8 },
-  { source: "Copilot",    count:  5 },
-];
-const DEMO_BOTS: VisitRow[] = [
-  { source: "ChatGPT",    count: 214 },
-  { source: "Claude",     count: 187 },
-  { source: "Perplexity", count:  93 },
-  { source: "Gemini",     count:  61 },
-];
-
-function getScript(token: string, origin: string) {
+function getScript(token: string) {
   return `<script>
 (function(){
   var T='${token}';
@@ -47,48 +36,59 @@ function getScript(token: string, origin: string) {
   for(var b in B){if(ua.indexOf(b)!==-1){src=B[b];type='bot';break;}}
   if(!src){for(var d in V){if(ref.indexOf(d)!==-1){src=V[d];break;}}}
   if(!src)return;
-  fetch('${origin}/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:T,source:src,type:type,url:window.location.href}),keepalive:true}).catch(function(){});
+  fetch('https://www.trycomly.com/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:T,source:src,type:type,url:window.location.href}),keepalive:true}).catch(function(){});
 })();
 <\/script>`.trim();
 }
 
-function SourceBar({ row, max }: { row: VisitRow; max: number }) {
-  const pct = Math.round((row.count / max) * 100);
-  const color = LLM_COLORS[row.source] ?? "#5B2D91";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
   return (
-    <div className="flex items-center gap-3">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={LLM_ICONS[row.source] ?? ""} alt={row.source} width={18} height={18} className="w-[18px] h-[18px] rounded-sm shrink-0" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[13px] font-semibold text-[#0a0a0a]">{row.source}</span>
-          <span className="text-[13px] font-semibold text-[#6b6b6b]">{row.count.toLocaleString()}</span>
+    <div className="bg-white border border-[#e8e8e8] rounded-xl shadow-lg px-4 py-3 text-[12px]">
+      <p className="font-bold text-[#0a0a0a] mb-2">{label}</p>
+      {payload.map((p: { name: string; value: number; color: string }) => (
+        <div key={p.name} className="flex items-center gap-2 mb-0.5">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
+          <span className="text-[#6b6b6b]">{p.name}</span>
+          <span className="font-semibold text-[#0a0a0a] ml-auto pl-4">{p.value}</span>
         </div>
-        <div className="h-1.5 w-full bg-[#f0f0f0] rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${pct}%`, backgroundColor: color }}
-          />
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
+
+function Sparkline({ data, color }: { data: SparkPoint[]; color: string }) {
+  return (
+    <LineChart width={80} height={32} data={data}>
+      <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} dot={false} />
+    </LineChart>
+  );
+}
+
+const CARD = "bg-white border border-[#e5e5e5] rounded-2xl";
+const CARD_STYLE = { border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" };
+const TH = "text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide pb-3 text-left";
+const TD = "py-3 border-t border-[#f5f5f5]";
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1], delay },
+});
 
 interface Props {
   userId?: string;
   profile: BrandProfile;
 }
 
-export function VisitorsPage({ userId, profile }: Props) {
-  const [token,       setToken]       = useState<string | null>(null);
-  const [visits,      setVisits]      = useState<VisitsData | null>(null);
-  const [loading,     setLoading]     = useState(true);
-  const [copied,      setCopied]      = useState(false);
-  const [scriptOpen,  setScriptOpen]  = useState(true);
-
-  const isUnlocked = visits !== null && visits.total > 0;
-  const origin = "https://www.trycomly.com";
+export function VisitorsPage({ profile }: Props) {
+  const [tab,        setTab]        = useState<"visitors" | "crawlers">("visitors");
+  const [token,      setToken]      = useState<string | null>(null);
+  const [rawVisits,  setRawVisits]  = useState<VisitRow[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [modalOpen,   setModalOpen]   = useState(false);
+  const [modalCopied, setModalCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -96,7 +96,6 @@ export function VisitorsPage({ userId, profile }: Props) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { setLoading(false); return; }
 
-        // Get or create tracking token directly via Supabase client (RLS uses session automatically)
         let { data: row } = await supabase
           .from("llm_tracking_tokens")
           .select("token")
@@ -115,25 +114,13 @@ export function VisitorsPage({ userId, profile }: Props) {
         if (!row?.token) { setLoading(false); return; }
         setToken(row.token);
 
-        // Fetch visits for this token
         const { data: visits } = await supabase
           .from("llm_visits")
-          .select("source, type")
-          .eq("token", row.token);
+          .select("source, type, created_at, page_url")
+          .eq("token", row.token)
+          .order("created_at", { ascending: true });
 
-        if (visits?.length) {
-          const visitorMap = new Map<string, number>();
-          const botMap     = new Map<string, number>();
-          for (const v of visits) {
-            const map = v.type === "bot" ? botMap : visitorMap;
-            map.set(v.source, (map.get(v.source) ?? 0) + 1);
-          }
-          const toArr = (m: Map<string, number>) =>
-            Array.from(m.entries()).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count);
-          setVisits({ visitors: toArr(visitorMap), bots: toArr(botMap), total: visits.length });
-        } else {
-          setVisits({ visitors: [], bots: [], total: 0 });
-        }
+        setRawVisits(visits ?? []);
       } catch (e) {
         console.error("visitors-page error:", e);
       } finally {
@@ -142,146 +129,569 @@ export function VisitorsPage({ userId, profile }: Props) {
     })();
   }, []);
 
-  function copyScript() {
+  const visitors = useMemo(() => rawVisits.filter(v => v.type !== "bot"), [rawVisits]);
+  const bots     = useMemo(() => rawVisits.filter(v => v.type === "bot"),  [rawVisits]);
+
+  const activeRows = tab === "visitors" ? visitors : bots;
+  const isUnlocked = rawVisits.length > 0;
+
+  const totals = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of activeRows) map.set(v.source, (map.get(v.source) ?? 0) + 1);
+    return Array.from(map.entries()).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count);
+  }, [activeRows]);
+
+  const totalCount = activeRows.length;
+  const topSource  = totals[0] ?? null;
+
+  const { chartData, sources } = useMemo(() => {
+    const src = Array.from(new Set(activeRows.map(v => v.source)));
+    const dayMap = new Map<string, Record<string, number>>();
+    for (const v of activeRows) {
+      const day = v.created_at.slice(0, 10);
+      if (!dayMap.has(day)) dayMap.set(day, {});
+      const d = dayMap.get(day)!;
+      d[v.source] = (d[v.source] ?? 0) + 1;
+    }
+    const data: ChartPoint[] = Array.from(dayMap.entries()).map(([date, counts]) => ({
+      date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      ...counts,
+    }));
+    return { chartData: data, sources: src };
+  }, [activeRows]);
+
+  const sparklines = useMemo(() => {
+    const days: string[] = Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (13 - i));
+      return d.toISOString().slice(0, 10);
+    });
+    const result: Record<string, SparkPoint[]> = {};
+    for (const src of sources) {
+      result[src] = days.map(day => ({
+        v: activeRows.filter(v => v.source === src && v.created_at.slice(0, 10) === day).length,
+      }));
+    }
+    return result;
+  }, [activeRows, sources]);
+
+  const topPages = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of activeRows) {
+      try {
+        const path = v.page_url ? new URL(v.page_url).pathname : "/";
+        map.set(path, (map.get(path) ?? 0) + 1);
+      } catch { map.set("/", (map.get("/") ?? 0) + 1); }
+    }
+    return Array.from(map.entries())
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+  }, [activeRows]);
+
+  const botLastSeen = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const v of bots) {
+      const prev = map.get(v.source);
+      if (!prev || v.created_at > prev) map.set(v.source, v.created_at);
+    }
+    return map;
+  }, [bots]);
+
+  const botTotals = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of bots) map.set(v.source, (map.get(v.source) ?? 0) + 1);
+    return Array.from(map.entries()).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count);
+  }, [bots]);
+
+  function copyModalScript() {
     if (!token) return;
-    navigator.clipboard.writeText(getScript(token, origin));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(getScript(token));
+    setModalCopied(true);
+    setTimeout(() => setModalCopied(false), 2000);
   }
 
-  const visitorMax = Math.max(1, ...(isUnlocked ? visits.visitors : DEMO_VISITORS).map(v => v.count));
-  const botMax     = Math.max(1, ...(isUnlocked ? visits.bots     : DEMO_BOTS    ).map(v => v.count));
+  const DEMO_TOTALS = [
+    { source: "ChatGPT", count: 47 },
+    { source: "Perplexity", count: 23 },
+    { source: "Gemini", count: 12 },
+  ];
+  const DEMO_CHART: ChartPoint[] = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (13 - i));
+    return {
+      date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      ChatGPT:    Math.floor(2 + Math.random() * 6),
+      Perplexity: Math.floor(1 + Math.random() * 3),
+      Gemini:     Math.floor(0 + Math.random() * 2),
+    };
+  });
+  const DEMO_SPARKLINES: Record<string, SparkPoint[]> = {
+    ChatGPT:    Array.from({ length: 14 }, () => ({ v: Math.floor(1 + Math.random() * 6) })),
+    Perplexity: Array.from({ length: 14 }, () => ({ v: Math.floor(0 + Math.random() * 4) })),
+    Gemini:     Array.from({ length: 14 }, () => ({ v: Math.floor(0 + Math.random() * 2) })),
+  };
+  const DEMO_PAGES = [
+    { path: "/pricing", count: 23 },
+    { path: "/features", count: 17 },
+    { path: "/", count: 12 },
+    { path: "/blog/ai-seo", count: 8 },
+    { path: "/about", count: 5 },
+  ];
+  const DEMO_BOTS = [
+    { source: "ChatGPT",    count: 312, lastSeen: "2 hours ago" },
+    { source: "Claude",     count: 187, lastSeen: "5 hours ago" },
+    { source: "Gemini",     count: 94,  lastSeen: "1 day ago"   },
+    { source: "Perplexity", count: 61,  lastSeen: "3 days ago"  },
+  ];
+  const DEMO_CRAWLED_PAGES = [
+    { path: "/",             count: 98 },
+    { path: "/pricing",      count: 74 },
+    { path: "/blog/ai-seo",  count: 53 },
+    { path: "/features",     count: 41 },
+    { path: "/about",        count: 29 },
+  ];
+
+  function timeAgo(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  const displayTotals    = isUnlocked ? totals     : DEMO_TOTALS;
+  const displayChart     = isUnlocked ? chartData  : DEMO_CHART;
+  const displaySrcs      = isUnlocked ? sources    : ["ChatGPT", "Perplexity", "Gemini"];
+  const displayTotal     = isUnlocked ? totalCount : 82;
+  const displayTop       = isUnlocked ? topSource  : { source: "ChatGPT", count: 47 };
+  const displaySparks    = isUnlocked ? sparklines : DEMO_SPARKLINES;
+  const displayPages     = isUnlocked ? topPages   : DEMO_PAGES;
+  const displayBots      = isUnlocked ? botTotals.map(({ source, count }) => ({
+    source, count, lastSeen: timeAgo(botLastSeen.get(source) ?? new Date().toISOString()),
+  })) : DEMO_BOTS;
+  const displayCrawledPages = isUnlocked ? topPages : DEMO_CRAWLED_PAGES;
+  const totalBotCrawls   = isUnlocked ? bots.length : 654;
+  const botsDetected     = isUnlocked ? botTotals.length : 4;
 
   return (
+    <>
     <div className="p-6 space-y-4">
 
-      {/* Human visitors card */}
-      <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
-
-        {/* Header */}
-        <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#f3eeff] flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-[#5B2D91]" />
+      {/* Header card — animates in on mount */}
+      <motion.div className={`${CARD} px-8 pt-7 pb-0`} style={CARD_STYLE} {...fadeUp(0)}>
+        <div className="flex items-start justify-between gap-4 pb-5">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <h2 className="text-[18px] font-bold text-[#0a0a0a]">Traffic</h2>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Pro</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <h2 className="text-[18px] font-bold text-[#0a0a0a]">LLM Visitors</h2>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Pro</span>
-              </div>
-              <p className="text-[14px] text-[#6b6b6b] leading-relaxed">
-                Real people who clicked a link to {profile.brand_name} inside ChatGPT, Perplexity, Gemini, or Claude.
-              </p>
-            </div>
+            <p className="text-[13px] text-[#6b6b6b]">
+              See real visits and bot crawls from AI tools for {profile.brand_name}.
+            </p>
           </div>
+          {token && (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[12px] font-semibold transition-colors"
+              style={isUnlocked
+                ? { borderColor: "#d1fae5", background: "#f0fdf4", color: "#059669" }
+                : { borderColor: "#e5e5e5", background: "#fafafa", color: "#6b6b6b" }
+              }
+            >
+              {isUnlocked
+                ? <><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Active · View script</>
+                : <><Code2 className="w-3.5 h-3.5" /> Get snippet</>
+              }
+            </button>
+          )}
         </div>
 
-        {loading ? (
-          <div className="px-8 py-10 flex justify-center">
-            <div className="w-6 h-6 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <>
-            {/* Stats — blurred until unlocked */}
-            <div className={`px-8 py-6 space-y-4 relative ${!isUnlocked ? "select-none" : ""}`}>
-              {!isUnlocked && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 backdrop-blur-[6px] bg-white/60 rounded-b-2xl">
-                  <p className="text-[14px] font-bold text-[#0a0a0a]">Install the snippet to unlock</p>
-                  <p className="text-[12px] text-[#6b6b6b] max-w-xs text-center leading-relaxed">
-                    Paste the tracking script in your site&apos;s <code className="font-mono bg-[#f3eeff] px-1 rounded">&lt;head&gt;</code> and real visitor data will appear here.
-                  </p>
-                </div>
-              )}
-              <div className={!isUnlocked ? "blur-sm pointer-events-none" : ""}>
-                {(isUnlocked ? visits.visitors : DEMO_VISITORS).map(row => (
-                  <SourceBar key={row.source} row={row} max={visitorMax} />
-                ))}
-                {isUnlocked && visits.visitors.length === 0 && (
-                  <p className="text-[13px] text-[#aaaaaa] text-center py-4">No LLM visitor traffic yet — check back soon.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Script snippet — always visible */}
-            <div className="border-t border-[#f0f0f0]">
-              <button
-                onClick={() => setScriptOpen(v => !v)}
-                className="w-full flex items-center justify-between px-8 py-4 text-left hover:bg-[#fafafa] transition-colors"
-              >
-                <span className="text-[13px] font-semibold text-[#0a0a0a]">
-                  {isUnlocked ? "Tracking script (installed)" : "📋 Install tracking script"}
-                </span>
-                <div className="flex items-center gap-2">
-                  {isUnlocked && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">Active</span>
-                  )}
-                  {scriptOpen ? <ChevronUp className="w-4 h-4 text-[#aaaaaa]" /> : <ChevronDown className="w-4 h-4 text-[#aaaaaa]" />}
-                  </div>
-                </button>
-
-                {scriptOpen && (
-                  <div className="px-8 pb-6">
-                    {!isUnlocked && (
-                      <p className="text-[13px] text-[#6b6b6b] mb-4 leading-relaxed">
-                        Paste this before the closing <code className="font-mono bg-[#f3eeff] text-[#5B2D91] px-1 rounded">&lt;/head&gt;</code> tag on every page of your site.
-                      </p>
-                    )}
-                    {token ? (
-                      <div className="relative rounded-xl overflow-hidden">
-                        <pre className="bg-[#0a0a0a] text-[#a78bfa] text-[11px] leading-relaxed px-5 py-4 font-mono overflow-x-auto whitespace-pre-wrap break-all">
-                          {getScript(token, origin)}
-                        </pre>
-                        <button
-                          onClick={copyScript}
-                          className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition-colors"
-                        >
-                          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                          {copied ? "Copied!" : "Copy"}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center py-6">
-                        <div className="w-5 h-5 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-          </>
-        )}
-      </div>
-
-      {/* Bot crawlers card */}
-      <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
-        <div className="px-8 pt-6 pb-5 border-b border-[#f0f0f0]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#f0fdf4] flex items-center justify-center shrink-0">
-              <Bot className="w-4.5 h-4.5 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="text-[15px] font-bold text-[#0a0a0a]">AI Crawlers</h3>
-              <p className="text-[12px] text-[#6b6b6b] mt-0.5">LLM bots that indexed your site</p>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-0 border-b border-[#f0f0f0]">
+          {(["visitors", "crawlers"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex items-center gap-2 pb-4 px-1 mr-6 text-[13px] font-semibold border-b-2 transition-colors ${
+                tab === t ? "border-[#5B2D91] text-[#5B2D91]" : "border-transparent text-[#aaaaaa] hover:text-[#6b6b6b]"
+              }`}
+            >
+              {t === "visitors" ? <Users className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
         </div>
+      </motion.div>
 
-        <div className={`px-8 py-5 space-y-4 relative ${!isUnlocked ? "select-none" : ""}`}>
+      {loading ? (
+        <motion.div className={`${CARD} py-16 flex justify-center`} style={CARD_STYLE} {...fadeUp(0.08)}>
+          <div className="w-6 h-6 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
+        </motion.div>
+      ) : (
+        <div className={`relative space-y-4 ${!isUnlocked ? "select-none" : ""}`}>
+
+          {/* Blur overlay */}
           {!isUnlocked && (
-            <div className="absolute inset-0 z-10 backdrop-blur-[6px] bg-white/60 rounded-b-2xl flex items-center justify-center">
-              <p className="text-[13px] font-semibold text-[#6b6b6b]">Unlocks with the tracking script</p>
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 backdrop-blur-[5px] bg-[#ddd5f5]/40 rounded-2xl">
+              <div className="bg-white border border-[#e8e8e8] rounded-2xl px-8 py-6 shadow-lg text-center max-w-sm">
+                <p className="text-[15px] font-bold text-[#0a0a0a] mb-1">Install the snippet to unlock</p>
+                <p className="text-[13px] text-[#6b6b6b] leading-relaxed">
+                  Paste the tracking script in your site&apos;s <code className="font-mono bg-[#f3eeff] text-[#5B2D91] px-1 rounded">&lt;head&gt;</code> and real visitor data will appear here.
+                </p>
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+                >
+                  Get snippet
+                </button>
+                <p className="mt-3 text-[11px] text-[#aaaaaa] flex items-center gap-1.5 justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#aaaaaa] inline-block shrink-0" />
+                  Data appears after your first AI-referred visit or crawl
+                </p>
+              </div>
             </div>
           )}
-          <div className={!isUnlocked ? "blur-sm pointer-events-none" : ""}>
-            {(isUnlocked ? visits.bots : DEMO_BOTS).map(row => (
-              <SourceBar key={row.source} row={row} max={botMax} />
-            ))}
-            {isUnlocked && visits.bots.length === 0 && (
-              <p className="text-[13px] text-[#aaaaaa] text-center py-4">No bot crawls detected yet via script.</p>
-            )}
-          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className={!isUnlocked ? "blur-[3px] pointer-events-none space-y-4" : "space-y-4"}
+            >
+
+              {tab === "visitors" ? (
+                <>
+                  {/* Visitors — 3 stat cards */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className={`${CARD} px-6 py-5`} style={CARD_STYLE}>
+                      <div className="flex items-center gap-2 text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-3">
+                        <Users className="w-3.5 h-3.5" />
+                        AI Sessions
+                      </div>
+                      <p className="text-[30px] font-black text-[#0a0a0a] leading-none">{displayTotal.toLocaleString()}</p>
+                      <p className="text-[12px] text-[#aaaaaa] mt-1.5">{displayTotals.length} AI source{displayTotals.length !== 1 ? "s" : ""}</p>
+                    </div>
+                    <div className={`${CARD} px-6 py-5`} style={CARD_STYLE}>
+                      <div className="flex items-center gap-2 text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-3">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        Top AI Source
+                      </div>
+                      {displayTop && (
+                        <div className="flex items-center gap-2.5 mb-1.5">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={LLM_ICONS[displayTop.source] ?? ""} alt={displayTop.source} width={22} height={22} className="w-[22px] h-[22px] rounded-sm" />
+                          <p className="text-[22px] font-black text-[#0a0a0a] leading-none">{displayTop.source}</p>
+                        </div>
+                      )}
+                      <p className="text-[12px] text-[#aaaaaa]">{displayTop?.count ?? 0} sessions</p>
+                    </div>
+                    <div className={`${CARD} px-6 py-5`} style={CARD_STYLE}>
+                      <div className="flex items-center gap-2 text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-3">
+                        <Zap className="w-3.5 h-3.5" />
+                        Sources Detected
+                      </div>
+                      <p className="text-[30px] font-black text-[#0a0a0a] leading-none">{displayTotals.length}</p>
+                      <p className="text-[12px] text-[#aaaaaa] mt-1.5">
+                        {displayTotals.length > 0 ? displayTotals.map(t => t.source).join(", ") : "None yet"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Chart + source breakdown */}
+                  <div className="grid grid-cols-[1fr_280px] gap-4 items-stretch">
+                    <div className={`${CARD} px-8 pt-6 pb-5`} style={CARD_STYLE}>
+                      <p className="text-[12px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-4">AI referral traffic</p>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <AreaChart data={displayChart} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                          <defs>
+                            {displaySrcs.map(src => (
+                              <linearGradient key={src} id={`grad-${src}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor={LLM_COLORS[src] ?? "#5B2D91"} stopOpacity={0.25} />
+                                <stop offset="95%" stopColor={LLM_COLORS[src] ?? "#5B2D91"} stopOpacity={0.02} />
+                              </linearGradient>
+                            ))}
+                          </defs>
+                          <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#aaaaaa" }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11, fill: "#aaaaaa" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                          <Tooltip content={<CustomTooltip />} />
+                          {displaySrcs.map(src => (
+                            <Area key={src} type="monotone" dataKey={src} stackId="1"
+                              stroke={LLM_COLORS[src] ?? "#5B2D91"} strokeWidth={2} fill={`url(#grad-${src})`} />
+                          ))}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                      <div className="flex items-center gap-4 mt-3">
+                        {displaySrcs.map(src => (
+                          <div key={src} className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ background: LLM_COLORS[src] ?? "#5B2D91" }} />
+                            <span className="text-[11px] text-[#6b6b6b] font-medium">{src}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className={`${CARD} px-6 py-6 flex flex-col`} style={CARD_STYLE}>
+                      <p className="text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-4">By source</p>
+                      <div className="space-y-4 flex-1">
+                        {displayTotals.map(({ source, count }) => {
+                          const pct = Math.round((count / Math.max(1, displayTotal)) * 100);
+                          return (
+                            <div key={source} className="flex items-center gap-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={LLM_ICONS[source] ?? ""} alt={source} width={18} height={18} className="w-[18px] h-[18px] rounded-sm shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[13px] font-semibold text-[#0a0a0a]">{source}</span>
+                                  <span className="text-[13px] font-semibold text-[#6b6b6b]">{count}</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-[#f0f0f0] rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full transition-all duration-700"
+                                    style={{ width: `${pct}%`, backgroundColor: LLM_COLORS[source] ?? "#5B2D91" }} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {isUnlocked && totals.length === 0 && (
+                          <p className="text-[13px] text-[#aaaaaa] text-center py-4">No traffic yet.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sources table + Top pages table */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className={`${CARD} px-6 py-6`} style={CARD_STYLE}>
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className={`${TH} w-full`}>Source</th>
+                            <th className={`${TH} pr-4`}>Trend</th>
+                            <th className={`${TH} text-right whitespace-nowrap`}>Sessions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayTotals.map(({ source, count }) => (
+                            <tr key={source}>
+                              <td className={TD}>
+                                <div className="flex items-center gap-2.5">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={LLM_ICONS[source] ?? ""} alt={source} width={16} height={16} className="w-4 h-4 rounded-sm shrink-0" />
+                                  <span className="text-[13px] font-semibold text-[#0a0a0a]">{source}</span>
+                                </div>
+                              </td>
+                              <td className={`${TD} pr-2`}>
+                                <Sparkline data={displaySparks[source] ?? Array.from({ length: 14 }, () => ({ v: 0 }))} color={LLM_COLORS[source] ?? "#5B2D91"} />
+                              </td>
+                              <td className={`${TD} text-right`}>
+                                <span className="text-[13px] font-semibold text-[#0a0a0a]">{count}</span>
+                              </td>
+                            </tr>
+                          ))}
+                          {displayTotals.length === 0 && (
+                            <tr><td colSpan={3} className="py-6 text-center text-[13px] text-[#aaaaaa]">No data yet.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className={`${CARD} px-6 py-6`} style={CARD_STYLE}>
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className={`${TH} w-full`}>Page</th>
+                            <th className={`${TH} text-right whitespace-nowrap`}>Sessions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayPages.map(({ path, count }) => (
+                            <tr key={path}>
+                              <td className={TD}>
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <Globe className="w-3.5 h-3.5 text-[#cccccc] shrink-0" />
+                                  <span className="text-[13px] font-medium text-[#0a0a0a] truncate">{path}</span>
+                                </div>
+                              </td>
+                              <td className={`${TD} text-right`}>
+                                <span className="text-[13px] font-semibold text-[#0a0a0a]">{count}</span>
+                              </td>
+                            </tr>
+                          ))}
+                          {displayPages.length === 0 && (
+                            <tr><td colSpan={2} className="py-6 text-center text-[13px] text-[#aaaaaa]">No pages tracked yet.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Crawlers — 2 stat cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className={`${CARD} px-6 py-5`} style={CARD_STYLE}>
+                      <div className="flex items-center gap-2 text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-3">
+                        <Bot className="w-3.5 h-3.5" />
+                        Total Crawls
+                      </div>
+                      <p className="text-[30px] font-black text-[#0a0a0a] leading-none">{totalBotCrawls.toLocaleString()}</p>
+                      <p className="text-[12px] text-[#aaaaaa] mt-1.5">indexing events detected</p>
+                    </div>
+                    <div className={`${CARD} px-6 py-5`} style={CARD_STYLE}>
+                      <div className="flex items-center gap-2 text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide mb-3">
+                        <Zap className="w-3.5 h-3.5" />
+                        Bots Detected
+                      </div>
+                      <p className="text-[30px] font-black text-[#0a0a0a] leading-none">{botsDetected}</p>
+                      <p className="text-[12px] text-[#aaaaaa] mt-1.5">
+                        {displayBots.map(b => b.source).join(", ") || "None yet"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bot table + Crawled pages — side by side */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className={`${CARD} px-6 py-6`} style={CARD_STYLE}>
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className={`${TH} w-full`}>Bot</th>
+                            <th className={`${TH} text-right whitespace-nowrap pr-4`}>Crawls</th>
+                            <th className={`${TH} text-right whitespace-nowrap`}>Last seen</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayBots.map(({ source, count, lastSeen }) => (
+                            <tr key={source}>
+                              <td className={TD}>
+                                <div className="flex items-center gap-2.5">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={LLM_ICONS[source] ?? ""} alt={source} width={16} height={16} className="w-4 h-4 rounded-sm shrink-0" />
+                                  <span className="text-[13px] font-semibold text-[#0a0a0a]">{source}Bot</span>
+                                </div>
+                              </td>
+                              <td className={`${TD} text-right pr-4`}>
+                                <span className="text-[13px] font-semibold text-[#0a0a0a]">{count}</span>
+                              </td>
+                              <td className={`${TD} text-right`}>
+                                <span className="text-[12px] text-[#aaaaaa]">{lastSeen}</span>
+                              </td>
+                            </tr>
+                          ))}
+                          {displayBots.length === 0 && (
+                            <tr><td colSpan={3} className="py-6 text-center text-[13px] text-[#aaaaaa]">No bots detected yet.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className={`${CARD} px-6 py-6`} style={CARD_STYLE}>
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className={`${TH} w-full`}>Most crawled pages</th>
+                            <th className={`${TH} text-right whitespace-nowrap`}>Hits</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayCrawledPages.map(({ path, count }) => (
+                            <tr key={path}>
+                              <td className={TD}>
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <Globe className="w-3.5 h-3.5 text-[#cccccc] shrink-0" />
+                                  <span className="text-[13px] font-medium text-[#0a0a0a] truncate">{path}</span>
+                                </div>
+                              </td>
+                              <td className={`${TD} text-right`}>
+                                <span className="text-[13px] font-semibold text-[#0a0a0a]">{count}</span>
+                              </td>
+                            </tr>
+                          ))}
+                          {displayCrawledPages.length === 0 && (
+                            <tr><td colSpan={2} className="py-6 text-center text-[13px] text-[#aaaaaa]">No crawls recorded yet.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </div>
+      )}
+
 
     </div>
+
+      {/* Snippet modal */}
+      <AnimatePresence>
+        {modalOpen && token && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setModalOpen(false)}
+            />
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <div
+                className="pointer-events-auto w-full max-w-lg bg-white rounded-2xl overflow-hidden"
+                style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.1)" }}
+              >
+                <div className="flex items-start justify-between px-6 pt-6 pb-4">
+                  <div>
+                    <h3 className="text-[16px] font-bold text-[#0a0a0a]">Install tracking script</h3>
+                    <p className="text-[13px] text-[#6b6b6b] mt-0.5">
+                      Paste this before the closing <code className="font-mono bg-[#f3eeff] text-[#5B2D91] px-1 rounded text-[11px]">&lt;/head&gt;</code> tag on every page.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setModalOpen(false)}
+                    className="ml-4 mt-0.5 p-1.5 rounded-lg text-[#aaaaaa] hover:text-[#0a0a0a] hover:bg-[#f5f5f5] transition-colors shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="px-6 pb-6">
+                  <div className="relative rounded-xl overflow-hidden">
+                    <pre className="bg-[#0a0a0a] text-[#a78bfa] text-[11px] leading-relaxed px-5 py-4 font-mono overflow-x-auto whitespace-pre-wrap break-all">
+                      {getScript(token)}
+                    </pre>
+                    <button
+                      onClick={copyModalScript}
+                      className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition-colors"
+                    >
+                      {modalCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {modalCopied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setModalOpen(false)}
+                    className="mt-4 w-full py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
