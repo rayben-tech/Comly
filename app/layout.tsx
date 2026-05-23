@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, DM_Sans } from "next/font/google";
+import { Inter, DM_Sans, Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -8,6 +8,11 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400"],
   variable: "--font-dm-sans",
+});
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-outfit",
 });
 
 export const metadata: Metadata = {
@@ -37,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${dmSans.variable} bg-gray-50 text-gray-900 antialiased`}>
+      <body className={`${inter.className} ${dmSans.variable} ${outfit.variable} bg-gray-50 text-gray-900 antialiased`}>
         {children}
         <Analytics />
       </body>

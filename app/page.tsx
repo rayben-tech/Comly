@@ -19,7 +19,7 @@ const DemoDashboard = dynamic(
   () => import("@/components/demo/demo-dashboard").then((m) => ({ default: m.DemoDashboard })),
   { ssr: false }
 );
-import { AnimatedText } from "@/components/ui/animated-underline-text-one";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import { useScroll } from "@/components/ui/use-scroll";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { buttonVariants } from "@/components/ui/button";
@@ -73,7 +73,10 @@ function Logo({
 
 // ─── LLM BADGE (hero) ─────────────────────────────────────────────────────────
 
-function LLMBadge({ src, alt, style }: { src: string; alt: string; style: React.CSSProperties }) {
+function LLMBadge({ src, alt, style, depth = 0, mouseOffset = { x: 0, y: 0 } }: {
+  src: string; alt: string; style: React.CSSProperties;
+  depth?: number; mouseOffset?: { x: number; y: number };
+}) {
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -83,18 +86,22 @@ function LLMBadge({ src, alt, style }: { src: string; alt: string; style: React.
 
   return (
     <div
-      className="absolute hidden md:flex items-center justify-center w-14 h-14 rounded-2xl bg-white border border-[#e5e5e5] shadow-md"
-      style={style}
+      className="absolute hidden md:block z-20"
+      style={{
+        ...style,
+        transform: `translate(${mouseOffset.x * depth}px, ${mouseOffset.y * depth}px)`,
+        transition: "transform 0.12s ease-out",
+      }}
     >
-      <div className="relative w-8 h-8">
-        {!loaded && <div className="absolute inset-0 rounded-lg shimmer" />}
+      <div className="relative w-10 h-10">
+        {!loaded && <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse" />}
         <img
           ref={imgRef}
           src={src}
           alt={alt}
-          width={32}
-          height={32}
-          className={`w-8 h-8 rounded-lg transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+          width={40}
+          height={40}
+          className={`w-10 h-10 rounded-xl shadow-lg transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(true)}
         />
@@ -457,6 +464,13 @@ function useCountUp(end: number, trigger: boolean) {
 }
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
+
+const CYCLING_MODELS = [
+  { name: "ChatGPT",    domain: "chatgpt.com"        },
+  { name: "Claude",     domain: "claude.ai"           },
+  { name: "Perplexity", domain: "perplexity.ai"       },
+  { name: "Gemini",     domain: "gemini.google.com"   },
+];
 
 const HERO_COMPETITORS = [
   { name: "Confluence", domain: "confluence.atlassian.com", pct: 85 },
@@ -1463,7 +1477,45 @@ function HeroDashboardPreview() {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
+function CyclingModel() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex(i => (i + 1) % CYCLING_MODELS.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const current = CYCLING_MODELS[index];
+
+  return (
+    <div className="relative overflow-hidden h-[62px] md:h-[82px] w-full flex items-center justify-center mb-6">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current.name}
+          initial={{ y: 50, opacity: 0, filter: "blur(8px)" }}
+          animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+          exit={{ y: -50, opacity: 0, filter: "blur(8px)" }}
+          transition={{ duration: 0.42, ease: [0.25, 0.1, 0.25, 1] }}
+          className="absolute flex items-center gap-3 text-[54px] md:text-[72px] font-extrabold leading-none tracking-tight text-[#0a0a0a]"
+        >
+          <img
+            src={`https://www.google.com/s2/favicons?domain=${current.domain}&sz=64`}
+            alt={current.name}
+            width={48}
+            height={48}
+            className="rounded-xl shrink-0"
+          />
+          {current.name}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function LandingPage() {
+  const [heroMouse, setHeroMouse] = useState({ x: 0, y: 0 });
   const [url, setUrl] = useState("");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [navVisible, setNavVisible] = useState(false);
@@ -1621,6 +1673,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white text-[#0a0a0a] font-sans antialiased">
+      <SmoothScroll />
       <Navbar onCta={handleCheckout} visible={navVisible} user={sessionUser} hasAudit={hasAudit} />
 
       {/* ═══════════════════════════════════════════════════════════════════════
@@ -1628,17 +1681,26 @@ export default function LandingPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section
         id="hero"
-        className="relative min-h-screen pt-14 overflow-hidden [background:linear-gradient(to_bottom,#ffffff_0%,#ffffff_20%,#d4b8f5_50%,#a87be0_100%)]"
+        className="relative min-h-screen pt-14 overflow-hidden [background:linear-gradient(to_bottom,#ffffff_0%,#f3eeff_38%,#d4b8f5_64%,#a87be0_100%)]"
+        onMouseMove={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          setHeroMouse({
+            x: (e.clientX - r.left) / r.width - 0.5,
+            y: (e.clientY - r.top) / r.height - 0.5,
+          });
+        }}
+        onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}
       >
+
 
         {/* LLM logos */}
         {[
-          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64", alt: "ChatGPT", style: { top: "6%", left: "22%" } },
-          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64", alt: "Claude", style: { top: "16%", left: "16%" } },
-          { src: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", alt: "Gemini", style: { top: "6%", right: "22%" } },
-          { src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64", alt: "Perplexity", style: { top: "16%", right: "16%" } },
-        ].map(({ src, alt, style }) => (
-          <LLMBadge key={alt} src={src} alt={alt} style={style} />
+          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",       alt: "ChatGPT",    style: { top: "6%",  left:  "22%" }, depth: 16 },
+          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",         alt: "Claude",     style: { top: "16%", left:  "16%" }, depth: 26 },
+          { src: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", alt: "Gemini",     style: { top: "6%",  right: "22%" }, depth: 16 },
+          { src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64",     alt: "Perplexity", style: { top: "16%", right: "16%" }, depth: 26 },
+        ].map(({ src, alt, style, depth }) => (
+          <LLMBadge key={alt} src={src} alt={alt} style={style} depth={depth} mouseOffset={heroMouse} />
         ))}
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-10 lg:py-16 flex flex-col items-center text-center">
@@ -1646,17 +1708,18 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[54px] md:text-[72px] font-extrabold leading-[1.0] tracking-tight text-[#0a0a0a]"
+            className="text-[54px] md:text-[72px] font-extrabold leading-[1.0] tracking-tight text-[#0a0a0a] mb-8 [font-family:var(--font-outfit)]"
           >
-            Be the brand
+            Be the brand<br />
+            <motion.span
+              initial={{ filter: "blur(14px)", opacity: 0 }}
+              animate={{ filter: "blur(0px)", opacity: 1 }}
+              transition={{ duration: 1.1, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+              className="inline-block"
+            >
+              AI recommends
+            </motion.span>
           </motion.h1>
-          <AnimatedText
-            text="AI recommends"
-            textClassName="text-[54px] md:text-[72px] font-extrabold leading-[1.0] tracking-tight text-[#0a0a0a]"
-            underlineClassName="text-[#9E7AFF]"
-            underlineDuration={1.5}
-            className="mb-6"
-          />
 
           <motion.p
             initial={{ opacity: 0 }}
