@@ -77,12 +77,56 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1], delay },
 });
 
+const DEMO_MODE_TOTALS = [
+  { source: "ChatGPT",    count: 1203 },
+  { source: "Perplexity", count: 684  },
+  { source: "Gemini",     count: 521  },
+  { source: "Claude",     count: 312  },
+  { source: "Copilot",    count: 127  },
+];
+const DEMO_MODE_SRCS = DEMO_MODE_TOTALS.map(t => t.source);
+const DEMO_MODE_TOTAL = 2847;
+const DEMO_MODE_SPARKLINES: Record<string, SparkPoint[]> = {
+  ChatGPT:    [{ v:72 },{ v:78 },{ v:74 },{ v:83 },{ v:91 },{ v:88 },{ v:96 },{ v:94 },{ v:102 },{ v:109 },{ v:105 },{ v:114 },{ v:118 },{ v:116 }],
+  Perplexity: [{ v:38 },{ v:42 },{ v:40 },{ v:45 },{ v:51 },{ v:48 },{ v:55 },{ v:53 },{ v:59 },{ v:62 },{ v:58 },{ v:66 },{ v:70 },{ v:63 }],
+  Gemini:     [{ v:28 },{ v:31 },{ v:29 },{ v:34 },{ v:38 },{ v:36 },{ v:42 },{ v:40 },{ v:45 },{ v:47 },{ v:44 },{ v:50 },{ v:53 },{ v:49 }],
+  Claude:     [{ v:16 },{ v:19 },{ v:17 },{ v:22 },{ v:25 },{ v:23 },{ v:28 },{ v:26 },{ v:30 },{ v:29 },{ v:32 },{ v:35 },{ v:31 },{ v:34 }],
+  Copilot:    [{ v:6  },{ v:8  },{ v:7  },{ v:9  },{ v:11 },{ v:10 },{ v:12 },{ v:11 },{ v:13 },{ v:12 },{ v:14 },{ v:13 },{ v:15 },{ v:14 }],
+};
+const DEMO_MODE_PAGES = [
+  { path: "/blog/ai-seo-guide",   count: 423 },
+  { path: "/pricing",             count: 312 },
+  { path: "/features",            count: 287 },
+  { path: "/",                    count: 241 },
+  { path: "/templates",           count: 198 },
+  { path: "/blog/ai-tools-2025",  count: 142 },
+  { path: "/integrations",        count: 87  },
+  { path: "/changelog",           count: 61  },
+];
+const DEMO_MODE_BOTS = [
+  { source: "ChatGPT",    count: 8234, lastSeen: "2 hours ago"  },
+  { source: "Claude",     count: 2891, lastSeen: "5 hours ago"  },
+  { source: "Gemini",     count: 1847, lastSeen: "1 day ago"    },
+  { source: "Perplexity", count: 623,  lastSeen: "3 days ago"   },
+];
+const DEMO_MODE_CRAWLED_PAGES = [
+  { path: "/blog/ai-seo-guide",  count: 1842 },
+  { path: "/",                   count: 1234 },
+  { path: "/pricing",            count: 987  },
+  { path: "/features",           count: 743  },
+  { path: "/blog/ai-tools-2025", count: 621  },
+  { path: "/integrations",       count: 487  },
+  { path: "/templates",          count: 352  },
+  { path: "/changelog",          count: 269  },
+];
+
 interface Props {
   userId?: string;
   profile: BrandProfile;
+  demoMode?: boolean;
 }
 
-export function VisitorsPage({ profile }: Props) {
+export function VisitorsPage({ profile, demoMode }: Props) {
   const [tab,        setTab]        = useState<"visitors" | "crawlers">("visitors");
   const [token,      setToken]      = useState<string | null>(null);
   const [rawVisits,  setRawVisits]  = useState<VisitRow[]>([]);
@@ -91,6 +135,11 @@ export function VisitorsPage({ profile }: Props) {
   const [modalCopied, setModalCopied] = useState(false);
 
   useEffect(() => {
+    if (demoMode) {
+      setToken("demo_token_notion_xxxx1234");
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -127,13 +176,14 @@ export function VisitorsPage({ profile }: Props) {
         setLoading(false);
       }
     })();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoMode]);
 
   const visitors = useMemo(() => rawVisits.filter(v => v.type !== "bot"), [rawVisits]);
   const bots     = useMemo(() => rawVisits.filter(v => v.type === "bot"),  [rawVisits]);
 
   const activeRows = tab === "visitors" ? visitors : bots;
-  const isUnlocked = rawVisits.length > 0;
+  const isUnlocked = demoMode || rawVisits.length > 0;
 
   const totals = useMemo(() => {
     const map = new Map<string, number>();
@@ -259,19 +309,34 @@ export function VisitorsPage({ profile }: Props) {
     return `${Math.floor(h / 24)}d ago`;
   }
 
-  const displayTotals    = isUnlocked ? totals     : DEMO_TOTALS;
-  const displayChart     = isUnlocked ? chartData  : DEMO_CHART;
-  const displaySrcs      = isUnlocked ? sources    : ["ChatGPT", "Perplexity", "Gemini"];
-  const displayTotal     = isUnlocked ? totalCount : 82;
-  const displayTop       = isUnlocked ? topSource  : { source: "ChatGPT", count: 47 };
-  const displaySparks    = isUnlocked ? sparklines : DEMO_SPARKLINES;
-  const displayPages     = isUnlocked ? topPages   : DEMO_PAGES;
-  const displayBots      = isUnlocked ? botTotals.map(({ source, count }) => ({
+  const demoModeChart = useMemo<ChartPoint[]>(() => {
+    const values = [
+      [72, 38, 28, 16, 6], [78, 42, 31, 19, 8], [74, 40, 29, 17, 7],
+      [83, 45, 34, 22, 9], [91, 51, 38, 25, 11],[88, 48, 36, 23, 10],
+      [96, 55, 42, 28, 12],[94, 53, 40, 26, 11],[102,59, 45, 30, 13],
+      [109,62, 47, 29, 12],[105,58, 44, 32, 14],[114,66, 50, 35, 13],
+      [118,70, 53, 31, 15],[116,63, 49, 34, 14],
+    ];
+    return values.map((row, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (13 - i));
+      const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      return { date, ChatGPT: row[0]!, Perplexity: row[1]!, Gemini: row[2]!, Claude: row[3]!, Copilot: row[4]! };
+    });
+  }, []);
+
+  const displayTotals    = demoMode ? DEMO_MODE_TOTALS : isUnlocked ? totals     : DEMO_TOTALS;
+  const displayChart     = demoMode ? demoModeChart : isUnlocked ? chartData  : DEMO_CHART;
+  const displaySrcs      = demoMode ? DEMO_MODE_SRCS    : isUnlocked ? sources    : ["ChatGPT", "Perplexity", "Gemini"];
+  const displayTotal     = demoMode ? DEMO_MODE_TOTAL   : isUnlocked ? totalCount : 82;
+  const displayTop       = demoMode ? DEMO_MODE_TOTALS[0]! : isUnlocked ? topSource  : { source: "ChatGPT", count: 47 };
+  const displaySparks    = demoMode ? DEMO_MODE_SPARKLINES : isUnlocked ? sparklines : DEMO_SPARKLINES;
+  const displayPages     = demoMode ? DEMO_MODE_PAGES   : isUnlocked ? topPages   : DEMO_PAGES;
+  const displayBots      = demoMode ? DEMO_MODE_BOTS    : isUnlocked ? botTotals.map(({ source, count }) => ({
     source, count, lastSeen: timeAgo(botLastSeen.get(source) ?? new Date().toISOString()),
   })) : DEMO_BOTS;
-  const displayCrawledPages = isUnlocked ? topPages : DEMO_CRAWLED_PAGES;
-  const totalBotCrawls   = isUnlocked ? bots.length : 654;
-  const botsDetected     = isUnlocked ? botTotals.length : 4;
+  const displayCrawledPages = demoMode ? DEMO_MODE_CRAWLED_PAGES : isUnlocked ? topPages : DEMO_CRAWLED_PAGES;
+  const totalBotCrawls   = demoMode ? 13595 : isUnlocked ? bots.length : 654;
+  const botsDetected     = demoMode ? 4     : isUnlocked ? botTotals.length : 4;
 
   return (
     <>

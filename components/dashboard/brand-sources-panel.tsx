@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Globe } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { BrandProfile } from "@/types";
 
 interface SourceResult {
@@ -90,18 +90,11 @@ export function BrandSourcesPanel({ profile }: Props) {
       <div className="bg-white border border-[#e8e8e8] rounded-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="px-8 pt-8 pb-6 border-b border-[#f0f0f0]">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#f3eeff] flex items-center justify-center shrink-0">
-              <Globe className="w-5 h-5 text-[#5B2D91]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-[18px] font-bold text-[#0a0a0a] mb-1.5">Sources</h2>
-              <p className="text-[14px] text-[#6b6b6b] leading-relaxed">
-                Places on the web where {profile.brand_name} is being discussed — Reddit threads, review sites, press coverage.
-              </p>
-            </div>
-          </div>
+        <div className="px-8 pt-7 pb-5 border-b border-[#f0f0f0]">
+          <h2 className="text-[18px] font-bold text-[#0a0a0a] mb-1">Sources</h2>
+          <p className="text-[13px] text-[#6b6b6b]">
+            Places on the web where {profile.brand_name} is being discussed — Reddit, review sites, press coverage.
+          </p>
         </div>
 
         {/* Loading */}

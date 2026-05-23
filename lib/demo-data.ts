@@ -1,4 +1,4 @@
-import { BrandProfile, PromptResult, CompetitorRanking } from "@/types";
+import { BrandProfile, PromptResult, CompetitorRanking, CompetitorMentions } from "@/types";
 
 export const DEMO_PROFILE: BrandProfile = {
   brand_name: "Notion",
@@ -528,6 +528,149 @@ export const DEMO_THREADS = [
     upvotes: 2891,
     comments: 312,
     age: "7 days",
+  },
+];
+
+export const DEMO_PLAYBOOK_DATA: CompetitorMentions[] = [
+  {
+    name: "Asana",
+    domain: "asana.com",
+    mentions: 6,
+    results: [
+      {
+        url: "https://www.reddit.com/r/projectmanagement/comments/notion_vs_asana/",
+        title: "Notion vs Asana for product teams — what's your experience?",
+        description: "We've been using Asana for 2 years but considering switching to Notion. Anyone made this switch and regretted it?",
+        domain: "reddit.com",
+        category: "reddit",
+      },
+      {
+        url: "https://www.reddit.com/r/Asana/comments/asana_alternatives_wiki/",
+        title: "r/Asana: Looking for something that combines project tracking with docs",
+        description: "Asana is great for tasks but we keep bouncing between it and Confluence for documentation. Is Notion a better fit?",
+        domain: "reddit.com",
+        category: "reddit",
+      },
+      {
+        url: "https://www.g2.com/products/asana/reviews",
+        title: "Asana Reviews 2025 — G2",
+        description: "4.4/5 stars · 12,400+ reviews · #1 in Project Management Software on G2",
+        domain: "g2.com",
+        category: "review",
+      },
+      {
+        url: "https://www.capterra.com/project-management-software/asana",
+        title: "Asana Software Reviews, Demo & Pricing — Capterra",
+        description: "Read real Asana reviews. See ratings, pricing and side-by-side comparisons with top alternatives.",
+        domain: "capterra.com",
+        category: "review",
+      },
+      {
+        url: "https://zapier.com/blog/best-asana-alternatives/",
+        title: "The 10 Best Asana Alternatives in 2025",
+        description: "Looking for an Asana replacement? We compared the top project management tools including Notion, ClickUp, and Monday.com.",
+        domain: "zapier.com",
+        category: "press",
+      },
+      {
+        url: "https://techcrunch.com/2025/03/15/asana-ai-work-graph/",
+        title: "Asana's AI-powered Work Graph is reshaping how teams manage projects",
+        description: "Asana rolls out AI features across its platform as the race to automate knowledge work intensifies.",
+        domain: "techcrunch.com",
+        category: "press",
+      },
+    ],
+  },
+  {
+    name: "Confluence",
+    domain: "confluence.atlassian.com",
+    mentions: 6,
+    results: [
+      {
+        url: "https://www.reddit.com/r/confluence/comments/moving_to_notion/",
+        title: "r/Confluence: Moving from Confluence to Notion after 5 years — tips?",
+        description: "After 5 years on Confluence, our 60-person startup is migrating. Anyone else done this? What did you wish you knew?",
+        domain: "reddit.com",
+        category: "reddit",
+      },
+      {
+        url: "https://www.reddit.com/r/devops/comments/best_wiki_2025/",
+        title: "r/devops: Best internal wiki for a 50-person engineering org in 2025",
+        description: "Evaluating docs tools. Confluence vs Notion vs Slab — we want something engineers will actually use.",
+        domain: "reddit.com",
+        category: "reddit",
+      },
+      {
+        url: "https://www.g2.com/products/confluence/reviews",
+        title: "Confluence Reviews 2025 — G2",
+        description: "4.1/5 stars · 15,200+ reviews · Team Collaboration Software · Compare with Notion",
+        domain: "g2.com",
+        category: "review",
+      },
+      {
+        url: "https://www.trustradius.com/products/confluence/reviews",
+        title: "Confluence Reviews & Ratings 2025 — TrustRadius",
+        description: "In-depth expert reviews and user ratings for enterprise wiki and knowledge management tools.",
+        domain: "trustradius.com",
+        category: "review",
+      },
+      {
+        url: "https://www.infoq.com/articles/confluence-vs-notion-enterprise/",
+        title: "Confluence vs Notion: Which Wiki Wins for Enterprise Teams in 2025?",
+        description: "A detailed comparison of two leading knowledge management platforms — setup costs, scalability, and real team feedback.",
+        domain: "infoq.com",
+        category: "press",
+      },
+      {
+        url: "https://slab.com/blog/confluence-alternatives/",
+        title: "The Best Confluence Alternatives for Your Team — Slab",
+        description: "If Confluence is feeling bloated, here are the top alternatives based on real migration stories and team feedback.",
+        domain: "slab.com",
+        category: "press",
+      },
+    ],
+  },
+  {
+    name: "Trello",
+    domain: "trello.com",
+    mentions: 5,
+    results: [
+      {
+        url: "https://www.reddit.com/r/Trello/comments/moved_to_notion/",
+        title: "r/Trello: Why I moved from Trello to Notion and never looked back",
+        description: "After 3 years of Trello, here's why Notion's flexibility was worth the migration effort — and what I miss.",
+        domain: "reddit.com",
+        category: "reddit",
+      },
+      {
+        url: "https://www.reddit.com/r/productivity/comments/trello_vs_notion_2025/",
+        title: "r/productivity: Trello vs Notion for a solo founder — 2025 honest take",
+        description: "Starting a new project, debating between keeping Trello simple or going full Notion. What would you pick?",
+        domain: "reddit.com",
+        category: "reddit",
+      },
+      {
+        url: "https://www.pcmag.com/reviews/trello",
+        title: "Trello Review 2025 — PCMag",
+        description: "The classic kanban board app holds up in 2025. Editors' Choice — 4.0/5 stars. Best for visual task management.",
+        domain: "pcmag.com",
+        category: "review",
+      },
+      {
+        url: "https://www.g2.com/products/trello/reviews",
+        title: "Trello Reviews 2025 — G2",
+        description: "4.4/5 stars · 13,600+ reviews · See how Trello compares to Notion, Asana and ClickUp.",
+        domain: "g2.com",
+        category: "review",
+      },
+      {
+        url: "https://www.wired.com/story/best-project-management-apps-2025/",
+        title: "The Best Project Management Apps in 2025 — WIRED",
+        description: "We tested dozens of project management tools. Trello, Notion, Asana — here are the ones actually worth your time.",
+        domain: "wired.com",
+        category: "press",
+      },
+    ],
   },
 ];
 

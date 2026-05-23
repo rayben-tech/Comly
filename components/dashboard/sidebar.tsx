@@ -24,6 +24,7 @@ interface SidebarProps {
   onOpen?: () => void;
   collapsed?: boolean;
   demoMode?: boolean;
+  demoUnlockedPages?: string[];
 }
 
 function LockedNavItem({
@@ -201,15 +202,22 @@ function IconBtn({
   );
 }
 
-export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode, demoUnlockedPages = [] }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const isFixesActive = activePage.startsWith("fixes:");
 
-  const [secondsLeft, setSecondsLeft] = useState(86400);
+  function secondsUntil2amUTC() {
+    const now = new Date();
+    const next = new Date();
+    next.setUTCHours(2, 0, 0, 0);
+    if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+    return Math.floor((next.getTime() - now.getTime()) / 1000);
+  }
+  const [secondsLeft, setSecondsLeft] = useState(() => secondsUntil2amUTC());
   useEffect(() => {
     if (!demoMode) return;
     const id = setInterval(() => {
-      setSecondsLeft(s => (s <= 1 ? 86400 : s - 1));
+      setSecondsLeft(s => (s <= 1 ? secondsUntil2amUTC() : s - 1));
     }, 1000);
     return () => clearInterval(id);
   }, [demoMode]);
@@ -286,24 +294,23 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
 
               <div className="w-5 border-t border-[#f0f0f0] my-1.5" />
 
-              {demoMode ? (
-                <>
-                  <IconBtn title="Know exactly when AI crawls your website" disabled>
-                    <Users className="w-4 h-4" />
-                  </IconBtn>
-                  <IconBtn title="See exactly why AI recommended your competition" disabled>
-                    <Swords className="w-4 h-4" />
-                  </IconBtn>
-                </>
+              {demoMode && !demoUnlockedPages.includes("visitors") ? (
+                <IconBtn title="Know exactly when AI crawls your website" disabled>
+                  <Users className="w-4 h-4" />
+                </IconBtn>
               ) : (
-                <>
-                  <IconBtn title="Visitors" active={activePage === "visitors"} onClick={() => onNavigate("visitors")}>
-                    <Users className="w-4 h-4" />
-                  </IconBtn>
-                  <IconBtn title="Competitor Playbook" active={activePage === "competitor-playbook"} onClick={() => onNavigate("competitor-playbook")}>
-                    <Swords className="w-4 h-4" />
-                  </IconBtn>
-                </>
+                <IconBtn title="Visitors" active={activePage === "visitors"} onClick={() => onNavigate("visitors")}>
+                  <Users className="w-4 h-4" />
+                </IconBtn>
+              )}
+              {demoMode && !demoUnlockedPages.includes("competitor-playbook") ? (
+                <IconBtn title="See exactly why AI recommended your competition" disabled>
+                  <Swords className="w-4 h-4" />
+                </IconBtn>
+              ) : (
+                <IconBtn title="Competitor Playbook" active={activePage === "competitor-playbook"} onClick={() => onNavigate("competitor-playbook")}>
+                  <Swords className="w-4 h-4" />
+                </IconBtn>
               )}
 
               <div className="w-5 border-t border-[#f0f0f0] my-1.5" />
@@ -460,16 +467,15 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               <div>
                 <SectionLabel>Intelligence</SectionLabel>
                 <div className="space-y-0.5">
-                  {demoMode ? (
-                    <>
-                      <LockedNavItem icon={Users} label="Visitors" title="Track real humans arriving from ChatGPT, Perplexity & more" />
-                      <LockedNavItem icon={Swords} label="Competitor Playbook" title="See exactly why AI recommended your competition" />
-                    </>
+                  {demoMode && !demoUnlockedPages.includes("visitors") ? (
+                    <LockedNavItem icon={Users} label="Visitors" title="Track real humans arriving from ChatGPT, Perplexity & more" />
                   ) : (
-                    <>
-                      <NavItem active={activePage === "visitors"} icon={Users} label="Visitors" onClick={() => onNavigate("visitors")} />
-                      <NavItem active={activePage === "competitor-playbook"} icon={Swords} label="Competitor Playbook" onClick={() => onNavigate("competitor-playbook")} />
-                    </>
+                    <NavItem active={activePage === "visitors"} icon={Users} label="Visitors" onClick={() => onNavigate("visitors")} />
+                  )}
+                  {demoMode && !demoUnlockedPages.includes("competitor-playbook") ? (
+                    <LockedNavItem icon={Swords} label="Competitor Playbook" title="See exactly why AI recommended your competition" />
+                  ) : (
+                    <NavItem active={activePage === "competitor-playbook"} icon={Swords} label="Competitor Playbook" onClick={() => onNavigate("competitor-playbook")} />
                   )}
                 </div>
               </div>
@@ -501,7 +507,13 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               </div>
               <div className="flex items-center gap-1.5 mt-2 px-2">
                 <Clock className="w-3 h-3 text-[#5B2D91] shrink-0" />
-                <span className="text-[11px] text-[#6b7280]">Re-audited daily at 2:00 AM UTC</span>
+                {demoMode ? (
+                  <span className="text-[11px] text-[#6b7280]">
+                    Next re-audit in <span className="font-mono font-semibold text-[#5B2D91]">{timerLabel}</span>
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-[#6b7280]">Re-audited daily at 2:00 AM UTC</span>
+                )}
               </div>
             </div>
           </motion.div>

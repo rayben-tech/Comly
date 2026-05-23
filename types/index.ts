@@ -34,3 +34,18 @@ export interface AuditResult {
 }
 
 export type AuditStep = "input" | "scraping" | "profile" | "review-prompts" | "auditing" | "results" | "paywall" | "confirming-payment";
+
+export interface MentionResult {
+  url: string;
+  title: string;
+  description: string;
+  domain: string;
+  category: "reddit" | "review" | "press" | "other";
+}
+
+export interface CompetitorMentions {
+  name: string;
+  domain: string;
+  mentions: number;
+  results: MentionResult[];
+}

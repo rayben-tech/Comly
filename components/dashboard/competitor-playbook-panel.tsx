@@ -3,28 +3,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swords, Star, Newspaper, MessageCircle, Link } from "lucide-react";
-import { BrandProfile, CompetitorRanking } from "@/types";
+import { BrandProfile, CompetitorRanking, MentionResult, CompetitorMentions } from "@/types";
 import { FaviconImg } from "@/components/ui/favicon-img";
-
-interface MentionResult {
-  url: string;
-  title: string;
-  description: string;
-  domain: string;
-  category: "reddit" | "review" | "press" | "other";
-}
-
-interface CompetitorMentions {
-  name: string;
-  domain: string;
-  mentions: number;
-  results: MentionResult[];
-}
 
 interface Props {
   competitorRankings: CompetitorRanking[];
   promptResults: never[];
   profile: BrandProfile;
+  demoData?: CompetitorMentions[];
 }
 
 const CATEGORY_LABELS: Record<MentionResult["category"], string> = {
@@ -59,7 +45,7 @@ function cacheKey(brandName: string) {
   return `comly_playbook_${brandName.toLowerCase().replace(/\s+/g, "_")}`;
 }
 
-export function CompetitorPlaybookPanel({ competitorRankings, profile }: Props) {
+export function CompetitorPlaybookPanel({ competitorRankings, profile, demoData }: Props) {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [mentionData, setMentionData] = useState<CompetitorMentions[]>([] as CompetitorMentions[]);
   const [errorMsg, setErrorMsg] = useState("");
@@ -69,6 +55,12 @@ export function CompetitorPlaybookPanel({ competitorRankings, profile }: Props) 
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
+    if (demoData) {
+      setMentionData(demoData);
+      setActiveComp(demoData[0]?.name ?? "");
+      setStatus("done");
+      return;
+    }
     try {
       const cached = localStorage.getItem(cacheKey(profile.brand_name));
       if (cached) {
