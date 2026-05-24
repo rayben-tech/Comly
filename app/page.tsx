@@ -4,12 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase, getUserAudit } from "@/lib/supabase";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Globe, ArrowRight, Check, X, Menu, ChevronDown, Plus,
   BarChart3, TrendingUp, Target, Eye, Bell, Shield,
   ExternalLink, Search, RefreshCw, Users,
-  CheckCircle2, AlertCircle, Loader2,
+  CheckCircle2, AlertCircle, Loader2, Music,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HowItWorksAnimated } from "@/components/ui/animated-scroll";
@@ -73,9 +73,9 @@ function Logo({
 
 // ─── LLM BADGE (hero) ─────────────────────────────────────────────────────────
 
-function LLMBadge({ src, alt, style, depth = 0, mouseOffset = { x: 0, y: 0 } }: {
+function LLMBadge({ src, alt, style, depth = 0, rotate = 0, mouseOffset = { x: 0, y: 0 } }: {
   src: string; alt: string; style: React.CSSProperties;
-  depth?: number; mouseOffset?: { x: number; y: number };
+  depth?: number; rotate?: number; mouseOffset?: { x: number; y: number };
 }) {
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -89,7 +89,7 @@ function LLMBadge({ src, alt, style, depth = 0, mouseOffset = { x: 0, y: 0 } }: 
       className="absolute hidden md:block z-20"
       style={{
         ...style,
-        transform: `translate(${mouseOffset.x * depth}px, ${mouseOffset.y * depth}px)`,
+        transform: `translate(${mouseOffset.x * depth}px, ${mouseOffset.y * depth}px) rotate(${rotate}deg)`,
         transition: "transform 0.12s ease-out",
       }}
     >
@@ -208,8 +208,8 @@ function BeforeChat({ s }: { s: ChatState }) {
             <div className="bg-[#2f2f2f] rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
               <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
             </div>
-            <div className="w-7 h-7 rounded-full bg-[#5B2D91]/60 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[10px] font-bold text-white">Y</span>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "linear-gradient(135deg, #ff4444, #ff8800)" }}>
+              <Music className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
 
@@ -285,8 +285,8 @@ function AfterChat({ s }: { s: ChatState }) {
             <div className="bg-[#2f2f2f] rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
               <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
             </div>
-            <div className="w-7 h-7 rounded-full bg-[#5B2D91]/60 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[10px] font-bold text-white">Y</span>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "linear-gradient(135deg, #ff4444, #ff8800)" }}>
+              <Music className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
 
@@ -601,7 +601,7 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
         {/* Logo */}
         <a href="#hero" className="flex items-center gap-2 shrink-0">
           <ComlyLogo size={28} />
-          <span className="font-bold text-[#0a0a0a] text-base tracking-tight">Comly</span>
+          <span className="font-bold text-[#0a0a0a] text-base tracking-tight [font-family:var(--font-outfit)]">Comly</span>
         </a>
 
         {/* Desktop links */}
@@ -1513,6 +1513,320 @@ function CyclingModel() {
   );
 }
 
+// ─── FEATURE CARD HELPERS ────────────────────────────────────────────────────
+
+function FeatureBullets({ items }: { items: string[] }) {
+  return (
+    <div className="space-y-3.5">
+      {items.map((item) => (
+        <div key={item} className="flex items-start gap-3">
+          <div className="w-5 h-5 rounded-full bg-[#f3eeff] border border-[#e4d4ff] flex items-center justify-center shrink-0 mt-0.5">
+            <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="#5B2D91" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <span className="text-[14px] text-[#4b5563] leading-snug">{item}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FeatureCardShell({ title, badge, children }: { title: string; badge?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f0f0f0] bg-gradient-to-r from-[#fdfcff] to-white">
+        <p className="text-[13px] font-semibold text-[#0a0a0a]">{title}</p>
+        {badge}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// Row 1 — LLM tab switcher
+const MENTIONS_DATA = {
+  "chatgpt.com": [
+    { snippet: "For team productivity, I'd recommend checking out…", pos: 2, score: 74 },
+    { snippet: "When asked about collaboration tools, this brand…", pos: 1, score: 88 },
+    { snippet: "The most AI-friendly knowledge base right now is…", pos: 3, score: 61 },
+  ],
+  "claude.ai": [
+    { snippet: "Teams looking for a wiki-style workspace should…",    pos: 1, score: 91 },
+    { snippet: "For documentation-heavy teams, I would suggest…",    pos: 2, score: 79 },
+    { snippet: "In my experience recommending knowledge tools, this…", pos: 1, score: 85 },
+  ],
+  "gemini.google.com": [
+    { snippet: "When it comes to AI-first knowledge tools, this…",   pos: 2, score: 68 },
+    { snippet: "In the productivity space, one standout option is…", pos: 1, score: 83 },
+    { snippet: "For teams needing structured documentation, I'd say…", pos: 3, score: 57 },
+  ],
+  "perplexity.ai": [
+    { snippet: "The leading knowledge management platforms are…",    pos: 3, score: 55 },
+    { snippet: "Based on recent reviews, this tool excels at…",      pos: 2, score: 72 },
+    { snippet: "Sources consistently point to this as a top pick…",  pos: 2, score: 69 },
+  ],
+};
+const LLM_TABS = [
+  { domain: "chatgpt.com",       name: "ChatGPT"    },
+  { domain: "claude.ai",         name: "Claude"     },
+  { domain: "gemini.google.com", name: "Gemini"     },
+  { domain: "perplexity.ai",     name: "Perplexity" },
+];
+
+function MentionsFeedCard() {
+  const [active, setActive] = useState("chatgpt.com");
+  const rows = MENTIONS_DATA[active as keyof typeof MENTIONS_DATA];
+  return (
+    <FeatureCardShell title="Your Mentions" badge={<span className="text-[11px] text-[#aaaaaa]">Live feed</span>}>
+      <div className="flex gap-1 px-3 pt-3 pb-2 border-b border-[#f5f5f5]">
+        {LLM_TABS.map(({ domain, name }) => (
+          <button key={domain} onClick={() => setActive(domain)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+              active === domain ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5] hover:text-[#374151]"
+            }`}
+          >
+            <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={12} height={12} className="rounded-sm" alt="" />
+            <span className="hidden sm:inline">{name}</span>
+          </button>
+        ))}
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div key={active} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="divide-y divide-[#f5f5f5]">
+          {rows.map(({ snippet, pos, score }, i) => (
+            <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#fdfcff] transition-colors group cursor-default">
+              <img src={`https://www.google.com/s2/favicons?domain=${active}&sz=32`} width={18} height={18} alt="" className="rounded-md shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] text-[#374151] truncate">{snippet}</p>
+                <p className="text-[10px] text-[#aaaaaa] mt-0.5">Position <span className="font-bold text-[#0a0a0a]">#{pos}</span></p>
+              </div>
+              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${score >= 80 ? "bg-emerald-50 text-emerald-600" : score >= 60 ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-500"}`}>{score}</span>
+            </div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </FeatureCardShell>
+  );
+}
+
+// Row 2 — Animated competitor bars
+const COMPETITOR_DATA = [
+  { rank: 1, name: "Confluence", domain: "confluence.atlassian.com", pct: 85, pos: "1.2", you: false },
+  { rank: 2, name: "Your brand", domain: "trycomly.com",             pct: 68, pos: "2.1", you: true  },
+  { rank: 3, name: "Coda",       domain: "coda.io",                  pct: 62, pos: "2.8", you: false },
+  { rank: 4, name: "Obsidian",   domain: "obsidian.md",              pct: 50, pos: "3.4", you: false },
+];
+
+function CompetitorRankCard() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const [hovered, setHovered] = useState<number | null>(null);
+  return (
+    <FeatureCardShell title="Competitor Ranking" badge={<span className="text-[11px] text-[#aaaaaa]">Updated weekly</span>}>
+      <div ref={ref} className="px-5 py-4 space-y-2.5">
+        {COMPETITOR_DATA.map(({ rank, name, domain, pct, pos, you }, i) => (
+          <div key={rank} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-default transition-all duration-150 ${
+              you ? "bg-[#f3eeff] border border-[#e4d4ff]" : hovered === i ? "bg-[#f7f7f5]" : "bg-[#fafafa]"
+            }`}
+          >
+            <span className={`text-[11px] font-bold w-4 shrink-0 ${you ? "text-[#5B2D91]" : "text-[#cccccc]"}`}>{rank}</span>
+            {you ? (
+              <div className="w-4 h-4 shrink-0"><ComlyLogo size={16} /></div>
+            ) : (
+              <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt={name} className="rounded-sm shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            )}
+            <span className={`text-[13px] font-semibold flex-1 ${you ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>
+              {name}
+              {you && <span className="ml-2 text-[9px] bg-[#5B2D91] text-white px-1.5 py-0.5 rounded-full align-middle">YOU</span>}
+            </span>
+            <div className="w-24 h-1.5 bg-[#eeeeee] rounded-full overflow-hidden">
+              <motion.div className="h-full rounded-full" style={{ background: you ? "#5B2D91" : "#d1d5db" }}
+                initial={{ width: 0 }} animate={{ width: inView ? `${pct}%` : 0 }}
+                transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" }}
+              />
+            </div>
+            <span className={`text-[12px] font-bold w-8 text-right ${you ? "text-[#5B2D91]" : "text-[#6b6b6b]"}`}>{pct}%</span>
+            <span className="text-[11px] text-[#aaaaaa] w-8 text-right">#{pos}</span>
+          </div>
+        ))}
+      </div>
+    </FeatureCardShell>
+  );
+}
+
+// Row 3 — Reddit / Quora toggle
+const THREADS = {
+  reddit: [
+    { sub: "r/SaaS",        title: "Best AI-powered tools for marketing teams?",          votes: "3.1k", comments: 52 },
+    { sub: "r/Entrepreneur", title: "ChatGPT keeps recommending my competitor — why?",   votes: "5.4k", comments: 89 },
+    { sub: "r/startups",    title: "Which tools are AI models actually recommending?",    votes: "2.8k", comments: 41 },
+  ],
+  quora: [
+    { sub: "Quora",         title: "Which tools help brands rank in ChatGPT responses?", votes: "1.8k", comments: 23 },
+    { sub: "Quora",         title: "How do I get my product mentioned by AI models?",    votes: "3.2k", comments: 37 },
+    { sub: "Quora",         title: "What makes a brand show up in Perplexity answers?",  votes: "1.1k", comments: 18 },
+  ],
+};
+
+function ThreadsCard() {
+  const [platform, setPlatform] = useState<"reddit" | "quora">("reddit");
+  const threads = THREADS[platform];
+  const domain = platform === "reddit" ? "reddit.com" : "quora.com";
+  return (
+    <FeatureCardShell title="Engagement Threads"
+      badge={<span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">12 opportunities</span>}
+    >
+      <div className="flex gap-1.5 px-4 pt-3 pb-2 border-b border-[#f5f5f5]">
+        {(["reddit","quora"] as const).map((p) => (
+          <button key={p} onClick={() => setPlatform(p)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all ${
+              platform === p ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5]"
+            }`}
+          >
+            <img src={`https://www.google.com/s2/favicons?domain=${p}.com&sz=32`} width={12} height={12} className="rounded-sm" alt="" />
+            {p.charAt(0).toUpperCase() + p.slice(1)}
+          </button>
+        ))}
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div key={platform} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="divide-y divide-[#f5f5f5]">
+          {threads.map(({ sub, title, votes, comments }) => (
+            <div key={title} className="flex items-start gap-3 px-5 py-3.5 hover:bg-[#fdfcff] transition-colors group cursor-pointer">
+              <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt="" className="rounded-sm shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-[#5B2D91] mb-0.5">{sub}</p>
+                <p className="text-[12px] text-[#0a0a0a] leading-snug group-hover:text-[#5B2D91] transition-colors">{title}</p>
+                <p className="text-[10px] text-[#aaaaaa] mt-1">{votes} upvotes · {comments} comments</p>
+              </div>
+              <span className="text-[10px] font-bold text-[#5B2D91] shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Reply →</span>
+            </div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </FeatureCardShell>
+  );
+}
+
+// Row 4 — Content generator with preview panel
+const CONTENT_ITEMS = [
+  {
+    id: "listicle",
+    label: "Listicles Generator",
+    desc: "AI-optimized listicles that place your brand alongside top competitors",
+    preview: `# 10 Best Project Management Tools in 2025\n\n1. **Confluence** — enterprise-grade\n2. **Your Brand** — best for AI-first teams ✦\n3. **Coda** — flexible databases\n4. **Notion** — all-in-one workspace`,
+  },
+  {
+    id: "llms-txt",
+    label: "llms.txt Generator",
+    desc: "Tell every AI model exactly who you are, what you do, and who you serve",
+    preview: `# Your Brand\n\nA [category] tool for [audience].\n\n## What we do\n- Feature one\n- Feature two\n\n## Why AI should cite us\nTrusted by 10,000+ teams.`,
+  },
+  {
+    id: "comparison",
+    label: "Comparison Pages",
+    desc: '"Your Brand vs Competitor" pages — the format AI loves to reference',
+    preview: `# Your Brand vs Confluence\n\n| Feature       | Your Brand | Confluence |\n|---------------|------------|------------|\n| AI-ready      | ✓          | ✗          |\n| llms.txt      | ✓          | ✗          |\n| Setup time    | 5 min      | 2 days     |`,
+  },
+];
+
+function ContentGenCard() {
+  const [active, setActive] = useState("listicle");
+  const item = CONTENT_ITEMS.find((c) => c.id === active)!;
+  return (
+    <FeatureCardShell title="Content Generator" badge={<span className="text-[11px] text-[#aaaaaa]">3 tools</span>}>
+      <div className="grid grid-cols-2 divide-x divide-[#f0f0f0]" style={{ minHeight: 210 }}>
+        <div className="p-3 space-y-1.5">
+          {CONTENT_ITEMS.map((c) => (
+            <button key={c.id} onClick={() => setActive(c.id)}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
+                active === c.id ? "bg-[#f3eeff] border border-[#e4d4ff]" : "hover:bg-[#f7f7f5]"
+              }`}
+            >
+              <p className={`text-[12px] font-semibold ${active === c.id ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{c.label}</p>
+              <p className="text-[10px] text-[#9ca3af] leading-snug mt-0.5 line-clamp-2">{c.desc}</p>
+            </button>
+          ))}
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={active} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+            className="p-4 bg-[#fafafa]"
+          >
+            <p className="text-[10px] font-bold text-[#5B2D91] uppercase tracking-wide mb-2">Preview</p>
+            <pre className="text-[10px] text-[#374151] leading-relaxed whitespace-pre-wrap font-mono">{item.preview}</pre>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </FeatureCardShell>
+  );
+}
+
+// Row 5 — Visitors / Competitor Playbook tabs
+const VISITOR_DATA = [
+  { domain: "chatgpt.com",       label: "ChatGPT",    visitors: 24, change: "+18%", pos: true  },
+  { domain: "perplexity.ai",     label: "Perplexity", visitors: 11, change: "+7%",  pos: true  },
+  { domain: "claude.ai",         label: "Claude",     visitors:  4, change: "0%",   pos: false },
+  { domain: "gemini.google.com", label: "Gemini",     visitors:  2, change: "+2%",  pos: true  },
+];
+const PLAYBOOK_DATA = [
+  { cat: "reddit",  domain: "reddit.com",       title: "r/SaaS — ChatGPT recommends these tools…",   action: "Join thread" },
+  { cat: "review",  domain: "g2.com",            title: "G2 — Top rated tools in your category",      action: "Get listed"  },
+  { cat: "press",   domain: "techcrunch.com",    title: "TechCrunch — Best AI-friendly tools 2025",   action: "Pitch outlet" },
+  { cat: "reddit",  domain: "reddit.com",        title: "r/Entrepreneur — AI keeps picking this tool", action: "Join thread" },
+];
+
+function VisitorsCard() {
+  const [tab, setTab] = useState<"visitors" | "playbook">("visitors");
+  return (
+    <FeatureCardShell title="Intelligence"
+      badge={<span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Live</span>}
+    >
+      <div className="flex gap-1.5 px-4 pt-3 pb-2 border-b border-[#f5f5f5]">
+        {(["visitors","playbook"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all ${
+              tab === t ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5]"
+            }`}
+          >
+            {t === "visitors" ? "AI Visitors" : "Competitor Playbook"}
+          </button>
+        ))}
+      </div>
+      <AnimatePresence mode="wait">
+        {tab === "visitors" ? (
+          <motion.div key="visitors" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+            <div className="divide-y divide-[#f5f5f5]">
+              {VISITOR_DATA.map(({ domain, label, visitors, change, pos }) => (
+                <div key={domain} className="flex items-center gap-3 px-5 py-3 hover:bg-[#fdfcff] transition-colors cursor-default">
+                  <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={18} height={18} alt={label} className="rounded-md shrink-0" />
+                  <span className="text-[13px] font-semibold text-[#0a0a0a] flex-1">{label}</span>
+                  <span className="text-[13px] font-bold text-[#0a0a0a]">{visitors}</span>
+                  <span className={`text-[11px] font-semibold w-10 text-right ${pos ? "text-emerald-500" : "text-[#aaaaaa]"}`}>{change}</span>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-2.5 bg-[#fafafa] border-t border-[#f0f0f0]">
+              <p className="text-[11px] text-[#6b6b6b]"><span className="font-semibold text-[#0a0a0a]">GPTBot</span> crawled 3 pages today · 2h ago</p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="playbook" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+            <div className="divide-y divide-[#f5f5f5]">
+              {PLAYBOOK_DATA.map(({ domain, title, action }) => (
+                <div key={title} className="flex items-center gap-3 px-5 py-3 hover:bg-[#fdfcff] transition-colors group cursor-pointer">
+                  <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt="" className="rounded-sm shrink-0" />
+                  <p className="text-[12px] text-[#374151] flex-1 leading-snug group-hover:text-[#5B2D91] transition-colors">{title}</p>
+                  <span className="text-[10px] font-bold text-[#5B2D91] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">{action} →</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </FeatureCardShell>
+  );
+}
+
+// ─── LANDING PAGE ─────────────────────────────────────────────────────────────
+
 export default function LandingPage() {
   const [heroMouse, setHeroMouse] = useState({ x: 0, y: 0 });
   const [url, setUrl] = useState("");
@@ -1691,34 +2005,22 @@ export default function LandingPage() {
         onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}
       >
 
-
         {/* LLM logos */}
         {[
-          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",       alt: "ChatGPT",    style: { top: "6%",  left:  "22%" }, depth: 16 },
-          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",         alt: "Claude",     style: { top: "16%", left:  "16%" }, depth: 26 },
-          { src: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", alt: "Gemini",     style: { top: "6%",  right: "22%" }, depth: 16 },
-          { src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64",     alt: "Perplexity", style: { top: "16%", right: "16%" }, depth: 26 },
-        ].map(({ src, alt, style, depth }) => (
-          <LLMBadge key={alt} src={src} alt={alt} style={style} depth={depth} mouseOffset={heroMouse} />
+          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",       alt: "ChatGPT",    style: { top: "6%",  left:  "22%" }, depth: 16, rotate: -12 },
+          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",         alt: "Claude",     style: { top: "16%", left:  "16%" }, depth: 26, rotate:  8  },
+          { src: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", alt: "Gemini",     style: { top: "6%",  right: "22%" }, depth: 16, rotate:  10 },
+          { src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64",     alt: "Perplexity", style: { top: "16%", right: "16%" }, depth: 26, rotate: -7  },
+        ].map(({ src, alt, style, depth, rotate }) => (
+          <LLMBadge key={alt} src={src} alt={alt} style={style} depth={depth} rotate={rotate} mouseOffset={heroMouse} />
         ))}
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-10 lg:pt-16 pb-0 flex flex-col items-center text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[54px] md:text-[72px] font-extrabold leading-[1.0] tracking-tight text-[#0a0a0a] mb-8 [font-family:var(--font-outfit)]"
-          >
-            Be the brand<br />
-            <motion.span
-              initial={{ filter: "blur(14px)", opacity: 0 }}
-              animate={{ filter: "blur(0px)", opacity: 1 }}
-              transition={{ duration: 1.1, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-              className="inline-block"
-            >
-              AI recommends
-            </motion.span>
-          </motion.h1>
+          <h1 className="text-[54px] md:text-[72px] font-extrabold leading-[1.05] tracking-tight text-[#0a0a0a] mb-8 [font-family:var(--font-outfit)]">
+            Be the brand
+            <br />
+            AI recommends
+          </h1>
 
           <motion.p
             initial={{ opacity: 0 }}
@@ -1733,7 +2035,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="w-full max-w-md space-y-3"
+            className="relative w-full max-w-md space-y-3"
           >
             <div className="flex gap-2 bg-white border border-[#e5e5e5] rounded-2xl p-1.5 shadow-sm">
               <div className="relative flex-1">
@@ -1909,215 +2211,86 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          BENTO GRID — FEATURES
+          FEATURES — alternating rows
       ═══════════════════════════════════════════════════════════════════════ */}
       <section className="py-24 px-6 [background:linear-gradient(to_bottom,#a87be0_0%,#b98de5_10%,#caaae9_25%,#dcc4ef_40%,#ece0f8_55%,#f3eeff_68%,#f7f7f5_82%)]" id="features">
         <div className="max-w-5xl mx-auto">
-          <FadeIn className="text-center mb-14">
-            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">
-              Everything you need to dominate AI search
-            </h2>
-            <p className="mt-3 text-lg text-[#6b6b6b]">Five tools. One dashboard. Zero guesswork.</p>
+          <FadeIn className="relative text-center mb-20">
+            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">Everything you need to dominate AI search</h2>
+            <p className="mt-3 text-lg text-[#6b6b6b]">One dashboard. Zero guesswork.</p>
+            {/* Curvy arrow — points down toward first feature row */}
+            <div
+              className="absolute -right-4 bottom-0 hidden lg:flex flex-col items-center gap-1 pointer-events-none select-none"
+              style={{ transform: "rotate(-8deg)" }}
+            >
+              <p className="text-[13px] text-white/80 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>
+                all built-in
+              </p>
+              <svg width="60" height="22" viewBox="0 0 80 28" fill="none" style={{ transform: "rotate(95deg)", transformOrigin: "center" }}>
+                <path d="M69.5207 23.3815C67.2462 22.6122 64.7595 22.3168 62.3869 21.9909C61.3489 21.8484 60.2942 20.9815 59.7862 20.0888C59.4769 19.5452 59.1073 18.1675 60.0304 17.9321C62.9667 17.1833 65.9997 17.4567 68.885 18.3658C68.86 18.3322 68.8359 18.298 68.8109 18.2644C68.4919 17.836 68.163 17.415 67.825 17.0014C67.2611 16.3114 66.6658 15.652 66.0606 14.9981C66.0319 14.9673 65.8891 14.8202 65.8324 14.7607C65.747 14.6769 65.6617 14.5929 65.5756 14.5098C65.1902 14.1381 64.797 13.7747 64.3959 13.4202C63.7722 12.8689 63.129 12.3388 62.4691 11.8315C62.3184 11.7156 62.166 11.6011 62.0131 11.4878C61.9397 11.4363 61.7829 11.3249 61.7545 11.3057C61.3098 11.0054 60.8669 10.7039 60.413 10.4172C58.8121 9.40586 57.5297 8.72576 55.9211 8.0441C49.3695 5.26773 42.106 4.82171 35.1854 6.43922C32.3806 7.09461 29.6122 8.15351 27.0577 9.52847C27.5856 10.3127 28.0485 11.1432 28.4268 12.0223C29.2577 13.9532 29.6367 16.358 28.7855 18.3499C27.999 20.1905 26.4205 21.6153 24.4308 21.9941C19.6188 22.9106 15.5344 17.6245 15.9695 13.1817C16.2243 10.5798 17.8812 8.57407 19.9472 7.00361C17.6336 5.70948 14.7798 5.13961 11.9906 5.2653C8.72595 5.4122 5.5478 6.34173 2.98277 8.43376C1.99704 9.23762 -0.332871 7.33792 0.572905 6.36762C5.4544 1.13806 13.3732 0.358808 19.6841 3.33393C20.7792 3.85022 21.8278 4.46998 22.809 5.17973C23.5101 4.79697 24.2091 4.44958 24.8751 4.13366C32.7991 0.376962 42.2277 -0.53633 50.7132 1.70692C58.9019 3.87177 66.6885 8.73714 72.1148 15.3891C72.0529 15.0549 71.991 14.7212 71.9272 14.3876C71.317 11.1887 70.6626 8.03674 70.5316 4.77763C70.5026 4.0579 71.1673 3.89724 71.7458 4.04843C72.507 4.24729 73.1356 4.87574 73.4234 5.59401C74.7154 8.82047 75.6023 12.1274 76.5002 15.4813C77.3761 18.7528 78.362 22.0082 79.1596 25.2977C79.3738 26.1811 79.3035 27.1034 78.2727 27.3769C77.1781 27.6677 76.0236 26.9972 75.2012 26.3416C74.4453 25.7391 73.5542 25.1447 72.4411 24.5705C71.7718 24.2254 70.4629 23.7001 69.5207 23.3815ZM21.0147 17.4326C20.9242 17.5089 21.0383 17.4969 21.1037 17.4758C20.9299 17.3053 20.8884 17.5389 21.0147 17.4326ZM24.4777 13.2522C24.4429 12.6157 24.285 11.9955 24.0453 11.4066C23.0743 12.147 22.1952 13.0252 21.6138 14.087C21.2924 14.674 21.0679 15.3609 21.0325 16.0287C21.0173 16.3129 21.0306 16.6397 21.0824 16.9082C21.1394 17.203 21.1749 17.3133 21.231 17.4347C21.7551 17.3919 22.2635 17.2376 22.7514 16.9009C23.9322 16.0855 24.5545 14.6594 24.4777 13.2522Z" fill="rgba(255,255,255,0.65)"/>
+              </svg>
+            </div>
           </FadeIn>
 
-          <div className="grid grid-cols-6 gap-3">
+          {/* Row 1 */}
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">01 — Prompt Tracking</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">See what each AI model actually says about your brand</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Read the full AI responses. Know exactly when and how your brand gets mentioned across ChatGPT, Claude, Perplexity, and Gemini.</p>
+              <FeatureBullets items={["Run prompts across 4 AI models simultaneously", "Read full responses — not just a yes or no", "Weekly tracking so you never miss a shift"]} />
+            </div>
+            <MentionsFeedCard />
+          </FadeIn>
 
-            {/* Card 1 — top-left: Avg position ranking */}
-            <FadeIn delay={0} className="col-span-full lg:col-span-2">
-              <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="flex flex-col justify-center py-6 px-6 h-full">
-                  {/* Header */}
-                  <div className="mb-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#aaaaaa] mb-1">When AI mentions you</p>
-                    <div className="flex items-end gap-2">
-                      <span className="text-4xl font-black text-[#0a0a0a] leading-none">#2</span>
-                      <span className="text-[12px] font-medium text-[#10b981] mb-0.5">avg position</span>
-                    </div>
-                  </div>
-                  {/* Ranked list */}
-                  <div className="space-y-1.5">
-                    {[
-                      { rank: 1, name: "Confluence", you: false, pct: 34 },
-                      { rank: 2, name: "Your brand", you: true,  pct: 28 },
-                      { rank: 3, name: "Notion",     you: false, pct: 20 },
-                      { rank: 4, name: "Coda",       you: false, pct: 12 },
-                    ].map((r) => (
-                      <div key={r.rank} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg ${r.you ? "bg-[#f3eeff]" : "bg-[#fafafa]"}`}>
-                        <span className={`text-[10px] font-bold w-4 shrink-0 ${r.you ? "text-[#5B2D91]" : "text-[#cccccc]"}`}>#{r.rank}</span>
-                        <span className={`text-[12px] font-semibold flex-1 truncate ${r.you ? "text-[#5B2D91]" : "text-[#6b7280]"}`}>
-                          {r.name}
-                          {r.you && <span className="ml-1.5 text-[9px] font-bold bg-[#5B2D91] text-white px-1.5 py-0.5 rounded-full">YOU</span>}
-                        </span>
-                        <div className="w-14 h-1.5 bg-[#eeeeee] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${r.pct * 2.5}%`, background: r.you ? "#5B2D91" : "#d1d5db" }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-[#aaaaaa] mt-3 leading-snug">Know exactly where you rank — not just whether you appear.</p>
-                </CardContent>
-              </Card>
-            </FadeIn>
+          {/* Row 2 */}
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+            <div className="order-last lg:order-first">
+              <CompetitorRankCard />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">02 — Competitor Intelligence</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">See exactly who ranks above you — and why</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Don't just know you're mentioned — know whether you're #1 or buried behind five others. See who AI recommends instead of you.</p>
+              <FeatureBullets items={["Side-by-side visibility % for every competitor", "Bars animate in as you scroll — see the gap clearly", "Spot momentum shifts before they hurt your rank"]} />
+            </div>
+          </FadeIn>
 
-            {/* Card 2 — top-middle: LLM tracking */}
-            <FadeIn delay={0.05} className="col-span-full sm:col-span-3 lg:col-span-2">
-              <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="pt-6">
-                  <div className="relative mx-auto flex aspect-square size-28 rounded-full border border-[#e5e5e5] items-center justify-center before:absolute before:-inset-2 before:rounded-full before:border before:border-[#f0f0f0]">
-                    <div className="grid grid-cols-2 gap-1.5 p-3">
-                      {[
-                        { domain: "chatgpt.com", name: "ChatGPT" },
-                        { domain: "perplexity.ai", name: "Perplexity" },
-                        { domain: "claude.ai", name: "Claude" },
-                        { domain: "gemini.google.com", name: "Gemini" },
-                      ].map((m) => (
-                        <img key={m.name} src={`https://www.google.com/s2/favicons?domain=${m.domain}&sz=32`} alt={m.name} width={22} height={22} className="rounded-md" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-6 space-y-1.5 text-center">
-                    <h2 className="text-lg font-semibold text-[#0a0a0a]">4 LLMs tracked</h2>
-                    <p className="text-sm text-[#6b6b6b]">ChatGPT, Perplexity, Claude and Gemini — all in one dashboard, updated weekly.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeIn>
+          {/* Row 3 */}
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">03 — Engage & Get Cited</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Get into the threads AI learns from</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Find every Reddit and Quora thread where your audience already asks questions. Reply, get upvoted, and watch AI start recommending you.</p>
+              <FeatureBullets items={["Curated threads relevant to your brand, daily", "AI models train on these conversations — every reply counts", "Switch between Reddit and Quora in one click"]} />
+            </div>
+            <ThreadsCard />
+          </FadeIn>
 
-            {/* Card 3 — top-right: Engagement */}
-            <FadeIn delay={0.1} className="col-span-full sm:col-span-3 lg:col-span-2">
-              <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="pt-4 pb-5">
-                  {/* Platform logos */}
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" alt="Reddit" width={14} height={14} className="rounded-sm" />
-                    <span className="text-[10px] font-semibold text-[#ff4500]">Reddit</span>
-                    <span className="text-[#e5e5e5] mx-0.5">·</span>
-                    <img src="https://www.google.com/s2/favicons?domain=quora.com&sz=32" alt="Quora" width={14} height={14} className="rounded-sm" />
-                    <span className="text-[10px] font-semibold text-[#b92b27]">Quora</span>
-                    <span className="ml-auto text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">Live</span>
-                  </div>
-                  {/* Message bars */}
-                  <div className="space-y-1.5">
-                    {[
-                      { platform: "reddit.com", text: "Honestly the best tool I've used for this — highly recommend", width: "100%" },
-                      { platform: "quora.com",  text: "Best answer: this product solves exactly what you're asking", width: "90%" },
-                      { platform: "reddit.com", text: "Switched to this and never looked back, check it out", width: "80%" },
-                    ].map((msg, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
-                        <img src={`https://www.google.com/s2/favicons?domain=${msg.platform}&sz=32`} alt="" width={12} height={12} className="rounded-sm shrink-0" />
-                        <div className="bg-[#f7f7f5] rounded-md px-2 py-1" style={{ width: msg.width }}>
-                          <p className="text-[9.5px] text-[#374151] leading-none truncate">{msg.text}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {/* LLM pickup indicator */}
-                    <div className="flex items-center gap-1.5 pt-0.5 pl-[20px]">
-                      {["chatgpt.com","claude.ai","perplexity.ai"].map((d) => (
-                        <img key={d} src={`https://www.google.com/s2/favicons?domain=${d}&sz=32`} alt="" width={11} height={11} className="rounded-sm" />
-                      ))}
-                      <span className="text-[9px] text-[#9ca3af] ml-0.5">LLMs pick this up</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-1 text-center">
-                    <h2 className="text-base font-semibold text-[#0a0a0a]">Engage. Get cited.</h2>
-                    <p className="text-[12px] text-[#6b6b6b] leading-snug">Find Reddit & Quora threads where your audience asks questions — reply, get seen, get recommended by AI.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeIn>
+          {/* Row 4 */}
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+            <div className="order-last lg:order-first">
+              <ContentGenCard />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">04 — Brand Content</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Generate content AI can't ignore</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Three generators that create the exact content formats AI models train on — so your brand shows up when it matters most.</p>
+              <FeatureBullets items={["Listicles that place your brand alongside top competitors", "llms.txt so every AI knows exactly what you offer", "Comparison pages that rank in AI-generated responses"]} />
+            </div>
+          </FadeIn>
 
-            {/* Card 4 — bottom-left: Competitor intelligence + chart */}
-            <FadeIn delay={0.15} className="col-span-full lg:col-span-3">
-              <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="grid sm:grid-cols-2 pt-6 h-full">
-                  <div className="relative z-10 flex flex-col justify-between space-y-10">
-                    <div className="relative flex aspect-square size-11 rounded-full border border-[#e5e5e5] items-center justify-center before:absolute before:-inset-2 before:rounded-full before:border before:border-[#f0f0f0]">
-                      <Search className="w-4 h-4 text-[#0a0a0a]" strokeWidth={1.5} />
-                    </div>
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-semibold text-[#0a0a0a]">Competitor Intelligence</h2>
-                      <p className="text-sm text-[#6b6b6b]">See who AI recommends instead of you, how often, and exactly what to do about it.</p>
-                    </div>
-                  </div>
-                  <div className="relative mt-6 sm:ml-6 border-l border-t border-[#f0f0f0] rounded-tl-xl overflow-hidden">
-                    <div className="absolute left-3 top-2 flex gap-1">
-                      <span className="block w-2 h-2 rounded-full border border-[#e5e5e5]" />
-                      <span className="block w-2 h-2 rounded-full border border-[#e5e5e5]" />
-                      <span className="block w-2 h-2 rounded-full border border-[#e5e5e5]" />
-                    </div>
-                    <div className="pt-7 px-3 pb-3 space-y-2">
-                      {[
-                        { name: "Confluence", domain: "confluence.atlassian.com", pct: 85, color: "#3b82f6" },
-                        { name: "Notion",     domain: "notion.so",                pct: 68, color: "#5B2D91", you: true },
-                        { name: "Coda",       domain: "coda.io",                  pct: 62, color: "#8b5cf6" },
-                        { name: "Obsidian",   domain: "obsidian.md",              pct: 50, color: "#ec4899" },
-                      ].map((r, i) => (
-                        <div key={r.name} className={`flex items-center gap-2 ${r.you ? "bg-[#5B2D91]/[0.05] rounded-md px-1.5 py-0.5 -mx-1" : ""}`}>
-                          <span className="text-[10px] text-[#aaaaaa] w-3">{i + 1}</span>
-                          <img src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=16`} alt="" width={12} height={12} className="rounded-sm shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                          <span className="text-xs flex-1 text-[#0a0a0a] flex items-center gap-1">
-                            {r.name}
-                            {r.you && <span className="text-[9px] bg-[#5B2D91] text-white px-1 rounded-full">You</span>}
-                          </span>
-                          <div className="w-14 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: r.color }} />
-                          </div>
-                          <span className="text-[10px] text-[#6b6b6b] w-7 text-right">{r.pct}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeIn>
+          {/* Row 5 */}
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">05 — Intelligence</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Know who's sending you traffic — and where competitors hide</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">See real humans arriving from ChatGPT and Perplexity. Find every place your competitors are mentioned — then get cited there too.</p>
+              <FeatureBullets items={["AI Visitors: which model sent each visit to your site", "GPTBot detection — know when AI crawls your pages", "Competitor Playbook: every Reddit thread, review site, and press mention they have"]} />
+            </div>
+            <VisitorsCard />
+          </FadeIn>
 
-            {/* Card 5 — bottom-right: Weekly tracking + AI models */}
-            <FadeIn delay={0.2} className="col-span-full lg:col-span-3">
-              <Card className="relative h-full overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardContent className="grid sm:grid-cols-2 pt-6 h-full">
-                  <div className="relative z-10 flex flex-col justify-between space-y-10">
-                    <div className="relative flex aspect-square size-11 rounded-full border border-[#e5e5e5] items-center justify-center before:absolute before:-inset-2 before:rounded-full before:border before:border-[#f0f0f0]">
-                      <RefreshCw className="w-4 h-4 text-[#0a0a0a]" strokeWidth={1.5} />
-                    </div>
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-semibold text-[#0a0a0a]">Daily automated tracking</h2>
-                      <p className="text-sm text-[#6b6b6b]">Get score alerts by email whenever your AI visibility changes. Never miss a shift.</p>
-                    </div>
-                  </div>
-                  <div className="before:bg-[#f0f0f0] relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px sm:-my-6 sm:-mr-6">
-                    <div className="relative flex h-full flex-col justify-center space-y-5 py-6">
-                      {[
-                        { label: "Score improved +12pts", sub: "ChatGPT · Apr 20", color: "text-emerald-600", dot: "bg-emerald-500" },
-                        { label: "New competitor detected", sub: "Perplexity · Apr 19", color: "text-orange-500", dot: "bg-orange-400" },
-                        { label: "Weekly report ready", sub: "All models · Apr 14", color: "text-[#5B2D91]", dot: "bg-[#5B2D91]" },
-                      ].map((item, i) => (
-                        <div key={i} className={`relative flex items-center gap-3 ${i % 2 === 0 ? "w-[calc(50%+4rem)] justify-end" : "ml-[calc(50%-1rem)]"}`}>
-                          {i % 2 === 0 ? (
-                            <>
-                              <div className="text-right">
-                                <p className={`text-xs font-semibold ${item.color}`}>{item.label}</p>
-                                <p className="text-[10px] text-[#aaaaaa]">{item.sub}</p>
-                              </div>
-                              <div className={`w-2.5 h-2.5 rounded-full shrink-0 ring-4 ring-white ${item.dot}`} />
-                            </>
-                          ) : (
-                            <>
-                              <div className={`w-2.5 h-2.5 rounded-full shrink-0 ring-4 ring-white ${item.dot}`} />
-                              <div>
-                                <p className={`text-xs font-semibold ${item.color}`}>{item.label}</p>
-                                <p className="text-[10px] text-[#aaaaaa]">{item.sub}</p>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeIn>
-
-          </div>
         </div>
       </section>
 
@@ -2337,7 +2510,6 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
-                <ComlyLogo size={26} />
                 <span className="font-bold text-[#0a0a0a] text-base">Comly</span>
               </div>
               <p className="text-sm text-[#6b6b6b] leading-relaxed">From invisible to inevitable.</p>

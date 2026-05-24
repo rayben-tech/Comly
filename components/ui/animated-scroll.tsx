@@ -1,152 +1,183 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Globe, Check, BarChart2, ChevronDown, Loader2 } from "lucide-react";
+import { Globe, Check, BarChart2, ChevronDown, Loader2, TrendingUp } from "lucide-react";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-// ── Shared keyframes ──────────────────────────────────────────────────────────
+// ── Step 01: cursor click → paste URL → scrape → auto-fill brand profile ──────
 
-const STYLES = `
-  @keyframes scanLine {
-    0%   { transform: translateY(-100%); opacity: 0; }
-    10%  { opacity: 0.6; }
-    90%  { opacity: 0.6; }
-    100% { transform: translateY(400%); opacity: 0; }
-  }
-  @keyframes rowReveal {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes chipSlide {
-    from { opacity: 0; transform: translateX(-8px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  @keyframes ringPop {
-    0%   { transform: scale(0.92); opacity: 0.5; }
-    60%  { transform: scale(1.04); opacity: 1; }
-    100% { transform: scale(1);    opacity: 1; }
-  }
-  @keyframes dotPulse {
-    0%, 100% { opacity: 0.3; transform: scale(0.7); }
-    50%       { opacity: 1;   transform: scale(1); }
-  }
-`;
-
-// ── Step 01: URL analysis ─────────────────────────────────────────────────────
-
+const PASTED_URL = "yourapp.com";
+const CRAWL_MSGS = [
+  "Reading homepage…",
+  "Scanning meta tags…",
+  "Detecting brand signals…",
+  "Identifying competitors…",
+];
 const PROFILE_ROWS = [
   { label: "Brand",       value: "YourApp"          },
   { label: "Category",    value: "SaaS Tool"        },
   { label: "Audience",    value: "Teams & founders" },
   { label: "Competitors", value: "Notion, Linear"   },
 ];
-const TYPED_URL = "yourapp.com";
+
+function CursorIcon() {
+  return (
+    <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M0 0V15.5L3.5 12L6 18L8.5 17L6 11H11.5L0 0Z"
+        fill="white"
+      />
+      <path
+        d="M0 0V15.5L3.5 12L6 18L8.5 17L6 11H11.5L0 0Z"
+        stroke="#111111"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 export function VisualStep01() {
-  const [chars, setChars] = useState(0);
-  const [phase, setPhase] = useState<"idle" | "scanning" | "done">("idle");
-  const [rows,  setRows]  = useState(0);
+  const [phase,      setPhase]      = useState<"idle"|"moving"|"clicking"|"pasted"|"scanning"|"extracting"|"done">("idle");
+  const [crawlIdx,   setCrawlIdx]   = useState(0);
+  const [pagesCount, setPagesCount] = useState(0);
+  const [rowChars,   setRowChars]   = useState([0, 0, 0, 0]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       while (alive) {
-        setChars(0); setPhase("idle"); setRows(0);
-        await sleep(500);
-        for (let i = 1; i <= TYPED_URL.length && alive; i++) {
-          setChars(i); await sleep(70);
-        }
-        await sleep(350);
+        setPhase("idle"); setCrawlIdx(0); setPagesCount(0); setRowChars([0,0,0,0]);
+        await sleep(800);
+
+        setPhase("moving");
+        await sleep(620);
+
+        setPhase("clicking");
+        await sleep(260);
+
+        setPhase("pasted");
+        await sleep(480);
+
         setPhase("scanning");
-        await sleep(1600);
-        setPhase("done");
-        for (let i = 1; i <= PROFILE_ROWS.length && alive; i++) {
-          setRows(i); await sleep(430);
+        for (let m = 0; m < CRAWL_MSGS.length && alive; m++) {
+          setCrawlIdx(m); setPagesCount(m + 1); await sleep(580);
         }
-        await sleep(2400);
+
+        setPhase("extracting");
+        for (let row = 0; row < PROFILE_ROWS.length && alive; row++) {
+          const val = PROFILE_ROWS[row].value;
+          for (let c = 1; c <= val.length && alive; c++) {
+            setRowChars(prev => prev.map((v, i) => i === row ? c : v));
+            await sleep(36);
+          }
+          await sleep(160);
+        }
+        setPhase("done");
+        await sleep(3000);
       }
     })();
     return () => { alive = false; };
   }, []);
 
-  return (
-    <div className="w-full max-w-[440px] space-y-4">
-      <style>{STYLES}</style>
+  const showCursor = phase === "moving" || phase === "clicking";
+  const isClicking = phase === "clicking";
+  const isFocused  = ["clicking","pasted","scanning"].includes(phase);
+  const showUrl    = ["pasted","scanning","extracting","done"].includes(phase);
+  const scanning   = phase === "scanning";
+  const extracting = phase === "extracting" || phase === "done";
 
-      {/* URL bar */}
+  return (
+    <div className="w-full max-w-[380px] space-y-3 relative">
+      {/* Mouse cursor sliding in from right */}
       <div
-        className="flex items-center gap-3 rounded-2xl px-5 py-4 backdrop-blur-sm transition-all duration-500"
+        className="absolute z-20 pointer-events-none"
         style={{
-          background:  phase === "scanning" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)",
-          border:      phase === "scanning" ? "1.5px solid rgba(255,255,255,0.5)" : "1.5px solid rgba(255,255,255,0.18)",
-          boxShadow:   phase === "scanning" ? "0 0 28px rgba(255,255,255,0.10)" : "none",
+          top: "12px",
+          left: showCursor ? "88px" : "330px",
+          opacity: showCursor ? 1 : 0,
+          transform: isClicking ? "scale(0.8)" : "scale(1)",
+          transition: "left 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease, transform 0.1s ease",
         }}
       >
-        <Globe className="w-5 h-5 text-white/55 shrink-0" />
-        <span className="flex-1 text-[15px] text-white/90 font-mono tracking-tight">
-          {TYPED_URL.slice(0, chars)}
-          <span className="inline-block w-0.5 h-4 bg-white/70 ml-0.5 align-middle animate-pulse" />
-        </span>
-        <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-          {phase === "scanning" && <Loader2 className="w-5 h-5 text-white/60 animate-spin" />}
-          {phase === "done"     && <Check   className="w-5 h-5 text-emerald-400" />}
-        </div>
+        <CursorIcon />
       </div>
 
-      {/* Scanning label */}
-      {phase === "scanning" && (
-        <p className="text-center text-[11px] uppercase tracking-widest text-white/40 animate-pulse">
-          Analyzing your site…
-        </p>
-      )}
+      {/* URL bar */}
+      <div className={`bg-white rounded-xl border shadow-sm flex items-center gap-2.5 px-4 py-3 transition-all duration-200 ${
+        isClicking
+          ? "border-[#5B2D91] shadow-[0_0_0_5px_rgba(91,45,145,0.18)]"
+          : isFocused
+          ? "border-[#5B2D91] shadow-[0_0_0_3px_rgba(91,45,145,0.08)]"
+          : "border-[#e2e2e2]"
+      }`}>
+        <Globe className="w-4 h-4 text-[#bbbbbb] shrink-0" />
+        <span className="flex-1 text-[13px] font-mono tracking-tight">
+          {showUrl ? (
+            <span className="text-[#0a0a0a]">
+              {PASTED_URL}
+              {phase === "pasted" && (
+                <span className="inline-block w-[2px] h-[14px] bg-[#5B2D91] ml-0.5 align-middle animate-pulse" />
+              )}
+            </span>
+          ) : (
+            <span className="text-[#cccccc]">Paste your URL here…</span>
+          )}
+        </span>
+        {scanning   && <Loader2 className="w-4 h-4 text-[#5B2D91] animate-spin shrink-0" />}
+        {extracting && <Check   className="w-4 h-4 text-emerald-500 shrink-0" />}
+      </div>
+
+      {/* Crawl status pill */}
+      <div
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f3eeff] border border-[#e4d4ff] transition-all duration-300"
+        style={{ opacity: scanning ? 1 : 0, transform: scanning ? "translateY(0)" : "translateY(-4px)" }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[#5B2D91] animate-pulse shrink-0" />
+        <span className="text-[11px] font-medium text-[#5B2D91] flex-1">{CRAWL_MSGS[crawlIdx]}</span>
+        <span className="text-[10px] font-bold text-[#5B2D91] bg-[#e4d4ff] px-1.5 py-0.5 rounded-full">{pagesCount}/4</span>
+      </div>
 
       {/* Profile card */}
-      <div
-        className="rounded-2xl overflow-hidden backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.09)", border: "1.5px solid rgba(255,255,255,0.16)" }}
-      >
-        {/* Scan line overlay */}
-        {phase === "scanning" && (
-          <div
-            className="absolute left-0 right-0 h-[2px] pointer-events-none"
-            style={{
-              background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)",
-              animation: "scanLine 1.2s ease-in-out",
-            }}
-          />
-        )}
-
-        <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">
-            Brand profile
-          </p>
-          {phase === "done" && rows > 0 && (
-            <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-              <Check className="w-3 h-3" /> Detected
-            </span>
-          )}
+      <div className="bg-white rounded-xl border border-[#e2e2e2] shadow-sm overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa] flex items-center justify-between">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#aaaaaa]">Brand profile</p>
+          <span
+            className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 transition-all duration-300"
+            style={{ opacity: phase === "done" ? 1 : 0 }}
+          >
+            <Check className="w-3 h-3" /> Auto-detected
+          </span>
         </div>
-
-        <div className="p-5 space-y-4">
+        <div className="p-4 space-y-3">
           {PROFILE_ROWS.map(({ label, value }, i) => (
-            <div
-              key={label}
-              className="flex items-center gap-3"
-              style={{
-                opacity:    i < rows ? 1 : 0.15,
-                transform:  i < rows ? "translateY(0)" : "translateY(6px)",
-                transition: "opacity 0.4s ease, transform 0.4s ease",
-                transitionDelay: `${i * 0.05}s`,
-              }}
-            >
-              <span className="text-white/40 text-sm w-24 shrink-0">{label}</span>
-              {i < rows ? (
-                <span className="font-semibold text-white/90 text-sm flex-1">{value}</span>
-              ) : (
-                <div className="flex-1 h-3 rounded-lg bg-white/10" />
-              )}
-              {i < rows && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+            <div key={label} className="flex items-center gap-3">
+              <span className="text-[11px] text-[#aaaaaa] w-20 shrink-0">{label}</span>
+              <div className="flex-1 h-5 flex items-center">
+                {rowChars[i] > 0 ? (
+                  <span className="text-[13px] font-semibold text-[#0a0a0a]">
+                    {value.slice(0, rowChars[i])}
+                    {rowChars[i] < value.length && (
+                      <span className="inline-block w-[2px] h-[13px] bg-[#5B2D91] ml-0.5 align-middle" />
+                    )}
+                  </span>
+                ) : (
+                  <div className="w-full h-3 rounded-md bg-[#f0f0f0]" />
+                )}
+              </div>
+              <div
+                className="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 transition-all duration-200"
+                style={{
+                  opacity:   rowChars[i] >= value.length ? 1 : 0,
+                  transform: rowChars[i] >= value.length ? "scale(1)" : "scale(0.4)",
+                }}
+              >
+                <Check className="w-2.5 h-2.5 text-emerald-500" />
+              </div>
             </div>
           ))}
         </div>
@@ -155,325 +186,292 @@ export function VisualStep01() {
   );
 }
 
-// ── Step 02: AI audit running ─────────────────────────────────────────────────
+// ── Step 02: Prompt fired → per-model streaming responses ─────────────────────
 
-const LLM_MODELS = [
-  { name: "ChatGPT",    accent: "#10a37f" },
-  { name: "Claude",     accent: "#c86d3f" },
-  { name: "Gemini",     accent: "#4285F4" },
-  { name: "Perplexity", accent: "#a855f7" },
+const PROMPT_ROUNDS = [
+  {
+    prompt: "Best tool for async team knowledge sharing?",
+    responses: [
+      { domain: "chatgpt.com",       name: "ChatGPT",    text: "YourApp is excellent for async teams…" },
+      { domain: "claude.ai",         name: "Claude",     text: "Teams often prefer YourApp because…"   },
+      { domain: "gemini.google.com", name: "Gemini",     text: "I'd suggest YourApp — it handles…"     },
+      { domain: "perplexity.ai",     name: "Perplexity", text: "Sources show YourApp ranks #2 for…"    },
+    ],
+  },
+  {
+    prompt: "Which tools do fast-growing startups use?",
+    responses: [
+      { domain: "chatgpt.com",       name: "ChatGPT",    text: "For growing teams, YourApp and Notion…" },
+      { domain: "claude.ai",         name: "Claude",     text: "Popular picks include YourApp, which…"  },
+      { domain: "gemini.google.com", name: "Gemini",     text: "YourApp tops most startup tool lists…"  },
+      { domain: "perplexity.ai",     name: "Perplexity", text: "YourApp is frequently cited in posts…"  },
+    ],
+  },
 ];
-const TOTAL = 10;
 
 export function VisualStep02() {
-  const [fired,    setFired]    = useState(0);
-  const [active,   setActive]   = useState<number | null>(null);
-  const [complete, setComplete] = useState(false);
+  const [roundIdx,    setRoundIdx]    = useState(0);
+  const [promptChars, setPromptChars] = useState(0);
+  const [activeModel, setActiveModel] = useState<number | null>(null);
+  const [modelChars,  setModelChars]  = useState([0, 0, 0, 0]);
+  const [modelDone,   setModelDone]   = useState([false, false, false, false]);
+  const [totalFired,  setTotalFired]  = useState(0);
 
   useEffect(() => {
     let alive = true;
     (async () => {
+      let fired = 0;
       while (alive) {
-        setFired(0); setActive(null); setComplete(false);
-        await sleep(700);
-        for (let i = 0; i < TOTAL && alive; i++) {
-          const m = i % LLM_MODELS.length;
-          setActive(m);
-          await sleep(240);
-          setFired(i + 1);
-          await sleep(520);
-          setActive(null);
-          await sleep(160);
+        for (let r = 0; r < PROMPT_ROUNDS.length && alive; r++) {
+          setRoundIdx(r);
+          setPromptChars(0);
+          setActiveModel(null);
+          setModelChars([0, 0, 0, 0]);
+          setModelDone([false, false, false, false]);
+
+          const prompt = PROMPT_ROUNDS[r].prompt;
+          for (let c = 1; c <= prompt.length && alive; c++) { setPromptChars(c); await sleep(32); }
+          await sleep(280);
+
+          for (let m = 0; m < 4 && alive; m++) {
+            setActiveModel(m);
+            await sleep(260);
+            const text = PROMPT_ROUNDS[r].responses[m].text;
+            for (let c = 1; c <= text.length && alive; c++) {
+              setModelChars(prev => prev.map((v, i) => i === m ? c : v));
+              await sleep(18);
+            }
+            setModelDone(prev => prev.map((v, i) => i === m ? true : v));
+            fired++;
+            setTotalFired(fired);
+            setActiveModel(null);
+            await sleep(180);
+          }
+          await sleep(1200);
         }
-        if (alive) setComplete(true);
-        await sleep(2200);
       }
     })();
     return () => { alive = false; };
   }, []);
 
-  const progress = (fired / TOTAL) * 100;
+  const round = PROMPT_ROUNDS[roundIdx];
+  const TOTAL_PROMPTS = PROMPT_ROUNDS.length * 4;
 
   return (
-    <div className="w-full max-w-[440px] space-y-4">
-
-      {/* Status bar */}
-      <div
-        className="flex items-center gap-3 rounded-2xl px-5 py-4 backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.10)", border: "1.5px solid rgba(255,255,255,0.18)" }}
-      >
-        <span
-          className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{
-            background: complete ? "#34d399" : "#34d399",
-            boxShadow:  complete ? "none" : "0 0 0 4px rgba(52,211,153,0.25)",
-            animation:  complete ? "none" : "dotPulse 1.2s ease-in-out infinite",
-          }}
-        />
-        <span className="text-sm font-semibold text-white/90">
-          {complete ? "Audit complete" : "Live audit running"}
-        </span>
-        {complete
-          ? <Check className="w-4 h-4 text-emerald-400 ml-auto" />
-          : <span className="text-xs text-white/35 ml-auto">Running…</span>
-        }
-      </div>
-
-      {/* Progress bar */}
-      <div
-        className="rounded-2xl px-5 py-4 backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(255,255,255,0.12)" }}
-      >
-        <div className="h-2.5 bg-white/12 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width:      `${progress}%`,
-              background: "linear-gradient(90deg, rgba(255,255,255,0.55), rgba(255,255,255,0.9))",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* LLM model grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {LLM_MODELS.map(({ name, accent }, i) => (
-          <div
-            key={name}
-            className="rounded-2xl px-4 py-5 backdrop-blur-sm transition-all duration-300"
-            style={{
-              background:  active === i ? `${accent}22` : "rgba(255,255,255,0.07)",
-              border:      active === i ? `1.5px solid ${accent}88` : "1.5px solid rgba(255,255,255,0.12)",
-              boxShadow:   active === i ? `0 0 24px ${accent}33` : "none",
-              transform:   active === i ? "scale(1.04)" : "scale(1)",
-            }}
-          >
-            {/* Model indicator dot */}
-            <div
-              className="w-2 h-2 rounded-full mx-auto mb-3 transition-all duration-200"
-              style={{
-                background: active === i ? accent : "rgba(255,255,255,0.2)",
-                boxShadow:  active === i ? `0 0 10px ${accent}` : "none",
-              }}
-            />
-            <p className="text-[13px] font-semibold text-white/80 text-center">{name}</p>
-            <p
-              className="text-[10px] mt-1 text-center transition-opacity duration-150"
-              style={{ opacity: active === i ? 1 : 0, color: accent }}
-            >
-              responding…
-            </p>
+    <div className="w-full max-w-[380px] space-y-3">
+      {/* Prompt card */}
+      <div className="bg-white rounded-xl border border-[#e2e2e2] shadow-sm px-4 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-2 h-2 rounded-full bg-[#5B2D91] shrink-0 animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#5B2D91]">Firing prompt</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <div className="h-1 w-16 bg-[#f0f0f0] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#5B2D91] rounded-full transition-all duration-500"
+                style={{ width: `${(totalFired / TOTAL_PROMPTS) * 100}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-[#aaaaaa] tabular-nums">{totalFired}/{TOTAL_PROMPTS}</span>
           </div>
-        ))}
+        </div>
+        <p className="text-[13px] font-semibold text-[#0a0a0a] font-mono leading-snug">
+          &ldquo;{round.prompt.slice(0, promptChars)}
+          {promptChars < round.prompt.length && (
+            <span className="inline-block w-[2px] h-[13px] bg-[#5B2D91] ml-0.5 align-middle" />
+          )}
+          &rdquo;
+        </p>
       </div>
 
-      {/* Bottom status */}
-      <div
-        className="flex items-center justify-center gap-2 text-sm transition-opacity duration-500"
-        style={{ opacity: fired > 0 ? 1 : 0 }}
-      >
-        <Check className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="text-white/45">
-          {complete ? "All responses collected" : "Collecting responses…"}
-        </span>
+      {/* Model response rows */}
+      <div className="bg-white rounded-xl border border-[#e2e2e2] shadow-sm overflow-hidden divide-y divide-[#f5f5f5]">
+        {round.responses.map(({ domain, name, text }, i) => {
+          const isActive = activeModel === i;
+          const isDone   = modelDone[i];
+          return (
+            <div
+              key={name}
+              className={`flex items-start gap-3 px-4 py-3 transition-all duration-200 ${isActive ? "bg-[#fdfcff]" : ""}`}
+              style={{ borderLeft: isActive ? "2px solid #5B2D91" : "2px solid transparent" }}
+            >
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+                width={20} height={20} className="rounded-md shrink-0 mt-0.5" alt={name}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-[#0a0a0a]">{name}</p>
+                <p className="text-[11px] leading-snug mt-0.5 font-mono text-[#6b6b6b]">
+                  {modelChars[i] > 0 ? (
+                    <>
+                      {text.slice(0, modelChars[i])}
+                      {isActive && <span className="inline-block w-[2px] h-[11px] bg-[#5B2D91] ml-0.5 align-middle" />}
+                    </>
+                  ) : isActive ? (
+                    <span className="flex gap-1 items-center h-4">
+                      {[0, 150, 300].map((d) => (
+                        <span key={d} className="w-1 h-1 rounded-full bg-[#5B2D91] animate-bounce"
+                          style={{ animationDelay: `${d}ms` }} />
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-[#cccccc]">Waiting…</span>
+                  )}
+                </p>
+              </div>
+              <div className="shrink-0 mt-0.5">
+                {isDone ? (
+                  <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                    <Check className="w-3 h-3 text-emerald-500" />
+                  </div>
+                ) : isActive ? (
+                  <Loader2 className="w-4 h-4 text-[#5B2D91] animate-spin" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full border-2 border-[#e8e8e8]" />
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ── Step 03: Score + fixes + engagement ──────────────────────────────────────
+// ── Step 03: Score reveal + per-model hits + fixes sliding in ─────────────────
 
-const FIX_ITEMS = [
-  { text: "Listicles Generator", badge: "Generate" },
-  { text: "llms.txt Generator",  badge: "Generate" },
-  { text: "Comparison Pages",    badge: "Create"   },
-  { text: "Hero Rewrite",        badge: "Rewrite"  },
-];
+const PREV_SCORE   = 60;
 const TARGET_SCORE = 72;
 
-const ENGAGE_MSGS = [
-  { platform: "reddit.com", text: "Just tried this — honestly game changer" },
-  { platform: "quora.com",  text: "Best answer: this solves exactly what you need" },
+const LLM_HITS = [
+  { domain: "chatgpt.com",       name: "ChatGPT",    hits: 8, total: 10 },
+  { domain: "claude.ai",         name: "Claude",     hits: 7, total: 10 },
+  { domain: "gemini.google.com", name: "Gemini",     hits: 6, total: 10 },
+  { domain: "perplexity.ai",     name: "Perplexity", hits: 4, total: 10 },
+];
+
+const FIX_ITEMS = [
+  { text: "Listicles Generator", badge: "Generate", impact: "+12%" },
+  { text: "llms.txt Generator",  badge: "Generate", impact: "+8%"  },
+  { text: "Comparison Pages",    badge: "Create",   impact: "+6%"  },
+  { text: "Reddit Threads",      badge: "Engage",   impact: "+5%"  },
 ];
 
 export function VisualStep03() {
-  const [score, setScore] = useState(0);
-  const [fixes, setFixes] = useState(0);
-  const [engageVisible, setEngageVisible] = useState(false);
+  const [score,    setScore]    = useState(PREV_SCORE);
+  const [barsIn,   setBarsIn]   = useState(false);
+  const [fixes,    setFixes]    = useState(0);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       while (alive) {
-        setScore(0); setFixes(0); setEngageVisible(false);
-        await sleep(500);
-        const STEPS = 50;
+        setScore(PREV_SCORE); setBarsIn(false); setFixes(0);
+        await sleep(600);
+        setBarsIn(true);
+
+        const STEPS = 65;
         for (let i = 1; i <= STEPS && alive; i++) {
           const ease = 1 - Math.pow(1 - i / STEPS, 3);
-          setScore(Math.round(ease * TARGET_SCORE));
-          await sleep(26);
+          setScore(Math.round(PREV_SCORE + ease * (TARGET_SCORE - PREV_SCORE)));
+          await sleep(20);
         }
-        await sleep(400);
+        await sleep(350);
+
         for (let i = 1; i <= FIX_ITEMS.length && alive; i++) {
-          setFixes(i); await sleep(380);
+          setFixes(i); await sleep(360);
         }
-        await sleep(300);
-        if (alive) setEngageVisible(true);
-        await sleep(2400);
+        await sleep(3000);
       }
     })();
     return () => { alive = false; };
   }, []);
 
-  const R = 46;
+  const R = 38;
   const circ = 2 * Math.PI * R;
   const offset = circ - (score / 100) * circ;
-  const ringColor = score > 60 ? "#34d399" : score > 30 ? "#fbbf24" : "#f87171";
+  const ringColor = score >= 70 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
+  const delta = score - PREV_SCORE;
 
   return (
-    <div className="w-full max-w-[440px] space-y-3">
-
+    <div className="w-full max-w-[380px] space-y-3">
       {/* Score card */}
-      <div
-        className="rounded-2xl p-5 backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.10)", border: "1.5px solid rgba(255,255,255,0.18)" }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-white/50" />
-            <span className="text-sm font-semibold text-white/80">AI Visibility Score</span>
+      <div className="bg-white rounded-xl border border-[#e2e2e2] shadow-sm p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <BarChart2 className="w-3.5 h-3.5 text-[#5B2D91]" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#5B2D91]">AI Visibility Score</span>
           </div>
-          <span className="text-xs font-bold text-emerald-400">+12 vs last ↑</span>
+          <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" /> +{delta} this week
+          </span>
         </div>
-
-        <div className="flex items-center gap-6">
-          {/* Circular ring — slightly smaller */}
-          <div
-            className="relative shrink-0"
-            style={{ animation: score === TARGET_SCORE ? "ringPop 0.5s ease" : "none" }}
-          >
-            <svg width="108" height="108" className="-rotate-90">
-              <circle cx="54" cy="54" r={R} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="8" />
-              <circle cx="54" cy="54" r={R} fill="none" stroke={ringColor} strokeWidth="8"
+        <div className="flex items-center gap-4">
+          {/* Animated ring */}
+          <div className="relative shrink-0">
+            <svg width="92" height="92" className="-rotate-90">
+              <circle cx="46" cy="46" r={R} fill="none" stroke="#f0f0f0" strokeWidth="7" />
+              <circle cx="46" cy="46" r={R} fill="none" stroke={ringColor} strokeWidth="7"
                 strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
-                style={{ transition: "stroke-dashoffset 26ms linear, stroke 600ms ease" }} />
+                style={{ transition: "stroke-dashoffset 20ms linear, stroke 500ms ease" }}
+              />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-white tabular-nums leading-none">{score}</span>
-              <span className="text-[10px] text-white/40 mt-0.5">/100</span>
+              <span className="text-[26px] font-black text-[#0a0a0a] tabular-nums leading-none">{score}</span>
+              <span className="text-[9px] text-[#aaaaaa] font-bold">/100</span>
             </div>
           </div>
 
-          {/* Score breakdown */}
-          <div className="flex-1 space-y-2.5">
-            <div>
-              <div className="flex justify-between text-[11px] text-white/40 mb-1">
-                <span>Visibility</span><span>{score}%</span>
+          {/* Per-model hit bars */}
+          <div className="flex-1 space-y-2">
+            {LLM_HITS.map(({ domain, name, hits, total }, i) => (
+              <div key={name} className="flex items-center gap-2">
+                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+                  width={14} height={14} className="rounded-sm shrink-0" alt="" />
+                <div className="flex-1 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: barsIn ? `${(hits / total) * 100}%` : "0%",
+                      background: ringColor,
+                      transitionDelay: `${i * 90}ms`,
+                    }}
+                  />
+                </div>
+                <span className="text-[10px] font-semibold text-[#6b6b6b] w-8 text-right tabular-nums">{hits}/{total}</span>
               </div>
-              <div className="h-1.5 bg-white/12 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${score}%`, background: ringColor }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-[11px] text-white/40 mb-1">
-                <span>Prompts hit</span><span>{Math.round(score / 10)} / 10</span>
-              </div>
-              <div className="h-1.5 bg-white/12 rounded-full overflow-hidden">
-                <div className="h-full rounded-full bg-white/40" style={{ width: `${score}%`, transition: "width 26ms linear" }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-[11px] text-white/40 mb-1">
-                <span>Competitor rank</span><span>#3</span>
-              </div>
-              <div className="h-1.5 bg-white/12 rounded-full overflow-hidden">
-                <div className="h-full rounded-full bg-white/40" style={{ width: "33%" }} />
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Fixes + Engagement side by side */}
-      <div className="grid grid-cols-2 gap-3">
-
-        {/* Fix toolkit */}
-        <div
-          className="rounded-2xl overflow-hidden backdrop-blur-sm"
-          style={{ background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.12)" }}
-        >
-          <div className="px-3.5 py-2.5 border-b border-white/10">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-white/35">Fixes</p>
-          </div>
-          <div className="px-3.5 py-3 space-y-2.5">
-            {FIX_ITEMS.map(({ text, badge }, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2"
-                style={{
-                  opacity:   i < fixes ? 1 : 0.12,
-                  transform: i < fixes ? "translateY(0)" : "translateY(5px)",
-                  transition: "opacity 0.35s ease, transform 0.35s ease",
-                }}
-              >
-                <span
-                  className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
-                  style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)" }}
-                >
-                  {i + 1}
-                </span>
-                <span className="text-[10px] text-white/75 flex-1 leading-tight">{text}</span>
-                <span
-                  className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                  style={{ background: "rgba(167,139,250,0.2)", color: "rgba(196,181,253,0.9)", border: "1px solid rgba(167,139,250,0.3)" }}
-                >
-                  {badge}
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* Fixes card */}
+      <div className="bg-white rounded-xl border border-[#e2e2e2] shadow-sm overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa] flex items-center justify-between">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#aaaaaa]">Recommended fixes</p>
+          <span className="text-[10px] font-bold text-[#5B2D91]">{fixes}/{FIX_ITEMS.length} applied</span>
         </div>
-
-        {/* Engagement */}
-        <div
-          className="rounded-2xl overflow-hidden backdrop-blur-sm transition-all duration-500"
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1.5px solid rgba(255,255,255,0.12)",
-            opacity: engageVisible ? 1 : 0.15,
-            transform: engageVisible ? "translateY(0)" : "translateY(6px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
-          <div className="px-3.5 py-2.5 border-b border-white/10 flex items-center gap-1.5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-white/35">Engage</p>
-            <span
-              className="ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: "rgba(52,211,153,0.15)", color: "#34d399" }}
+        <div className="divide-y divide-[#f5f5f5]">
+          {FIX_ITEMS.map(({ text, badge, impact }, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 px-4 py-2.5"
+              style={{
+                opacity:   i < fixes ? 1 : 0.18,
+                transform: i < fixes ? "translateX(0)" : "translateX(-10px)",
+                transition: "opacity 0.35s ease, transform 0.35s ease",
+              }}
             >
-              Live
-            </span>
-          </div>
-          <div className="px-3.5 py-3 space-y-2">
-            {ENGAGE_MSGS.map((msg, i) => (
-              <div key={i} className="flex items-start gap-1.5">
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${msg.platform}&sz=32`}
-                  alt="" width={11} height={11}
-                  className="rounded-sm shrink-0 mt-[2px]"
-                />
-                <p className="text-[9.5px] text-white/60 leading-snug line-clamp-2">{msg.text}</p>
+              <div className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center border transition-all duration-200 ${
+                i < fixes ? "bg-emerald-50 border-emerald-200 scale-100" : "border-[#e8e8e8] scale-75"
+              }`}>
+                {i < fixes && <Check className="w-2.5 h-2.5 text-emerald-500" />}
               </div>
-            ))}
-            <div className="pt-1 flex items-center gap-1">
-              {["chatgpt.com", "claude.ai", "perplexity.ai"].map((d) => (
-                <img key={d} src={`https://www.google.com/s2/favicons?domain=${d}&sz=32`} alt="" width={10} height={10} className="rounded-sm" />
-              ))}
-              <span className="text-[8.5px] text-white/30 ml-0.5">pick this up</span>
+              <span className="text-[12px] text-[#0a0a0a] font-medium flex-1">{text}</span>
+              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full shrink-0">{impact}</span>
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff] shrink-0">{badge}</span>
             </div>
-          </div>
+          ))}
         </div>
-
       </div>
     </div>
   );
@@ -485,7 +483,7 @@ const STEPS = [
   {
     num: "01",
     visualOnLeft: true,
-    gradient: "linear-gradient(135deg, #1a0533 0%, #5B2D91 60%, #9333ea 100%)",
+    panelBg: "linear-gradient(135deg, #f3eeff 0%, #e8d8ff 100%)",
     heading: "Tell us about your brand",
     description: "Paste your website URL. Comly automatically extracts your brand name, category, target users, competitors and use cases. Confirm or edit in seconds.",
     Visual: VisualStep01,
@@ -493,7 +491,7 @@ const STEPS = [
   {
     num: "02",
     visualOnLeft: false,
-    gradient: "linear-gradient(135deg, #1e0a3c 0%, #6d28d9 60%, #a78bfa 100%)",
+    panelBg: "linear-gradient(135deg, #ede0ff 0%, #d4b8ff 100%)",
     heading: "We run the AI audit",
     description: "Our engine generates targeted prompts and fires them at ChatGPT, Claude, Gemini and Perplexity. We record every mention, position and competitor that appears.",
     Visual: VisualStep02,
@@ -501,9 +499,9 @@ const STEPS = [
   {
     num: "03",
     visualOnLeft: true,
-    gradient: "linear-gradient(135deg, #170836 0%, #4c1d95 60%, #7c3aed 100%)",
+    panelBg: "linear-gradient(135deg, #fce8ff 0%, #f0c4ff 100%)",
     heading: "Score, fix, and get cited",
-    description: "See your visibility score and prompts hit across all 4 LLMs. Use built-in tools — Listicles, llms.txt, Comparison Pages, Hero Rewrite — then engage on Reddit & Quora so AI starts recommending you.",
+    description: "See your visibility score and prompts hit across all 4 LLMs. Use built-in tools — Listicles, llms.txt, Comparison Pages — then engage on Reddit & Quora so AI starts recommending you.",
     Visual: VisualStep03,
   },
 ] as const;
@@ -535,36 +533,25 @@ export function HowItWorksAnimated() {
     <div>
       {/* Section heading */}
       <div className="text-center pt-16 sm:pt-24 pb-8 sm:pb-10 px-6 bg-white">
-        <p className="text-[11px] font-bold tracking-widest uppercase text-[#5B2D91] mb-4">
-          HOW IT WORKS
-        </p>
-        <h2 className="text-[28px] sm:text-[42px] font-bold tracking-tight text-[#0a0a0a]">
-          How Comly works
-        </h2>
-        <p className="mt-3 text-base sm:text-lg text-[#6b6b6b]">
-          3 steps to go from invisible to recommended
-        </p>
+        <p className="text-[11px] font-bold tracking-widest uppercase text-[#5B2D91] mb-4">HOW IT WORKS</p>
+        <h2 className="text-[28px] sm:text-[42px] font-bold tracking-tight text-[#0a0a0a]">How Comly works</h2>
+        <p className="mt-3 text-base sm:text-lg text-[#6b6b6b]">3 steps to go from invisible to recommended</p>
         <div className="mt-6 sm:mt-8 flex justify-center">
           <ChevronDown className="w-5 h-5 text-[#aaaaaa] animate-bounce" />
         </div>
       </div>
 
-      {/* Mobile: stacked step cards */}
+      {/* Mobile: stacked */}
       <div className="md:hidden px-4 pb-14 space-y-5">
         {STEPS.map((step) => {
           const VisualComp = step.Visual;
           return (
-            <div key={step.num} className="rounded-3xl overflow-hidden shadow-lg border border-white/10">
-              <div
-                className="flex items-start justify-center px-5 pt-8 pb-6"
-                style={{ background: step.gradient }}
-              >
+            <div key={step.num} className="rounded-3xl overflow-hidden shadow-lg border border-[#e8e8e8]">
+              <div className="flex items-start justify-center px-5 pt-8 pb-6" style={{ background: step.panelBg }}>
                 <VisualComp />
               </div>
               <div className="bg-white px-6 py-6">
-                <p className="text-[10px] font-bold text-[#5B2D91] uppercase tracking-widest mb-2">
-                  Step {step.num}
-                </p>
+                <p className="text-[10px] font-bold text-[#5B2D91] uppercase tracking-widest mb-2">Step {step.num}</p>
                 <h3 className="text-xl font-bold text-[#0a0a0a] mb-2 leading-snug">{step.heading}</h3>
                 <p className="text-sm text-[#6b6b6b] leading-relaxed">{step.description}</p>
               </div>
@@ -573,16 +560,14 @@ export function HowItWorksAnimated() {
         })}
       </div>
 
-      {/* Desktop: scroll-driven sticky animation */}
+      {/* Desktop: scroll-sticky */}
       <div ref={outerRef} id="how-it-works-steps" style={{ height: `${numPages * 100}vh` }} className="hidden md:block">
         <div className="sticky top-0 h-screen overflow-hidden bg-white">
 
           {/* Progress dots */}
           <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5">
             {STEPS.map((_, i) => (
-              <div
-                key={i}
-                className="rounded-full transition-all duration-500"
+              <div key={i} className="rounded-full transition-all duration-500"
                 style={{
                   width:      currentPage === i + 1 ? "28px" : "8px",
                   height:     "8px",
@@ -592,16 +577,16 @@ export function HowItWorksAnimated() {
             ))}
           </div>
 
-          {/* Pages */}
           {STEPS.map((step, i) => {
-            const idx = i + 1;
-            const isActive = currentPage === idx;
+            const idx        = i + 1;
+            const isActive   = currentPage === idx;
             const leftTrans  = isActive ? "translateY(0)" : "translateY(100%)";
             const rightTrans = isActive ? "translateY(0)" : "translateY(-100%)";
             const VisualComp = step.Visual;
 
             const textPanel = (
               <div className="flex flex-col items-start justify-center h-full px-10 py-8 md:px-14 lg:px-20 bg-white">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-4">Step {step.num}</p>
                 <h3 className="text-3xl md:text-4xl lg:text-[46px] font-bold mb-5 leading-tight text-[#0a0a0a]">
                   {step.heading}
                 </h3>
@@ -612,14 +597,8 @@ export function HowItWorksAnimated() {
             );
 
             const visualPanel = (
-              <div
-                className="flex items-center justify-center h-full px-10 py-12 md:px-14 lg:px-16"
-                style={{
-                  background: step.gradient,
-                  backgroundImage: `${step.gradient}, url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(255,255,255,0.04)'/%3E%3C/svg%3E")`,
-                  backgroundSize: "auto, 20px 20px",
-                }}
-              >
+              <div className="flex items-center justify-center h-full px-10 py-12 md:px-14 lg:px-16"
+                style={{ background: step.panelBg }}>
                 <VisualComp />
               </div>
             );
