@@ -1064,8 +1064,8 @@ function DemoFrame({ children }: { children: React.ReactNode }) {
         width: "100%",
         height: CHROME_H + Math.round(DASH_H * scale),
         borderRadius: 16,
-        border: "1px solid #e0e0e0",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.08)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        boxShadow: "none",
         overflow: "hidden",
         position: "relative",
         background: "#f5f5f5",
@@ -1703,7 +1703,7 @@ export default function LandingPage() {
           <LLMBadge key={alt} src={src} alt={alt} style={style} depth={depth} mouseOffset={heroMouse} />
         ))}
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-10 lg:py-16 flex flex-col items-center text-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-10 lg:pt-16 pb-0 flex flex-col items-center text-center">
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1895,11 +1895,15 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
-            className="hidden sm:block w-full mt-8"
+            className="hidden sm:block w-full mt-8 relative"
           >
             <DemoFrame>
               <DemoDashboard />
             </DemoFrame>
+            <div
+              className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
+              style={{ background: "linear-gradient(to bottom, transparent 0%, #a87be0 100%)" }}
+            />
           </motion.div>
 
         </div>
@@ -1908,7 +1912,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           BENTO GRID — FEATURES
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#f7f7f5] py-24 px-6" id="features">
+      <section className="py-24 px-6 [background:linear-gradient(to_bottom,#a87be0_0%,#b98de5_10%,#caaae9_25%,#dcc4ef_40%,#ece0f8_55%,#f3eeff_68%,#f7f7f5_82%)]" id="features">
         <div className="max-w-5xl mx-auto">
           <FadeIn className="text-center mb-14">
             <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">
