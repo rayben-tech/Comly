@@ -8,6 +8,7 @@ import { BrandProfileEditor } from "@/components/brand-profile-editor";
 import { AuditResults } from "@/components/audit-results";
 import { AuditLoadingView, LoadingPhase } from "@/components/audit-loading";
 import { PromptReview } from "@/components/prompt-review";
+import { FakeResultsPreview } from "@/components/fake-results";
 import { supabase, getUserAudit, saveAuditForUser } from "@/lib/supabase";
 import { generateAuditPrompts } from "@/lib/generate-prompts";
 import { calculateScore, calculateCompetitorRankings } from "@/lib/score";
@@ -485,7 +486,13 @@ function AuditFlow() {
               expiresAt: Date.now() + 24 * 60 * 60 * 1000,
             } as PendingAudit));
           } catch {}
-          router.replace("/subscribe");
+          // Show fake firing animation, then teaser results — no real API calls
+          setLoadingPhase("firing");
+          setStep("auditing");
+          setTimeout(() => {
+            setLoadingPhase(null);
+            setStep("fake-results");
+          }, 20000);
           return;
         }
       }
@@ -520,6 +527,8 @@ function AuditFlow() {
     ? "confirming-payment"
     : loadingPhase
     ? "loading"
+    : step === "fake-results" && profile
+    ? "fake-results"
     : step === "results" && auditResult && profile
     ? "results"
     : error
@@ -553,6 +562,12 @@ function AuditFlow() {
             heroData={heroData}
             onReset={handleReset}
           />
+        </motion.div>
+      )}
+
+      {screenKey === "fake-results" && (
+        <motion.div key="fake-results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+          <FakeResultsPreview profile={profile!} url={normalizedUrl} onReset={handleReset} />
         </motion.div>
       )}
 

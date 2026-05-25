@@ -33,7 +33,7 @@ export interface AuditResult {
   competitor_rankings: CompetitorRanking[];
 }
 
-export type AuditStep = "input" | "scraping" | "profile" | "review-prompts" | "auditing" | "results" | "paywall" | "confirming-payment";
+export type AuditStep = "input" | "scraping" | "profile" | "review-prompts" | "auditing" | "results" | "paywall" | "confirming-payment" | "fake-results";
 
 export interface MentionResult {
   url: string;
