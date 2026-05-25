@@ -9,7 +9,7 @@ import {
   Globe, ArrowRight, Check, X, Menu, ChevronDown, Plus,
   BarChart3, TrendingUp, Target, Eye, Bell, Shield,
   ExternalLink, Search, RefreshCw, Users,
-  CheckCircle2, AlertCircle, Loader2, Music,
+  CheckCircle2, AlertCircle, Loader2, User,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HowItWorksAnimated } from "@/components/ui/animated-scroll";
@@ -208,8 +208,8 @@ function BeforeChat({ s }: { s: ChatState }) {
             <div className="bg-[#2f2f2f] rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
               <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
             </div>
-            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "linear-gradient(135deg, #ff4444, #ff8800)" }}>
-              <Music className="w-3.5 h-3.5 text-white" />
+            <div className="w-7 h-7 rounded-full bg-[#5a5a5a] flex items-center justify-center shrink-0 mt-0.5">
+              <User className="w-4 h-4 text-[#cccccc]" />
             </div>
           </div>
 
@@ -285,8 +285,8 @@ function AfterChat({ s }: { s: ChatState }) {
             <div className="bg-[#2f2f2f] rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
               <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
             </div>
-            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "linear-gradient(135deg, #ff4444, #ff8800)" }}>
-              <Music className="w-3.5 h-3.5 text-white" />
+            <div className="w-7 h-7 rounded-full bg-[#5a5a5a] flex items-center justify-center shrink-0 mt-0.5">
+              <User className="w-4 h-4 text-[#cccccc]" />
             </div>
           </div>
 
