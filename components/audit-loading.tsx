@@ -252,7 +252,11 @@ function ScrapingAnimation({ url, heroData }: { url: string; heroData?: { title:
                   transition={{ delay: 0.05 }}
                   className="h-11 bg-white border border-[#f0f0f0] rounded-lg flex items-center gap-3 px-4 shadow-sm"
                 >
-                  <div className="w-5 h-5 rounded-md bg-[#5B2D91] shrink-0" />
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${url}&sz=32`}
+                    width={20} height={20} className="rounded-md shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
                   <span className="text-[13px] font-bold text-[#0a0a0a]">{brandLabel}</span>
                   <div className="flex-1" />
                   {["Product", "Pricing", "Docs"].map((l) => (

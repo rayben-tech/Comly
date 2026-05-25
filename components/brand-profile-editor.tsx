@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrandProfile } from "@/types";
 import {
-  TrendingUp, Search, RefreshCw, Globe, Code, Users,
+  TrendingUp, Search, RefreshCw, Globe, Code, Users, User, Sparkles, Zap, Loader2,
   X, Plus, ArrowRight, Check,
 } from "lucide-react";
 
@@ -55,7 +55,6 @@ const COMPETITOR_DOMAINS: Record<string, string> = {
   "hubspot": "hubspot.com",
   "salesforce": "salesforce.com",
   "slack": "slack.com",
-  "notion": "notion.so",
   "linear": "linear.app",
   "jira": "atlassian.com/software/jira",
   "asana": "asana.com",
@@ -517,6 +516,61 @@ const COMPACT_FEATURES = [
   { icon: <Users      className="w-3.5 h-3.5" />, title: "Brand-focused",             desc: "Built for any brand that wants AI visibility"        },
 ];
 
+// ─── STEP INDICATOR ──────────────────────────────────────────────────────────
+
+function ProfileStepIndicator() {
+  const steps = [
+    { label: "Scrape",   Icon: Globe    },
+    { label: "Profile",  Icon: User     },
+    { label: "Prompts",  Icon: Sparkles },
+    { label: "Audit",    Icon: Zap      },
+  ];
+  return (
+    <div className="flex items-center justify-between w-full">
+      <div className="flex items-center">
+        {steps.map(({ label, Icon }, i) => {
+          const isDone   = i < 1;
+          const isActive = i === 1;
+          return (
+            <div key={label} className="flex items-center">
+              <div className="flex items-center gap-1.5">
+                {isDone ? (
+                  <motion.div initial={{ scale: 0.7 }} animate={{ scale: 1 }}
+                    className="w-5 h-5 rounded-full bg-[#5B2D91] flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 text-white" />
+                  </motion.div>
+                ) : isActive ? (
+                  <div className="w-5 h-5 rounded-full border-2 border-[#5B2D91] bg-[#f3eeff] flex items-center justify-center shrink-0">
+                    <Loader2 className="w-2.5 h-2.5 text-[#5B2D91] animate-spin" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-full border-2 border-[#e5e5e5] flex items-center justify-center shrink-0">
+                    <Icon className="w-2.5 h-2.5 text-[#c5c5c5]" />
+                  </div>
+                )}
+                <span className={`text-[12px] font-medium ${isDone || isActive ? "text-[#5B2D91]" : "text-[#c5c5c5]"}`}>
+                  {label}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className="w-8 h-0.5 mx-2 bg-[#e5e5e5] overflow-hidden rounded-full">
+                  <motion.div
+                    className="h-full bg-[#5B2D91] rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: isDone ? "100%" : "0%" }}
+                    transition={{ duration: 0.4 }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-[#aaaaaa]">Step 2 of 4 · Confirm your brand profile</p>
+    </div>
+  );
+}
+
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 export interface BrandProfileEditorProps {
@@ -539,101 +593,141 @@ export function BrandProfileEditor({ profile: initialProfile, onConfirm, isAudit
   const domain = getDomain(profile.url);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      <div className="flex min-h-screen">
+    <div className="min-h-screen bg-[#ddd5f5] flex items-start justify-center px-4 py-10">
+      <div className="w-full max-w-[820px]">
 
-        {/* ─ LEFT COLUMN ─ */}
-        <div className="flex-1 overflow-y-auto py-10 px-6 md:px-10 lg:px-14 bg-white" style={{ maxWidth: 640 }}>
-          <div className="max-w-[520px]">
+        <div
+          className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden"
+          style={{ boxShadow: "0 25px 60px rgba(91,45,145,0.28), 0 8px 24px rgba(91,45,145,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
+        >
+          {/* Step indicator header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f0f0] bg-[#fafafa]">
+            <ProfileStepIndicator />
+          </div>
 
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#5B2D91] mb-6">
-              Comly — AI Visibility Audit
-            </p>
+          {/* Body */}
+          <div className="flex">
 
-            <div className="space-y-5">
+            {/* Left: form */}
+            <div className="flex-1 min-w-0 p-8">
 
-              <Field label="Brand URL">
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} width={16} height={16} className="rounded-sm" />
-                  </div>
-                  <input type="url" value={profile.url} onChange={(e) => setProfile((p) => ({ ...p, url: e.target.value }))} className={`${inputCls} pl-9`} />
-                </div>
-              </Field>
-
-              <Field label="Brand name">
-                <input type="text" value={profile.brand_name} onChange={(e) => setProfile((p) => ({ ...p, brand_name: e.target.value }))} className={inputCls} />
-              </Field>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Category">
-                  <input type="text" value={profile.category} onChange={(e) => setProfile((p) => ({ ...p, category: e.target.value }))} className={inputCls} />
-                </Field>
-                <Field label="Target users">
-                  <input type="text" value={profile.target_users} onChange={(e) => setProfile((p) => ({ ...p, target_users: e.target.value }))} className={inputCls} />
-                </Field>
-              </div>
-
-              <Field label="Competitors">
-                <div className="w-full px-3 py-2 bg-white border border-[#d1d5db] rounded-lg min-h-[46px] focus-within:border-[#5B2D91] transition-colors">
-                  <TagInput tags={profile.competitors ?? []} onChange={(tags) => setProfile((p) => ({ ...p, competitors: tags }))} placeholder="competitor" getHref={getCompetitorHref} />
-                </div>
-              </Field>
-
-              <Field label="Main use cases">
-                <div className="w-full px-3 py-2 bg-white border border-[#d1d5db] rounded-lg min-h-[46px] focus-within:border-[#5B2D91] transition-colors">
-                  <TagInput tags={profile.main_use_cases ?? []} onChange={(tags) => setProfile((p) => ({ ...p, main_use_cases: tags }))} placeholder="use case" />
-                </div>
-              </Field>
-            </div>
-
-            <div className="mt-8 pb-10">
-              <button
-                onClick={() => onConfirm(profile)}
-                disabled={isAuditing}
-                className="w-full h-11 bg-[#5B2D91] text-white text-sm font-semibold rounded-lg hover:bg-[#4a2478] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-1.5"
+              {/* Brand summary row */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="flex items-center gap-3 mb-7 p-3.5 bg-[#faf8ff] rounded-xl border border-[#ede0ff]"
               >
-                Run AI Audit
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <p className="text-center text-xs text-[#aaaaaa] mt-2.5">
-                Takes about 60 seconds · No credit card required
-              </p>
-            </div>
-          </div>
-        </div>
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-[#f3eeff] border border-[#ede0ff] shrink-0">
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+                    width={32} height={32} className="w-8 h-8 object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-[#0a0a0a] text-[14px] truncate">{profile.brand_name || domain}</p>
+                  <p className="text-[11px] text-[#9ca3af] truncate">{domain}</p>
+                </div>
+                <span className="shrink-0 text-[11px] font-semibold text-[#5B2D91] bg-[#f3eeff] px-2.5 py-1 rounded-full border border-[#ede0ff]">
+                  ✓ Profile detected
+                </span>
+              </motion.div>
 
-        {/* ─ RIGHT COLUMN ─ */}
-        <div className="hidden lg:flex flex-1 flex-col sticky top-0 overflow-y-auto items-center" style={{ height: "100vh" }}>
-          <div className="p-6 py-10 w-full max-w-[520px]">
-
-            <AnimatedShowcase profile={profile} />
-
-            {/* Compact feature grid */}
-            <div className="mt-6 bg-white border border-[#e5e5e5] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
-              <div className="grid grid-cols-2">
-                {COMPACT_FEATURES.map((f, i) => {
-                  const isLastRow = i >= COMPACT_FEATURES.length - 2;
-                  const isRight = i % 2 === 1;
-                  return (
-                    <div
-                      key={i}
-                      className={`p-3.5 flex items-start gap-2.5 ${!isLastRow ? "border-b border-[#f3f4f6]" : ""} ${!isRight ? "border-r border-[#f3f4f6]" : ""}`}
-                    >
-                      <div className="text-[#9ca3af] shrink-0 mt-0.5">{f.icon}</div>
-                      <div>
-                        <p className="text-[12px] font-semibold text-[#0a0a0a] mb-0.5">{f.title}</p>
-                        <p className="text-[11px] text-[#9ca3af] leading-snug">{f.desc}</p>
+              {/* Form fields — staggered entrance */}
+              <div className="space-y-5">
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.3, ease: "easeOut" }}>
+                  <Field label="Brand URL">
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} width={16} height={16} className="rounded-sm" />
                       </div>
+                      <input type="url" value={profile.url} onChange={(e) => setProfile((p) => ({ ...p, url: e.target.value }))} className={`${inputCls} pl-9`} />
                     </div>
-                  );
-                })}
+                  </Field>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13, duration: 0.3, ease: "easeOut" }}>
+                  <Field label="Brand name">
+                    <input type="text" value={profile.brand_name} onChange={(e) => setProfile((p) => ({ ...p, brand_name: e.target.value }))} className={inputCls} />
+                  </Field>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.3, ease: "easeOut" }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Field label="Category">
+                      <input type="text" value={profile.category} onChange={(e) => setProfile((p) => ({ ...p, category: e.target.value }))} className={inputCls} />
+                    </Field>
+                    <Field label="Target users">
+                      <input type="text" value={profile.target_users} onChange={(e) => setProfile((p) => ({ ...p, target_users: e.target.value }))} className={inputCls} />
+                    </Field>
+                  </div>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23, duration: 0.3, ease: "easeOut" }}>
+                  <Field label="Competitors">
+                    <div className="w-full px-3 py-2 bg-white border border-[#d1d5db] rounded-lg min-h-[46px] focus-within:border-[#5B2D91] transition-colors">
+                      <TagInput tags={profile.competitors ?? []} onChange={(tags) => setProfile((p) => ({ ...p, competitors: tags }))} placeholder="competitor" getHref={getCompetitorHref} />
+                    </div>
+                  </Field>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28, duration: 0.3, ease: "easeOut" }}>
+                  <Field label="Main use cases">
+                    <div className="w-full px-3 py-2 bg-white border border-[#d1d5db] rounded-lg min-h-[46px] focus-within:border-[#5B2D91] transition-colors">
+                      <TagInput tags={profile.main_use_cases ?? []} onChange={(tags) => setProfile((p) => ({ ...p, main_use_cases: tags }))} placeholder="use case" />
+                    </div>
+                  </Field>
+                </motion.div>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="mt-8"
+              >
+                <button
+                  onClick={() => onConfirm(profile)}
+                  disabled={isAuditing}
+                  className="w-full h-11 bg-[#5B2D91] text-white text-sm font-semibold rounded-lg hover:bg-[#4a2478] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-1.5"
+                >
+                  Run AI Audit
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <p className="text-center text-xs text-[#aaaaaa] mt-2.5">
+                  Takes about 60 seconds · No credit card required
+                </p>
+              </motion.div>
+            </div>
+
+            {/* Right: showcase (lg only) */}
+            <div className="hidden lg:flex flex-col w-[288px] shrink-0 border-l border-[#f0f0f0] p-6 bg-[#fafafa]">
+              <AnimatedShowcase profile={profile} />
+              <div className="mt-5 bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
+                <div className="grid grid-cols-2">
+                  {COMPACT_FEATURES.map((f, i) => {
+                    const isLastRow = i >= COMPACT_FEATURES.length - 2;
+                    const isRight = i % 2 === 1;
+                    return (
+                      <div
+                        key={i}
+                        className={`p-3 flex items-start gap-2 ${!isLastRow ? "border-b border-[#f3f4f6]" : ""} ${!isRight ? "border-r border-[#f3f4f6]" : ""}`}
+                      >
+                        <div className="text-[#9ca3af] shrink-0 mt-0.5">{f.icon}</div>
+                        <div>
+                          <p className="text-[11px] font-semibold text-[#0a0a0a] mb-0.5">{f.title}</p>
+                          <p className="text-[10px] text-[#9ca3af] leading-snug">{f.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
           </div>
         </div>
-
       </div>
 
       {toast && (
