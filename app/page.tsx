@@ -2383,17 +2383,15 @@ export default function LandingPage() {
                 <p className="text-[15px] font-semibold text-[#0a0a0a] mb-6">What&apos;s included:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
                   {[
-                    { bold: "25 prompts", rest: " tracked daily across 4 AI models" },
+                    { bold: "25 prompts fired daily", rest: " across all 4 AI models" },
+                    { bold: "Full competitor tracking", rest: " — see exactly who beats you and why" },
+                    { bold: "AI Visibility Score", rest: " tracked over time" },
+                    { bold: "Reddit & forum monitor", rest: " — draft replies instantly" },
+                    { bold: "Hero copy rewrite", rest: " — get cited more by AI" },
+                    { bold: "Fix recommendations", rest: " — step-by-step ranking actions" },
+                    { bold: "Get listed on G2 & Capterra", rest: " — sites AI pulls from" },
+                    { bold: "Source tracking", rest: " — see what makes AI mention you" },
                     { bold: "All 4 AI models", rest: " — ChatGPT, Claude, Perplexity, Gemini" },
-                    { bold: "Visibility score", rest: " + score history & trends" },
-                    { bold: "Competitor tracking", rest: " — up to 5 competitors" },
-                    { bold: "llms.txt generator", rest: ", auto-updated weekly" },
-                    { bold: "Comparison page", rest: " generator" },
-                    { bold: "Listicle generator", rest: " — G2, Product Hunt, Capterra" },
-                    { bold: "Hero rewrite", rest: " suggestions" },
-                    { bold: "Engagement Threads", rest: " — Reddit finder & reply drafts" },
-                    { bold: "Email alerts", rest: " on score changes" },
-                    { bold: "Export data", rest: " as CSV" },
                     { bold: "Priority support", rest: "" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5">
