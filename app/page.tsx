@@ -2330,7 +2330,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
 
           <FadeIn className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 bg-[#f3eeff] border border-[#e8d8ff] rounded-full px-4 py-1.5 mb-6">
+            <div className="inline-flex items-center gap-2 bg-white border border-[#e0d4f5] rounded-full px-4 py-1.5 mb-6">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <span className="text-[12px] text-[#5B2D91] font-medium">Early adopter pricing — limited spots</span>
             </div>
@@ -2344,36 +2344,23 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="relative rounded-3xl overflow-hidden border border-white/10"
-            style={{ background: "linear-gradient(135deg, #5B2D91 0%, #3b1270 45%, #1a0a3d 100%)" }}
+            className="bg-white rounded-2xl overflow-hidden" style={{ border: "7px solid #a855f7" }}
           >
-            {/* Decorative glows */}
-            <div className="pointer-events-none absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full opacity-25"
-              style={{ background: "radial-gradient(circle, #a855f7, transparent 70%)" }} />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 w-[320px] h-[320px] rounded-full opacity-15"
-              style={{ background: "radial-gradient(circle, #7c3aed, transparent 70%)" }} />
-
-            <div className="relative flex flex-col lg:flex-row">
+            <div className="flex flex-col lg:flex-row">
 
               {/* ── Left: price ── */}
-              <div className="lg:w-[300px] shrink-0 px-10 py-14 flex flex-col justify-between gap-10 border-b lg:border-b-0 lg:border-r border-white/10">
-                <div className="space-y-5">
-                  <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-3 py-1">
-                    <span className="text-[11px] font-semibold text-white/80 tracking-wide">All in One</span>
-                    <span className="text-[10px] font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-full">For founders &amp; teams</span>
+              <div className="lg:w-[360px] shrink-0 px-10 py-6 flex flex-col gap-5 border-b lg:border-b-0 lg:border-r border-[#ede8ff]">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3 flex-wrap">
+                    <span className="text-[22px] font-bold text-[#0a0a0a]">All in One</span>
+                    <span className="text-[12px] font-medium text-[#6b6b6b] bg-[#f3eeff] border border-[#e0d4f5] px-3 py-1 rounded-full">Growth on auto-pilot</span>
                   </div>
-
-                  <div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[18px] text-white/30 line-through mt-4 leading-none">$149</span>
-                      <div className="flex items-end gap-1">
-                        <span className="text-[76px] font-black text-white leading-none tracking-tight">$99</span>
-                        <span className="text-[16px] text-white/40 pb-3">/mo</span>
-                      </div>
+                  <div className="flex items-end gap-3">
+                    <span className="text-[80px] font-black text-[#0a0a0a] leading-none tracking-tight">$99</span>
+                    <div className="pb-4 flex items-end gap-2">
+                      <span className="text-[22px] text-[#bbbbbb] line-through font-medium">$149</span>
+                      <span className="text-[18px] text-[#aaaaaa]">/mo</span>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full mt-3">
-                      🔒 Price locked for early adopters
-                    </span>
                   </div>
                 </div>
 
@@ -2381,50 +2368,50 @@ export default function LandingPage() {
                   <button
                     onClick={handleCheckout}
                     disabled={checkoutLoading}
-                    className="w-full rounded-2xl bg-white py-4 font-extrabold text-[#5B2D91] hover:bg-white/90 active:scale-[0.98] transition-all text-[15px] shadow-xl shadow-black/30 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full rounded-full bg-[#5B2D91] hover:bg-[#4a2478] py-4 font-bold text-white text-[16px] transition-all active:scale-[0.98] shadow-lg shadow-[#5B2D91]/30 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {checkoutLoading ? "Redirecting…" : isPaid ? "View dashboard →" : "Get started →"}
+                    {checkoutLoading ? "Redirecting…" : isPaid ? "View dashboard →" : "Get Started for Free →"}
                   </button>
-                  <div className="flex items-center justify-center gap-3 text-white/30 text-[11px]">
-                    <span>✓ No credit card</span>
-                    <span>·</span>
-                    <span>✓ Cancel anytime</span>
-                  </div>
+                  <p className="text-center text-[13px] text-[#6b6b6b]">
+                    <strong className="text-[#0a0a0a] font-semibold">Cancel anytime.</strong> No questions asked!
+                  </p>
                 </div>
               </div>
 
               {/* ── Right: features ── */}
-              <div className="flex-1 px-10 py-14">
-                <p className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-7">Everything included</p>
+              <div className="flex-1 px-10 py-6">
+                <p className="text-[15px] font-semibold text-[#0a0a0a] mb-6">What&apos;s included:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
                   {[
-                    { text: <><strong className="text-white">25 prompts</strong><span className="text-white/60"> tracked daily across 4 AI models</span></> },
-                    { text: <><strong className="text-white">All 4 AI models</strong><span className="text-white/60"> — ChatGPT, Claude, Perplexity, Gemini</span></> },
-                    { text: <><span className="text-white/60">Visibility score + </span><strong className="text-white">score history &amp; trends</strong></> },
-                    { text: <><strong className="text-white">Competitor tracking</strong><span className="text-white/60"> — up to 5 competitors</span></> },
-                    { text: <><strong className="text-white">llms.txt generator</strong><span className="text-white/60">, auto-updated weekly</span></> },
-                    { text: <><strong className="text-white">Comparison page</strong><span className="text-white/60"> generator</span></> },
-                    { text: <><strong className="text-white">Listicle generator</strong><span className="text-white/60"> — G2, Product Hunt, Capterra</span></> },
-                    { text: <><strong className="text-white">Hero rewrite</strong><span className="text-white/60"> suggestions</span></> },
-                    { text: <><strong className="text-white">Engagement Threads</strong><span className="text-white/60"> — Reddit finder &amp; reply drafts</span></> },
-                    { text: <><strong className="text-white">Email alerts</strong><span className="text-white/60"> on score changes</span></> },
-                    { text: <><span className="text-white/60">Export data as </span><strong className="text-white">CSV</strong></> },
-                    { text: <><strong className="text-white">Priority support</strong></> },
+                    { bold: "25 prompts", rest: " tracked daily across 4 AI models" },
+                    { bold: "All 4 AI models", rest: " — ChatGPT, Claude, Perplexity, Gemini" },
+                    { bold: "Visibility score", rest: " + score history & trends" },
+                    { bold: "Competitor tracking", rest: " — up to 5 competitors" },
+                    { bold: "llms.txt generator", rest: ", auto-updated weekly" },
+                    { bold: "Comparison page", rest: " generator" },
+                    { bold: "Listicle generator", rest: " — G2, Product Hunt, Capterra" },
+                    { bold: "Hero rewrite", rest: " suggestions" },
+                    { bold: "Engagement Threads", rest: " — Reddit finder & reply drafts" },
+                    { bold: "Email alerts", rest: " on score changes" },
+                    { bold: "Export data", rest: " as CSV" },
+                    { bold: "Priority support", rest: "" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5">
-                      <span className="shrink-0 mt-0.5 text-emerald-400 text-[14px]">✔</span>
-                      <span className="text-[13px] leading-snug">{item.text}</span>
+                      <CheckCircle2 className="w-[18px] h-[18px] text-[#5B2D91] shrink-0 mt-0.5" />
+                      <span className="text-[13px] leading-snug">
+                        <strong className="text-[#0a0a0a] font-semibold">{item.bold}</strong>
+                        <span className="text-[#6b6b6b]">{item.rest}</span>
+                      </span>
                     </div>
                   ))}
                 </div>
-                <p className="mt-8 pt-6 border-t border-white/10 text-[12px] text-white/30">
+                <p className="mt-8 pt-6 border-t border-[#ede8ff] text-[12px] text-[#aaaaaa]">
                   Plus: AI crawlability checker, source tracking, and all future tools at no extra cost.
                 </p>
               </div>
 
             </div>
           </motion.div>
-
 
         </div>
       </section>
