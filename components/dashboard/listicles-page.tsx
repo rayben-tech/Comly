@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BrandProfile } from "@/types";
 import {
   FileText, ChevronRight, Copy, Download,
-  RefreshCw, Loader2, Plus, X, Check, Sparkles, Globe, Search, Lock,
+  RefreshCw, Loader2, Plus, X, Check, Sparkles, Globe, Search,
 } from "lucide-react";
 
 interface Suggestion {
@@ -123,11 +123,9 @@ function toHtml(md: string): string {
 
 interface Props {
   profile: BrandProfile;
-  locked?: boolean;
-  onGenerated?: () => void;
 }
 
-export function ListiclesPage({ profile, locked, onGenerated }: Props) {
+export function ListiclesPage({ profile }: Props) {
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTitle, setActiveTitle] = useState<string | null>(null);
@@ -183,7 +181,6 @@ ${toHtml(content)}
       if (!res.ok) throw new Error(data.error || "Failed to generate");
       setGeneratedContent(data.markdown);
       triggerDownload(data.markdown, title);
-      onGenerated?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
     } finally {
@@ -301,19 +298,7 @@ ${toHtml(content)}
               We&apos;ll create ready-to-publish pages based on your brand profile
             </p>
           </div>
-          {locked && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#f7f7f5] border border-[#e5e5e5] shrink-0">
-              <Lock className="w-3 h-3 text-[#aaaaaa]" />
-              <span className="text-[11px] text-[#aaaaaa] font-medium">1 / 1 used</span>
-            </div>
-          )}
         </div>
-        {locked && !generatedContent && (
-          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#fafaf8] border border-[#e5e5e5] text-[13px] text-[#888]">
-            <Lock className="w-4 h-4 shrink-0 text-[#bbb]" />
-            You&apos;ve already generated a listicle for this audit. Upgrade to Pro for unlimited generations.
-          </div>
-        )}
 
         <div className="space-y-3">
           {suggestions.map((sug, i) => (
@@ -333,14 +318,12 @@ ${toHtml(content)}
                 </div>
                 <button
                   onClick={() => generate(sug.title)}
-                  disabled={loading || locked}
+                  disabled={loading}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-white text-[12px] font-semibold transition-opacity disabled:opacity-40 shrink-0"
                   style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
                 >
                   {loading && activeTitle === sug.title ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : locked ? (
-                    <Lock className="w-3.5 h-3.5" />
                   ) : (
                     <Sparkles className="w-3.5 h-3.5" />
                   )}
@@ -390,13 +373,13 @@ ${toHtml(content)}
               />
               <button
                 onClick={() => {
-                  if (customInput.trim() && !locked) {
+                  if (customInput.trim()) {
                     generate(customInput.trim());
                     setShowCustomInput(false);
                     setCustomInput("");
                   }
                 }}
-                disabled={!customInput.trim() || loading || locked}
+                disabled={!customInput.trim() || loading}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-[13px] font-semibold disabled:opacity-40 transition-opacity"
                 style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
               >
