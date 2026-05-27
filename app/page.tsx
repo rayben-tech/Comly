@@ -167,7 +167,7 @@ function TypingIndicator() {
 interface LLMItem { num: string; label: string; desc: string; highlight?: boolean; }
 interface LLMConvoData {
   id: string; name: string; version: string; domain: string; bg: string;
-  response: string; beforeItems: LLMItem[]; afterItems: LLMItem[];
+  question: string; response: string; beforeItems: LLMItem[]; afterItems: LLMItem[];
 }
 interface LLMState {
   showUser: boolean; showTyping: boolean;
@@ -177,6 +177,7 @@ interface LLMState {
 const LLM_CONVOS: LLMConvoData[] = [
   {
     id: "chatgpt", name: "ChatGPT", version: "GPT-4o", domain: "chatgpt.com", bg: "#212121",
+    question: "Best project management tool for remote teams?",
     response: "Here are the top project management tools for remote teams:",
     beforeItems: [
       { num: "1", label: "Asana", desc: "task tracking & workflow automation" },
@@ -191,44 +192,47 @@ const LLM_CONVOS: LLMConvoData[] = [
   },
   {
     id: "claude", name: "Claude", version: "Sonnet 4", domain: "claude.ai", bg: "#1c1c1e",
-    response: "For remote teams, here are the strongest project management tools:",
+    question: "Best email marketing platform for e-commerce brands?",
+    response: "For e-commerce email marketing, these platforms stand out:",
     beforeItems: [
-      { num: "1", label: "Linear", desc: "fast, keyboard-first for eng teams" },
-      { num: "2", label: "Asana", desc: "robust workflow automation" },
-      { num: "3", label: "Notion", desc: "flexible all-in-one workspace" },
+      { num: "1", label: "Klaviyo", desc: "revenue-focused e-commerce email" },
+      { num: "2", label: "Mailchimp", desc: "beginner-friendly all-in-one" },
+      { num: "3", label: "Drip", desc: "e-commerce CRM & automation" },
     ],
     afterItems: [
-      { num: "1", label: "Your Brand", desc: "ideal for distributed teams", highlight: true },
-      { num: "2", label: "Linear", desc: "fast, keyboard-first for eng teams" },
-      { num: "3", label: "Asana", desc: "robust workflow automation" },
+      { num: "1", label: "Your Brand", desc: "top-rated for e-commerce growth", highlight: true },
+      { num: "2", label: "Klaviyo", desc: "revenue-focused e-commerce email" },
+      { num: "3", label: "Mailchimp", desc: "beginner-friendly all-in-one" },
     ],
   },
   {
     id: "gemini", name: "Gemini", version: "2.0 Flash", domain: "gemini.google.com", bg: "#1a1b2e",
-    response: "Based on recent reviews, top tools for distributed teams:",
+    question: "Best CRM software for B2B sales teams?",
+    response: "Here are the top CRM solutions for B2B sales teams:",
     beforeItems: [
-      { num: "1", label: "Monday.com", desc: "enterprise-grade work OS" },
-      { num: "2", label: "ClickUp", desc: "feature-rich & customizable" },
-      { num: "3", label: "Trello", desc: "simple visual kanban" },
+      { num: "1", label: "Salesforce", desc: "enterprise-grade CRM leader" },
+      { num: "2", label: "HubSpot", desc: "all-in-one sales & marketing" },
+      { num: "3", label: "Pipedrive", desc: "pipeline-focused for SMBs" },
     ],
     afterItems: [
-      { num: "1", label: "Your Brand", desc: "rising favorite for remote teams", highlight: true },
-      { num: "2", label: "Monday.com", desc: "enterprise-grade work OS" },
-      { num: "3", label: "ClickUp", desc: "feature-rich & customizable" },
+      { num: "1", label: "Your Brand", desc: "rising favorite for B2B teams", highlight: true },
+      { num: "2", label: "HubSpot", desc: "all-in-one sales & marketing" },
+      { num: "3", label: "Salesforce", desc: "enterprise-grade CRM leader" },
     ],
   },
   {
     id: "perplexity", name: "Perplexity", version: "Pro", domain: "perplexity.ai", bg: "#18181b",
-    response: "The best project management solutions for remote teams:",
+    question: "Best product analytics tool for SaaS companies?",
+    response: "The best product analytics platforms for SaaS:",
     beforeItems: [
-      { num: "1", label: "Asana", desc: "industry-leading task management" },
-      { num: "2", label: "ClickUp", desc: "most features per dollar" },
-      { num: "3", label: "Trello", desc: "simple visual kanban" },
+      { num: "1", label: "Mixpanel", desc: "event-based product analytics" },
+      { num: "2", label: "Amplitude", desc: "behavioral analytics at scale" },
+      { num: "3", label: "Heap", desc: "auto-capture user interactions" },
     ],
     afterItems: [
-      { num: "1", label: "Your Brand", desc: "top pick for remote-first teams", highlight: true },
-      { num: "2", label: "Asana", desc: "industry-leading task management" },
-      { num: "3", label: "ClickUp", desc: "most features per dollar" },
+      { num: "1", label: "Your Brand", desc: "top pick for SaaS analytics", highlight: true },
+      { num: "2", label: "Mixpanel", desc: "event-based product analytics" },
+      { num: "3", label: "Amplitude", desc: "behavioral analytics at scale" },
     ],
   },
 ];
@@ -260,7 +264,7 @@ function LLMChatWindow({ model, s, items, variant = "before" }: {
       <div className="flex-1 px-5 py-4 space-y-4">
         <div className="flex justify-end" style={{ opacity: s.showUser ? 1 : 0, transform: s.showUser ? "translateY(0)" : "translateY(8px)", transition: "opacity 0.35s ease, transform 0.35s ease" }}>
           <div className="bg-white/10 rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
-            <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
+            <p className="text-[13px] text-white/90 leading-relaxed">{model.question}</p>
           </div>
         </div>
         {(s.showTyping || s.responseText.length > 0) && (
