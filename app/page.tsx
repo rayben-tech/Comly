@@ -148,13 +148,13 @@ const chatSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1.5 py-1">
-      <style>{`@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
-      <style>{`@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    <div className="flex items-center gap-1.5 py-1 px-1">
+      <style>{`@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}`}</style>
+      <style>{`@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="w-2 h-2 rounded-full bg-white/40 inline-block"
+          className="w-1.5 h-1.5 rounded-full bg-white/50 inline-block"
           style={{ animation: `typingBounce 1.1s ease-in-out ${i * 0.18}s infinite` }}
         />
       ))}
@@ -162,207 +162,187 @@ function TypingIndicator() {
   );
 }
 
-const BEFORE_RESP = "The most popular project management tools for remote teams include:";
-const BEFORE_ITEMS = ["Asana", "Trello", "Monday.com", "Notion", "ClickUp"];
-const AFTER_RESP = "For distributed teams, these stand out:";
-const AFTER_ITEMS = [
-  { label: "Your Brand", highlight: true },
-  { label: "Asana", highlight: false },
-  { label: "Monday.com", highlight: false },
+// ─── MULTI-LLM CONVERSATION SHOWCASE ─────────────────────────────────────────
+
+interface LLMItem { num: string; label: string; desc: string; highlight?: boolean; }
+interface LLMConvoData {
+  id: string; name: string; version: string; domain: string; bg: string;
+  response: string; beforeItems: LLMItem[]; afterItems: LLMItem[];
+}
+interface LLMState {
+  showUser: boolean; showTyping: boolean;
+  responseText: string; shownItems: number; showPill: boolean;
+}
+
+const LLM_CONVOS: LLMConvoData[] = [
+  {
+    id: "chatgpt", name: "ChatGPT", version: "GPT-4o", domain: "chatgpt.com", bg: "#212121",
+    response: "Here are the top project management tools for remote teams:",
+    beforeItems: [
+      { num: "1", label: "Asana", desc: "task tracking & workflow automation" },
+      { num: "2", label: "Monday.com", desc: "enterprise work OS" },
+      { num: "3", label: "Notion", desc: "all-in-one workspace" },
+    ],
+    afterItems: [
+      { num: "1", label: "Your Brand", desc: "best-in-class for distributed teams", highlight: true },
+      { num: "2", label: "Asana", desc: "task tracking & workflow automation" },
+      { num: "3", label: "Monday.com", desc: "enterprise work OS" },
+    ],
+  },
+  {
+    id: "claude", name: "Claude", version: "Sonnet 4", domain: "claude.ai", bg: "#1c1c1e",
+    response: "For remote teams, here are the strongest project management tools:",
+    beforeItems: [
+      { num: "1", label: "Linear", desc: "fast, keyboard-first for eng teams" },
+      { num: "2", label: "Asana", desc: "robust workflow automation" },
+      { num: "3", label: "Notion", desc: "flexible all-in-one workspace" },
+    ],
+    afterItems: [
+      { num: "1", label: "Your Brand", desc: "ideal for distributed teams", highlight: true },
+      { num: "2", label: "Linear", desc: "fast, keyboard-first for eng teams" },
+      { num: "3", label: "Asana", desc: "robust workflow automation" },
+    ],
+  },
+  {
+    id: "gemini", name: "Gemini", version: "2.0 Flash", domain: "gemini.google.com", bg: "#1a1b2e",
+    response: "Based on recent reviews, top tools for distributed teams:",
+    beforeItems: [
+      { num: "1", label: "Monday.com", desc: "enterprise-grade work OS" },
+      { num: "2", label: "ClickUp", desc: "feature-rich & customizable" },
+      { num: "3", label: "Trello", desc: "simple visual kanban" },
+    ],
+    afterItems: [
+      { num: "1", label: "Your Brand", desc: "rising favorite for remote teams", highlight: true },
+      { num: "2", label: "Monday.com", desc: "enterprise-grade work OS" },
+      { num: "3", label: "ClickUp", desc: "feature-rich & customizable" },
+    ],
+  },
+  {
+    id: "perplexity", name: "Perplexity", version: "Pro", domain: "perplexity.ai", bg: "#18181b",
+    response: "The best project management solutions for remote teams:",
+    beforeItems: [
+      { num: "1", label: "Asana", desc: "industry-leading task management" },
+      { num: "2", label: "ClickUp", desc: "most features per dollar" },
+      { num: "3", label: "Trello", desc: "simple visual kanban" },
+    ],
+    afterItems: [
+      { num: "1", label: "Your Brand", desc: "top pick for remote-first teams", highlight: true },
+      { num: "2", label: "Asana", desc: "industry-leading task management" },
+      { num: "3", label: "ClickUp", desc: "most features per dollar" },
+    ],
+  },
 ];
 
-interface ChatState {
-  showUser: boolean;
-  showTyping: boolean;
-  beforeText: string;
-  afterText: string;
-  beforeItems: number;
-  afterItems: number;
-  showPill: boolean;
-}
-
-function BeforeChat({ s }: { s: ChatState }) {
-  const { showUser, showTyping, beforeText: responseText, beforeItems: shownItems, showPill } = s;
-  const RESP = BEFORE_RESP;
-  const ITEMS = BEFORE_ITEMS; 
-
+function LLMChatWindow({ model, s, items, variant = "before" }: {
+  model: LLMConvoData; s: LLMState; items: LLMItem[]; variant?: "before" | "after";
+}) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-3 px-1">
-        <span className="w-2 h-2 rounded-full bg-red-400" />
-        <span className="text-xs font-bold uppercase tracking-widest text-red-500">Before</span>
-      </div>
-      <div className="flex-1 bg-[#212121] rounded-2xl overflow-hidden shadow-xl border border-white/5">
-        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/10">
-          <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-          <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-          <span className="w-3 h-3 rounded-full bg-[#28c840]" />
-          <span className="ml-3 text-[11px] text-white/30 font-medium">ChatGPT</span>
+    <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex flex-col" style={{ background: model.bg, minHeight: 360 }}>
+      {/* Browser chrome */}
+      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-white/5 bg-black/20">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+        <div className="flex-1 flex justify-center">
+          <div className="flex items-center gap-1.5 bg-white/6 rounded-md px-3 py-0.5">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/25"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span className="text-[9px] text-white/30">{model.domain}</span>
+          </div>
         </div>
-        <div className="px-5 py-5 space-y-5 min-h-[300px]">
-          {/* User bubble */}
-          <div
-            className="flex items-start gap-3 justify-end"
-            style={{ opacity: showUser ? 1 : 0, transform: showUser ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.35s ease, transform 0.35s ease" }}
-          >
-            <div className="bg-[#2f2f2f] rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-              <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
-            </div>
-            <div className="w-7 h-7 rounded-full bg-[#5a5a5a] flex items-center justify-center shrink-0 mt-0.5">
-              <User className="w-4 h-4 text-[#cccccc]" />
+      </div>
+      {/* Model header */}
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-white/5">
+        <img src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=64`} width={22} height={22} className="rounded-full shrink-0" alt={model.name} />
+        <span className="text-[13px] font-semibold text-white/90">{model.name}</span>
+        <span className="text-[10px] text-white/35 bg-white/8 px-2 py-0.5 rounded-full border border-white/10">{model.version}</span>
+      </div>
+      {/* Messages */}
+      <div className="flex-1 px-5 py-4 space-y-4">
+        <div className="flex justify-end" style={{ opacity: s.showUser ? 1 : 0, transform: s.showUser ? "translateY(0)" : "translateY(8px)", transition: "opacity 0.35s ease, transform 0.35s ease" }}>
+          <div className="bg-white/10 rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
+            <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
+          </div>
+        </div>
+        {(s.showTyping || s.responseText.length > 0) && (
+          <div className="flex items-start gap-3" style={{ animation: "msgIn 0.3s ease" }}>
+            <img src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=64`} width={24} height={24} className="rounded-full shrink-0 mt-0.5" alt={model.name} />
+            <div className="flex-1 space-y-2 min-w-0">
+              {s.showTyping ? <TypingIndicator /> : (
+                <>
+                  <p className="text-[13px] text-white/80 leading-relaxed">
+                    {s.responseText}
+                    {s.responseText.length < model.response.length && <span className="inline-block w-0.5 h-3 bg-white/60 ml-0.5 animate-pulse align-middle" />}
+                  </p>
+                  {s.shownItems > 0 && (
+                    <ol className="space-y-1.5 mt-1">
+                      {items.slice(0, s.shownItems).map((item) => (
+                        item.highlight ? (
+                          <li key={item.num} className="flex items-start gap-2 text-[12px]" style={{ animation: "msgIn 0.25s ease" }}>
+                            <span className="text-[#a78bfa] font-bold shrink-0 mt-0.5">{item.num}.</span>
+                            <div className="flex-1 bg-[#5B2D91]/20 border border-[#7c3aed]/30 rounded-lg px-2.5 py-1.5">
+                              <span className="font-bold text-white">{item.label}</span>
+                              <span className="text-white/50 text-[11px]"> — {item.desc}</span>
+                              <span className="ml-2 text-[9px] font-bold text-[#a78bfa] bg-[#5B2D91]/30 px-1.5 py-0.5 rounded-full align-middle">★ top pick</span>
+                            </div>
+                          </li>
+                        ) : (
+                          <li key={item.num} className="flex items-baseline gap-2 text-[12px] text-white/65" style={{ animation: "msgIn 0.25s ease" }}>
+                            <span className="text-white/30 font-medium shrink-0">{item.num}.</span>
+                            <span><strong className="text-white/80 font-semibold">{item.label}</strong><span className="text-white/40"> — {item.desc}</span></span>
+                          </li>
+                        )
+                      ))}
+                    </ol>
+                  )}
+                  {s.shownItems >= items.length && (
+                    <div className="flex items-center gap-3 pt-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-white/25"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-white/25"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 0-2-2h3"/></svg>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
-
-          {/* AI response */}
-          {(showTyping || responseText.length > 0) && (
-            <div className="flex items-start gap-3" style={{ animation: "msgIn 0.3s ease" }}>
-              <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 bg-white">
-                <img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=32" alt="ChatGPT" width={28} height={28} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 space-y-2.5">
-                {showTyping ? (
-                  <TypingIndicator />
-                ) : (
-                  <>
-                    <p className="text-[13px] text-white/80 leading-relaxed">
-                      {responseText}
-                      {responseText.length < RESP.length && (
-                        <span className="inline-block w-0.5 h-3.5 bg-white/60 ml-0.5 animate-pulse align-middle" />
-                      )}
-                    </p>
-                    {shownItems > 0 && (
-                      <ul className="space-y-1.5">
-                        {ITEMS.slice(0, shownItems).map((t) => (
-                          <li key={t} className="flex items-center gap-2 text-[13px] text-white/70" style={{ animation: "msgIn 0.3s ease" }}>
-                            <span className="w-1 h-1 rounded-full bg-white/30 shrink-0" />{t}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
-                )}
-              </div>
+        )}
+        {s.showPill && (
+          variant === "after" ? (
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2" style={{ animation: "msgIn 0.4s ease" }}>
+              <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span className="text-[11px] text-emerald-400 font-medium">Cited as #1 recommendation</span>
             </div>
-          )}
-
-          {/* Not mentioned pill */}
-          {showPill && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-3.5 py-2.5" style={{ animation: "msgIn 0.4s ease" }}>
-              <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-              <span className="text-[12px] text-red-400 font-medium">Your brand: not mentioned</span>
+          ) : (
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2" style={{ animation: "msgIn 0.4s ease" }}>
+              <svg className="w-3.5 h-3.5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              <span className="text-[11px] text-red-400 font-medium">Your brand: not mentioned</span>
             </div>
-          )}
+          )
+        )}
+      </div>
+      {/* Input bar */}
+      <div className="px-4 pb-4 pt-1">
+        <div className="bg-white/6 rounded-xl px-3.5 py-2.5 flex items-center gap-2 border border-white/5">
+          <span className="text-[11px] text-white/25 flex-1">Message {model.name}…</span>
+          <button className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/40"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function AfterChat({ s }: { s: ChatState }) {
-  const { showUser, showTyping, afterText: responseText, afterItems: shownItems, showPill } = s;
-  const RESP = AFTER_RESP;
-  const ITEMS = AFTER_ITEMS;
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-3 px-1">
-        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-        <span className="text-xs font-bold uppercase tracking-widest text-emerald-500">After</span>
-      </div>
-      <div className="flex-1 bg-[#212121] rounded-2xl overflow-hidden shadow-xl border border-white/5">
-        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/10">
-          <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-          <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-          <span className="w-3 h-3 rounded-full bg-[#28c840]" />
-          <span className="ml-3 text-[11px] text-white/30 font-medium">ChatGPT</span>
-        </div>
-        <div className="px-5 py-5 space-y-5 min-h-[300px]">
-          {/* User bubble */}
-          <div
-            className="flex items-start gap-3 justify-end"
-            style={{ opacity: showUser ? 1 : 0, transform: showUser ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.35s ease, transform 0.35s ease" }}
-          >
-            <div className="bg-[#2f2f2f] rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-              <p className="text-[13px] text-white/90 leading-relaxed">What&apos;s the best project management tool for remote teams?</p>
-            </div>
-            <div className="w-7 h-7 rounded-full bg-[#5a5a5a] flex items-center justify-center shrink-0 mt-0.5">
-              <User className="w-4 h-4 text-[#cccccc]" />
-            </div>
-          </div>
-
-          {/* AI response */}
-          {(showTyping || responseText.length > 0) && (
-            <div className="flex items-start gap-3" style={{ animation: "msgIn 0.3s ease" }}>
-              <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 bg-white">
-                <img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=32" alt="ChatGPT" width={28} height={28} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 space-y-2.5">
-                {showTyping ? (
-                  <TypingIndicator />
-                ) : (
-                  <>
-                    <p className="text-[13px] text-white/80 leading-relaxed">
-                      {responseText}
-                      {responseText.length < RESP.length && (
-                        <span className="inline-block w-0.5 h-3.5 bg-white/60 ml-0.5 animate-pulse align-middle" />
-                      )}
-                    </p>
-                    {shownItems > 0 && (
-                      <ul className="space-y-1.5">
-                        {ITEMS.slice(0, shownItems).map((item) => (
-                          <li
-                            key={item.label}
-                            className={item.highlight
-                              ? "flex items-center gap-2 bg-[#5B2D91]/20 border border-[#5B2D91]/30 rounded-lg px-3 py-2"
-                              : "flex items-center gap-2 text-[13px] text-white/50 px-3"
-                            }
-                            style={{ animation: "msgIn 0.3s ease" }}
-                          >
-                            <span className={`shrink-0 rounded-full ${item.highlight ? "w-1.5 h-1.5 bg-[#a78bfa]" : "w-1 h-1 bg-white/20"}`} />
-                            <span className={`text-[13px] ${item.highlight ? "text-white font-semibold" : ""}`}>{item.label}</span>
-                            {item.highlight && (
-                              <span className="ml-auto text-[10px] font-bold text-[#a78bfa] bg-[#5B2D91]/30 px-2 py-0.5 rounded-full">top recommendation</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Cited pill */}
-          {showPill && (
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3.5 py-2.5" style={{ animation: "msgIn 0.4s ease" }}>
-              <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span className="text-[12px] text-emerald-400 font-medium">Cited as #1 choice</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BeforeAfterChats() {
+function LLMConversations() {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
-  const [s, setS] = useState<ChatState>({
-    showUser: false, showTyping: false,
-    beforeText: "", afterText: "",
-    beforeItems: 0, afterItems: 0,
-    showPill: false,
-  });
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [s, setS] = useState<LLMState>({ showUser: false, showTyping: false, responseText: "", shownItems: 0, showPill: false });
+  const [sAfter, setSAfter] = useState<LLMState>({ showUser: false, showTyping: false, responseText: "", shownItems: 0, showPill: false });
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setInView(true); },
-      { threshold: 0.2 }
-    );
+    const obs = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setInView(true); }, { threshold: 0.1 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
@@ -370,40 +350,82 @@ function BeforeAfterChats() {
   useEffect(() => {
     if (!inView) return;
     let alive = true;
-    const maxLen = Math.max(BEFORE_RESP.length, AFTER_RESP.length);
-    const maxItems = Math.max(BEFORE_ITEMS.length, AFTER_ITEMS.length);
+    const model = LLM_CONVOS[activeIdx];
+    const reset: LLMState = { showUser: false, showTyping: false, responseText: "", shownItems: 0, showPill: false };
     (async () => {
-      while (alive) {
-        setS({ showUser: false, showTyping: false, beforeText: "", afterText: "", beforeItems: 0, afterItems: 0, showPill: false });
-        await chatSleep(700);
-        if (!alive) break;
-        setS(p => ({ ...p, showUser: true }));
-        await chatSleep(900);
-        setS(p => ({ ...p, showTyping: true }));
-        await chatSleep(1500);
-        setS(p => ({ ...p, showTyping: false }));
-        for (let i = 1; i <= maxLen && alive; i++) {
-          const bt = BEFORE_RESP.slice(0, Math.min(i, BEFORE_RESP.length));
-          const at = AFTER_RESP.slice(0, Math.min(i, AFTER_RESP.length));
-          setS(p => ({ ...p, beforeText: bt, afterText: at }));
-          await chatSleep(15);
-        }
-        for (let i = 1; i <= maxItems && alive; i++) {
-          setS(p => ({ ...p, beforeItems: Math.min(i, BEFORE_ITEMS.length), afterItems: Math.min(i, AFTER_ITEMS.length) }));
-          await chatSleep(300);
-        }
-        await chatSleep(350);
-        setS(p => ({ ...p, showPill: true }));
-        await chatSleep(3800);
+      setS(reset);
+      setSAfter(reset);
+      await chatSleep(500);
+      if (!alive) return;
+      setS(p => ({ ...p, showUser: true }));
+      setSAfter(p => ({ ...p, showUser: true }));
+      await chatSleep(900);
+      if (!alive) return;
+      setS(p => ({ ...p, showTyping: true }));
+      setSAfter(p => ({ ...p, showTyping: true }));
+      await chatSleep(1400);
+      if (!alive) return;
+      setS(p => ({ ...p, showTyping: false }));
+      setSAfter(p => ({ ...p, showTyping: false }));
+      for (let i = 1; i <= model.response.length && alive; i++) {
+        const text = model.response.slice(0, i);
+        setS(p => ({ ...p, responseText: text }));
+        setSAfter(p => ({ ...p, responseText: text }));
+        await chatSleep(16);
       }
+      if (!alive) return;
+      const maxItems = Math.max(model.beforeItems.length, model.afterItems.length);
+      for (let i = 1; i <= maxItems && alive; i++) {
+        setS(p => ({ ...p, shownItems: i }));
+        setSAfter(p => ({ ...p, shownItems: i }));
+        await chatSleep(380);
+      }
+      await chatSleep(350);
+      if (!alive) return;
+      setS(p => ({ ...p, showPill: true }));
+      setSAfter(p => ({ ...p, showPill: true }));
+      await chatSleep(2800);
+      if (!alive) return;
+      setActiveIdx(i => (i + 1) % LLM_CONVOS.length);
     })();
     return () => { alive = false; };
-  }, [inView]);
+  }, [inView, activeIdx]);
 
   return (
-    <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <BeforeChat s={s} />
-      <AfterChat s={s} />
+    <div ref={ref}>
+      {/* Model tab row */}
+      <div className="flex justify-center gap-2 mb-8 flex-wrap">
+        {LLM_CONVOS.map((model, i) => (
+          <button
+            key={model.id}
+            onClick={() => { setActiveIdx(i); }}
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border font-medium transition-all duration-200 ${
+              i === activeIdx
+                ? "bg-[#0a0a0a] border-[#0a0a0a] text-white shadow-lg scale-[1.03]"
+                : "bg-white border-[#e5e5e5] text-[#555] hover:border-[#bbb] hover:shadow-sm"
+            }`}
+          >
+            <img src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`} width={18} height={18} className="rounded-full" alt={model.name} />
+            <span className="text-[13px]">{model.name}</span>
+          </button>
+        ))}
+      </div>
+      {/* Before / After column headers */}
+      <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto mb-3 px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-red-500">Before Comly</span>
+          <div className="flex-1 h-px bg-red-200" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">After Comly</span>
+          <div className="flex-1 h-px bg-emerald-200" />
+        </div>
+      </div>
+      {/* Side-by-side windows */}
+      <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <LLMChatWindow model={LLM_CONVOS[activeIdx]} s={s} items={LLM_CONVOS[activeIdx].beforeItems} variant="before" />
+        <LLMChatWindow model={LLM_CONVOS[activeIdx]} s={sAfter} items={LLM_CONVOS[activeIdx].afterItems} variant="after" />
+      </div>
     </div>
   );
 }
@@ -559,6 +581,20 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const scrolled = useScroll(10);
+  const [overPurple, setOverPurple] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const pain = document.getElementById("pain");
+      const features = document.getElementById("features");
+      if (!pain || !features) return;
+      const y = window.scrollY + 60;
+      setOverPurple(y >= pain.offsetTop && y < features.offsetTop + features.offsetHeight * 0.6);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const links = [
     { label: "Home",         href: "#hero" },
@@ -579,7 +615,9 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
         "sticky top-0 z-50 mx-auto w-full border-b border-transparent",
         "md:rounded-xl md:border",
         "md:[transition:max-width_500ms_cubic-bezier(0.4,0,0.2,1),top_500ms_cubic-bezier(0.4,0,0.2,1),background-color_300ms_ease,box-shadow_300ms_ease,border-color_300ms_ease,padding_300ms_ease]",
-        scrolled && !menuOpen
+        overPurple && !menuOpen
+          ? "bg-white/10 backdrop-blur-md border-white/15 md:top-4"
+          : scrolled && !menuOpen
           ? "bg-white/95 supports-[backdrop-filter]:bg-white/80 border-[#e5e5e5] backdrop-blur-lg md:top-4 md:shadow-sm"
           : menuOpen
           ? "bg-white/95"
@@ -601,7 +639,7 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
         {/* Logo */}
         <a href="#hero" className="flex items-center gap-2 shrink-0">
           <ComlyLogo size={28} />
-          <span className="font-bold text-[#0a0a0a] text-base tracking-tight [font-family:var(--font-outfit)]">Comly</span>
+          <span className={cn("font-bold text-base tracking-tight [font-family:var(--font-outfit)] transition-colors duration-300", overPurple ? "text-white" : "text-[#0a0a0a]")}>Comly</span>
         </a>
 
         {/* Desktop links */}
@@ -610,7 +648,7 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
             <a
               key={l.href}
               href={l.href}
-              className={buttonVariants({ variant: "ghost", size: "sm", className: "text-[#6b6b6b] hover:text-[#0a0a0a]" })}
+              className={buttonVariants({ variant: "ghost", size: "sm", className: cn("transition-colors duration-300", overPurple ? "text-white/80 hover:text-white" : "text-[#6b6b6b] hover:text-[#0a0a0a]") })}
             >
               {l.label}
             </a>
@@ -2211,6 +2249,207 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
+          PAIN POINTS — GEO vs SEO
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="pain" className="bg-[#a87be0] py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+
+          <FadeIn className="text-center mb-16">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-white/60 mb-4">The shift is already happening</p>
+            <h2 className="text-[42px] font-bold tracking-tight text-white leading-tight">
+              SEO won&apos;t save you here.
+            </h2>
+            <p className="mt-4 text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
+              Google ranks pages. AI recommends brands. Millions of buyers now skip Google entirely and ask ChatGPT instead — and your SEO has zero effect on what AI says about you.
+            </p>
+          </FadeIn>
+
+          {/* Yesterday vs Today */}
+          <div className="relative flex flex-col lg:flex-row items-stretch gap-5 mb-16">
+
+            {/* LEFT — Google / Yesterday */}
+            <div className="flex-1 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <span className="inline-flex items-center gap-1.5 bg-[#0a0a0a] text-white text-[11px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
+                  <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  SEO era
+                </span>
+              </div>
+              <div className="bg-white border border-[#e8e8e8] rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden h-full pt-4">
+                {/* Browser bar */}
+                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#f0f0f0]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+                  <span className="ml-3 text-[13px] font-semibold" style={{ fontFamily: "sans-serif" }}>
+                    <span style={{ color: "#4285F4" }}>G</span>
+                    <span style={{ color: "#EA4335" }}>o</span>
+                    <span style={{ color: "#FBBC05" }}>o</span>
+                    <span style={{ color: "#4285F4" }}>g</span>
+                    <span style={{ color: "#34A853" }}>l</span>
+                    <span style={{ color: "#EA4335" }}>e</span>
+                  </span>
+                </div>
+                <div className="px-5 py-4">
+                  {/* Search bar */}
+                  <div className="flex items-center gap-2.5 border border-[#e0e0e0] rounded-full px-4 py-2.5 mb-5 shadow-sm">
+                    <Search className="w-4 h-4 text-[#9ca3af] shrink-0" />
+                    <span className="text-[13px] text-[#3c4043]">best analytics tool for ecommerce</span>
+                  </div>
+                  {/* Results */}
+                  {[
+                    {
+                      domain: "contentsquare.com", path: "contentsquare.com › guides",
+                      title: "8 Top Ecommerce Analytics Tools + Software [Free + Paid]",
+                      date: "10 Jul. 2025",
+                      desc: <>8 best ecommerce analytics tools for every budget · <strong>1. Google Analytics (G4A)</strong> · 2. Contentsquare · 3. Shopify Analytics · 4. WooCommerce…</>
+                    },
+                    {
+                      domain: "storehero.ai", path: "storehero.ai › best-ecomme...",
+                      title: "Best eCommerce Analytics Tools for 2026 (Ranked & ...)",
+                      date: null,
+                      desc: <>Discover the <strong>best ecommerce analytics tools for 2026</strong> — ranked by profitability, forecasting, and scalability. See how StoreHero helps DTC brands connect…</>
+                    },
+                    {
+                      domain: "datahawk.co", path: "datahawk.co › Blog old",
+                      title: "10 best Ecommerce & Marketplace Analytics tools in 2026",
+                      date: "15 Jan. 2026",
+                      desc: <>Comparing the top ecommerce analytics platforms in 2026 · <strong>DataHawk</strong> · GA4 · Triple Whale · Glew · Adobe Analytics · Mixpanel · Matomo.</>
+                    },
+                  ].map((r) => (
+                    <div key={r.domain} className="mb-4">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <img src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=32`} className="w-4 h-4 rounded-full shrink-0" alt={r.domain} />
+                        <span className="text-[12px] text-[#202124] font-medium">{r.domain}</span>
+                        <span className="text-[12px] text-[#4d5156]">› {r.path.split("› ").slice(1).join(" › ")}</span>
+                      </div>
+                      <p className="text-[14px] text-[#1a0dab] font-medium mb-0.5 hover:underline cursor-pointer leading-snug">{r.title}</p>
+                      <p className="text-[12px] text-[#4d5156] leading-relaxed">
+                        {r.date && <span className="text-[#70757a]">{r.date} — </span>}{r.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* The shift pill */}
+            <div className="hidden lg:flex items-center justify-center shrink-0">
+              <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[11px] font-bold px-3.5 py-2 rounded-full whitespace-nowrap">
+                The shift <ArrowRight className="w-3 h-3" />
+              </div>
+            </div>
+
+            {/* RIGHT — ChatGPT / Today */}
+            <div className="flex-1 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <span className="inline-flex items-center gap-1.5 bg-[#fde047] text-[#0a0a0a] text-[11px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  AI era
+                </span>
+              </div>
+              <div className="bg-white border border-[#e8e8e8] rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden h-full pt-4">
+                {/* Browser bar */}
+                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#ececec]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+                  <div className="ml-3 flex items-center gap-1.5">
+                    {/* Real OpenAI SVG logo */}
+                    <svg width="16" height="16" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.532 16.87a9.963 9.963 0 00-.856-8.184 10.078 10.078 0 00-10.855-4.835 9.964 9.964 0 00-7.505-3.348 10.079 10.079 0 00-9.612 6.977 9.967 9.967 0 00-6.664 4.834 10.08 10.08 0 001.24 11.817 9.965 9.965 0 00.856 8.185 10.079 10.079 0 0010.855 4.835 9.965 9.965 0 007.504 3.347 10.078 10.078 0 009.617-6.981 9.967 9.967 0 006.663-4.834 10.079 10.079 0 00-1.243-11.813zM22.498 37.886a7.474 7.474 0 01-4.799-1.735c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 00.655-1.134V19.054l3.366 1.944a.12.12 0 01.066.092v9.299a7.505 7.505 0 01-7.49 7.496zM6.392 31.006a7.471 7.471 0 01-.894-5.023c.06.036.162.099.237.141l7.964 4.6a1.297 1.297 0 001.308 0l9.724-5.614v3.888a.12.12 0 01-.048.103l-8.051 4.649a7.504 7.504 0 01-10.24-2.744zM4.297 13.62A7.469 7.469 0 018.2 10.333c0 .068-.004.19-.004.274v9.201a1.294 1.294 0 00.654 1.132l9.723 5.614-3.366 1.944a.12.12 0 01-.114.012L7.044 23.86a7.504 7.504 0 01-2.747-10.24zm27.658 6.437l-9.724-5.615 3.367-1.943a.121.121 0 01.114-.012l8.048 4.648a7.498 7.498 0 01-1.158 13.528v-9.476a1.293 1.293 0 00-.647-1.13zm3.35-5.043c-.059-.037-.162-.099-.236-.141l-7.965-4.6a1.298 1.298 0 00-1.308 0l-9.723 5.614v-3.888a.12.12 0 01.048-.103l8.05-4.645a7.497 7.497 0 0111.135 7.763zm-21.063 6.929l-3.367-1.944a.12.12 0 01-.065-.092v-9.299a7.497 7.497 0 0112.293-5.756 6.94 6.94 0 00-.236.134l-7.965 4.6a1.294 1.294 0 00-.654 1.132l-.006 11.225zm1.829-3.943l4.33-2.501 4.332 2.498v4.996l-4.331 2.5-4.331-2.5V18z" fill="currentColor"/></svg>
+                    <span className="text-[13px] font-medium text-[#0a0a0a]">ChatGPT</span>
+                  </div>
+                </div>
+
+                {/* Chat area */}
+                <div className="px-6 py-5 flex flex-col gap-5">
+                  {/* User bubble */}
+                  <div className="flex justify-end">
+                    <div className="bg-[#f4f4f4] rounded-[18px] rounded-tr-[4px] px-4 py-2.5 max-w-[75%]">
+                      <p className="text-[13.5px] text-[#0a0a0a] leading-snug">What&apos;s the best analytics tool for ecommerce?</p>
+                    </div>
+                  </div>
+
+                  {/* GPT response */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-full bg-white border border-[#e5e5e5] flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                      <svg width="14" height="14" viewBox="0 0 41 41" fill="#0a0a0a" xmlns="http://www.w3.org/2000/svg"><path d="M37.532 16.87a9.963 9.963 0 00-.856-8.184 10.078 10.078 0 00-10.855-4.835 9.964 9.964 0 00-7.505-3.348 10.079 10.079 0 00-9.612 6.977 9.967 9.967 0 00-6.664 4.834 10.08 10.08 0 001.24 11.817 9.965 9.965 0 00.856 8.185 10.079 10.079 0 0010.855 4.835 9.965 9.965 0 007.504 3.347 10.078 10.078 0 009.617-6.981 9.967 9.967 0 006.663-4.834 10.079 10.079 0 00-1.243-11.813zM22.498 37.886a7.474 7.474 0 01-4.799-1.735c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 00.655-1.134V19.054l3.366 1.944a.12.12 0 01.066.092v9.299a7.505 7.505 0 01-7.49 7.496zM6.392 31.006a7.471 7.471 0 01-.894-5.023c.06.036.162.099.237.141l7.964 4.6a1.297 1.297 0 001.308 0l9.724-5.614v3.888a.12.12 0 01-.048.103l-8.051 4.649a7.504 7.504 0 01-10.24-2.744zM4.297 13.62A7.469 7.469 0 018.2 10.333c0 .068-.004.19-.004.274v9.201a1.294 1.294 0 00.654 1.132l9.723 5.614-3.366 1.944a.12.12 0 01-.114.012L7.044 23.86a7.504 7.504 0 01-2.747-10.24zm27.658 6.437l-9.724-5.615 3.367-1.943a.121.121 0 01.114-.012l8.048 4.648a7.498 7.498 0 01-1.158 13.528v-9.476a1.293 1.293 0 00-.647-1.13zm3.35-5.043c-.059-.037-.162-.099-.236-.141l-7.965-4.6a1.298 1.298 0 00-1.308 0l-9.723 5.614v-3.888a.12.12 0 01.048-.103l8.05-4.645a7.497 7.497 0 0111.135 7.763zm-21.063 6.929l-3.367-1.944a.12.12 0 01-.065-.092v-9.299a7.497 7.497 0 0112.293-5.756 6.94 6.94 0 00-.236.134l-7.965 4.6a1.294 1.294 0 00-.654 1.132l-.006 11.225zm1.829-3.943l4.33-2.501 4.332 2.498v4.996l-4.331 2.5-4.331-2.5V18z"/></svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] text-[#0a0a0a] leading-relaxed mb-3">
+                        Here are the top ecommerce analytics tools in 2026:
+                      </p>
+                      <div className="space-y-2.5">
+                        {[
+                          { n: 1, name: "Mixpanel", desc: "Deep funnels & retention tracking", highlight: false, domain: "mixpanel.com" },
+                          { n: 2, name: "Your Brand", desc: "Built for modern ecommerce teams", highlight: true, domain: "comly.ai" },
+                          { n: 3, name: "Triple Whale", desc: "DTC-focused, Shopify-native", highlight: false, domain: "triplewhale.com" },
+                        ].map(({ n, name, desc, highlight, domain }) => (
+                          <div key={n} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${highlight ? "bg-[#fefce8] border border-[#fde047]/60" : "bg-[#fafafa] border border-[#f0f0f0]"}`}>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${highlight ? "bg-[#fde047] text-[#0a0a0a]" : "bg-[#e5e5e5] text-[#6b6b6b]"}`}>{n}</span>
+                            {highlight ? (
+                              <svg width="16" height="16" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                                <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#1a1a2e"/>
+                                <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="#7c3aed"/>
+                              </svg>
+                            ) : (
+                              <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} className="w-4 h-4 rounded-sm shrink-0" alt="" />
+                            )}
+                            <div className="min-w-0">
+                              <span className="text-[13px] font-semibold text-[#0a0a0a]">{name}</span>
+                              <span className="text-[12px] text-[#6b6b6b] ml-2">{desc}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Sources */}
+                      <div className="mt-4 pt-3 border-t border-[#f0f0f0]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#9ca3af] mr-1">Sources</span>
+                          {[
+                            { domain: "g2.com" },
+                            { domain: "reddit.com" },
+                            { domain: "quora.com" },
+                            { domain: "producthunt.com" },
+                          ].map((s, i) => (
+                            <div key={s.domain} className="flex items-center gap-1.5 bg-[#f4f4f4] rounded-full px-2.5 py-1 cursor-pointer hover:bg-[#ebebeb] transition-colors">
+                              <span className="text-[10px] text-[#9ca3af]">{i + 1}</span>
+                              <img src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=32`} className="w-3 h-3 rounded-sm shrink-0" alt="" />
+                              <span className="text-[11px] text-[#3a3a3a] font-medium">{s.domain}</span>
+                            </div>
+                          ))}
+                          <span className="text-[10px] text-[#9ca3af] cursor-pointer hover:underline ml-auto">+6 more</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input bar */}
+                <div className="px-4 py-3 border-t border-[#ececec]">
+                  <div className="flex items-center gap-2 bg-[#f4f4f4] rounded-full px-4 py-2">
+                    <span className="text-[12px] text-[#9ca3af] flex-1">Message ChatGPT</span>
+                    <div className="w-6 h-6 rounded-full bg-[#0a0a0a] flex items-center justify-center shrink-0">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 4l8 8-8 8M4 12h16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Pivot */}
+          <FadeIn className="text-center">
+            <p className="text-[22px] font-bold text-white">That&apos;s exactly what Comly fixes.</p>
+            <p className="mt-2 text-[15px] text-white/70">Stop optimizing for SEO. Start optimizing for GEO — Generative Engine Optimization.</p>
+          </FadeIn>
+
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
           FEATURES — alternating rows
       ═══════════════════════════════════════════════════════════════════════ */}
       <section className="py-24 px-6 [background:linear-gradient(to_bottom,#a87be0_0%,#b98de5_10%,#caaae9_25%,#dcc4ef_40%,#ece0f8_55%,#f3eeff_68%,#f7f7f5_82%)]" id="features">
@@ -2307,12 +2546,11 @@ export default function LandingPage() {
               className="text-[42px] md:text-[52px] font-bold tracking-tight text-[#0a0a0a] leading-[1.1]"
             />
             <p className="mt-4 text-lg text-[#6b6b6b] max-w-xl mx-auto leading-relaxed">
-              The same question. Two very different answers. This is what earning a seat at the table looks like.
+              The same question, asked across 4 AI models. Are you showing up in all of them?
             </p>
           </FadeIn>
 
-          {/* Before / After cards */}
-          <BeforeAfterChats />
+          <LLMConversations />
         </div>
       </section>
 
