@@ -414,21 +414,22 @@ function LLMConversations() {
           </button>
         ))}
       </div>
-      {/* Before / After column headers */}
-      <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto mb-3 px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-red-500">Before Comly</span>
-          <div className="flex-1 h-px bg-red-200" />
+      {/* Side-by-side windows — stacked on mobile, side by side on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-red-500">Before Comly</span>
+            <div className="flex-1 h-px bg-red-200" />
+          </div>
+          <LLMChatWindow model={LLM_CONVOS[activeIdx]} s={s} items={LLM_CONVOS[activeIdx].beforeItems} variant="before" />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">After Comly</span>
-          <div className="flex-1 h-px bg-emerald-200" />
+        <div>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">After Comly</span>
+            <div className="flex-1 h-px bg-emerald-200" />
+          </div>
+          <LLMChatWindow model={LLM_CONVOS[activeIdx]} s={sAfter} items={LLM_CONVOS[activeIdx].afterItems} variant="after" />
         </div>
-      </div>
-      {/* Side-by-side windows */}
-      <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <LLMChatWindow model={LLM_CONVOS[activeIdx]} s={s} items={LLM_CONVOS[activeIdx].beforeItems} variant="before" />
-        <LLMChatWindow model={LLM_CONVOS[activeIdx]} s={sAfter} items={LLM_CONVOS[activeIdx].afterItems} variant="after" />
       </div>
     </div>
   );
