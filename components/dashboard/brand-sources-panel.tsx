@@ -93,7 +93,7 @@ export function BrandSourcesPanel({ profile }: Props) {
         <div className="px-8 pt-7 pb-5 border-b border-[#f0f0f0]">
           <h2 className="text-[18px] font-bold text-[#0a0a0a] mb-1">Sources</h2>
           <p className="text-[13px] text-[#6b6b6b]">
-            Places on the web where {profile.brand_name} is being discussed — Reddit, review sites, press coverage.
+            The sources AI models pulled from when generating answers about {profile.brand_name} — these are the pages being cited.
           </p>
         </div>
 
