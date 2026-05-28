@@ -8,6 +8,7 @@ export interface BrandProfile {
   differentiators: string;
   pricing_tiers: { plan: string; price: string }[];
   url: string;
+  logo_url?: string;
 }
 
 export interface PromptResult {

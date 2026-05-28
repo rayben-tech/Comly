@@ -25,6 +25,7 @@ interface SidebarProps {
   collapsed?: boolean;
   demoMode?: boolean;
   demoUnlockedPages?: string[];
+  onEditProfile?: () => void;
 }
 
 function LockedNavItem({
@@ -69,9 +70,10 @@ function domainFromUrl(url: string): string {
   }
 }
 
-function BrandFavicon({ domain, name, size = 32 }: { domain: string; name: string; size?: number }) {
+function BrandFavicon({ domain, name, size = 32, logoUrl }: { domain: string; name: string; size?: number; logoUrl?: string }) {
   const [err, setErr] = useState(false);
-  if (err || !domain) {
+  const src = logoUrl || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : "");
+  if (err || !src) {
     return (
       <div
         className="rounded-xl bg-gradient-to-br from-[#5B2D91] to-[#8B5CF6] flex items-center justify-center text-white font-bold shrink-0"
@@ -83,7 +85,7 @@ function BrandFavicon({ domain, name, size = 32 }: { domain: string; name: strin
   }
   return (
     <img
-      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+      src={src}
       alt={name}
       width={size}
       height={size}
@@ -202,7 +204,7 @@ function IconBtn({
   );
 }
 
-export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode, demoUnlockedPages = [] }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode, demoUnlockedPages = [], onEditProfile }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const isFixesActive = activePage.startsWith("fixes:");
 
@@ -248,7 +250,13 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
           >
             {/* Brand favicon + expand button */}
             <div className="flex flex-col items-center gap-1.5 pt-3 pb-2.5 border-b border-[#f0f0f0]">
-              <BrandFavicon domain={domain} name={profile.brand_name} size={28} />
+              <button
+                onClick={() => onEditProfile ? onEditProfile() : onNavigate("brand")}
+                title="Edit brand profile"
+                className="rounded-xl hover:opacity-80 transition-opacity"
+              >
+                <BrandFavicon domain={domain} name={profile.brand_name} size={28} logoUrl={profile.logo_url} />
+              </button>
               {onOpen && (
                 <button
                   onClick={onOpen}
@@ -345,8 +353,17 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
           >
             {/* Brand header */}
             <div className="px-3 pt-3 pb-3 border-b border-[#f0f0f0] flex items-center gap-2">
-              <button className="flex-1 min-w-0 flex items-center gap-2.5 px-3 py-2 bg-white border border-[#e5e5e5] rounded-full shadow-sm hover:border-[#d0d0d0] transition-colors">
-                <BrandFavicon domain={domain} name={profile.brand_name} size={22} />
+              <button
+                onClick={() => onEditProfile ? onEditProfile() : onNavigate("brand")}
+                title="Edit brand profile"
+                className={cn(
+                  "flex-1 min-w-0 flex items-center gap-2.5 px-3 py-2 bg-white border rounded-full shadow-sm transition-colors",
+                  activePage === "brand"
+                    ? "border-[#5B2D91]/40 bg-[#faf7ff]"
+                    : "border-[#e5e5e5] hover:border-[#5B2D91]/30 hover:bg-[#faf7ff]"
+                )}
+              >
+                <BrandFavicon domain={domain} name={profile.brand_name} size={22} logoUrl={profile.logo_url} />
                 <span className="flex-1 min-w-0 text-[13px] font-semibold text-[#0a0a0a] truncate text-left">{profile.brand_name}</span>
                 <ChevronsUpDown className="w-3.5 h-3.5 text-[#9ca3af] shrink-0" />
               </button>

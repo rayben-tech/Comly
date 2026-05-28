@@ -125,11 +125,12 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
     typeof window !== "undefined" ? loadSet(`comly_reddit_replied_${slug}`) : new Set()
   );
 
-  const [activeThread,  setActiveThread]  = useState<Thread | null>(null);
-  const [replyText,     setReplyText]     = useState("");
-  const [isGenerating,  setIsGenerating]  = useState(false);
-  const [magicError,    setMagicError]    = useState("");
-  const [copied,        setCopied]        = useState(false);
+  const [activeThread,      setActiveThread]      = useState<Thread | null>(null);
+  const [replyText,         setReplyText]         = useState("");
+  const [isGenerating,      setIsGenerating]      = useState(false);
+  const [magicError,        setMagicError]        = useState("");
+  const [copied,            setCopied]            = useState(false);
+  const [generatedReplies,  setGeneratedReplies]  = useState<string[]>([]);
 
   const sortBtnRef  = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -219,6 +220,7 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
     setReplyText("");
     setMagicError("");
     setCopied(false);
+    setGeneratedReplies([]);
   }
 
   function insertFormatting(before: string, after: string = before) {
@@ -239,7 +241,17 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
     if (!activeThread) return;
     setIsGenerating(true);
     setMagicError("");
+    setGeneratedReplies([]);
     try {
+      if (demoMode) {
+        await new Promise(r => setTimeout(r, 900));
+        setGeneratedReplies([
+          `We actually made this exact switch at our company last year. The biggest win was having docs, tasks, and wikis in one place — way less context switching. Setup took a weekend but team adoption was surprisingly fast.`,
+          `Depends on what your team actually needs. For a living knowledge base that people enjoy writing in, ${profile.brand_name} wins hands down. Confluence works but it tends to collect dust because the UX gets in the way of actually writing.`,
+          `Honest take: the tool doesn't matter as much as who owns it. We tried both and the difference was always whether someone was actively maintaining it. That said, ${profile.brand_name} has lower friction for non-technical contributors which helped a lot.`,
+        ]);
+        return;
+      }
       const res  = await fetch("/api/generate-reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -247,9 +259,9 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Request failed");
-      const first = Array.isArray(data.replies) && data.replies[0] ? data.replies[0] : "";
-      if (!first) throw new Error("No reply was generated. Try again.");
-      setReplyText(first);
+      const replies = Array.isArray(data.replies) ? data.replies.filter(Boolean) : [];
+      if (!replies.length) throw new Error("No reply was generated. Try again.");
+      setGeneratedReplies(replies);
     } catch (err) {
       setMagicError(err instanceof Error ? err.message : "Could not generate reply. Try again.");
     } finally {
@@ -605,7 +617,7 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
                     ) : (
                       <Sparkles className="w-3 h-3" />
                     )}
-                    {isGenerating ? "Writing…" : "Magic write"}
+                    {isGenerating ? "Writing…" : generatedReplies.length > 0 ? "Regenerate" : "Magic write"}
                   </button>
                 </div>
 
@@ -616,13 +628,32 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
                   </div>
                 )}
 
+                {/* Generated reply options */}
+                {generatedReplies.length > 0 && (
+                  <div className="px-3 pt-3 pb-2 border-b border-[#f0f0f0] space-y-2 shrink-0">
+                    <p className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-widest px-1">Pick a reply</p>
+                    {generatedReplies.map((reply, i) => (
+                      <button
+                        key={i}
+                        onClick={() => { setReplyText(reply); setGeneratedReplies([]); setTimeout(() => textareaRef.current?.focus(), 0); }}
+                        className="w-full text-left rounded-lg border border-[#e5e5e5] px-3 py-2.5 hover:border-[#5B2D91]/50 hover:bg-[#faf7ff] transition-all group"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-[12px] text-[#1a1a1a] leading-snug line-clamp-3 flex-1">{reply}</p>
+                          <span className="shrink-0 text-[10px] font-bold text-[#5B2D91] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap mt-0.5">Use →</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Textarea */}
                 <textarea
                   ref={textareaRef}
                   value={replyText}
                   onChange={e => setReplyText(e.target.value)}
                   placeholder="Write your reply here, or click Magic write to generate one with AI…"
-                  className="flex-1 resize-none p-4 text-[13px] text-[#1a1a1a] placeholder:text-[#c0c0c0] focus:outline-none leading-relaxed bg-white"
+                  className="flex-1 resize-none p-4 text-[13px] text-[#1a1a1a] placeholder:text-[#c0c0c0] focus:outline-none leading-relaxed bg-white min-h-[80px]"
                 />
 
                 {/* Char count */}

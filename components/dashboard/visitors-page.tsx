@@ -133,6 +133,7 @@ export function VisitorsPage({ profile, demoMode }: Props) {
   const [loading,    setLoading]    = useState(true);
   const [modalOpen,   setModalOpen]   = useState(false);
   const [modalCopied, setModalCopied] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     if (demoMode) {
@@ -324,19 +325,21 @@ export function VisitorsPage({ profile, demoMode }: Props) {
     });
   }, []);
 
-  const displayTotals    = demoMode ? DEMO_MODE_TOTALS : isUnlocked ? totals     : DEMO_TOTALS;
-  const displayChart     = demoMode ? demoModeChart : isUnlocked ? chartData  : DEMO_CHART;
-  const displaySrcs      = demoMode ? DEMO_MODE_SRCS    : isUnlocked ? sources    : ["ChatGPT", "Perplexity", "Gemini"];
-  const displayTotal     = demoMode ? DEMO_MODE_TOTAL   : isUnlocked ? totalCount : 82;
-  const displayTop       = demoMode ? DEMO_MODE_TOTALS[0]! : isUnlocked ? topSource  : { source: "ChatGPT", count: 47 };
-  const displaySparks    = demoMode ? DEMO_MODE_SPARKLINES : isUnlocked ? sparklines : DEMO_SPARKLINES;
-  const displayPages     = demoMode ? DEMO_MODE_PAGES   : isUnlocked ? topPages   : DEMO_PAGES;
-  const displayBots      = demoMode ? DEMO_MODE_BOTS    : isUnlocked ? botTotals.map(({ source, count }) => ({
+  const isPreview = demoMode || previewMode;
+
+  const displayTotals    = isPreview ? DEMO_MODE_TOTALS : isUnlocked ? totals     : DEMO_TOTALS;
+  const displayChart     = isPreview ? demoModeChart : isUnlocked ? chartData  : DEMO_CHART;
+  const displaySrcs      = isPreview ? DEMO_MODE_SRCS    : isUnlocked ? sources    : ["ChatGPT", "Perplexity", "Gemini"];
+  const displayTotal     = isPreview ? DEMO_MODE_TOTAL   : isUnlocked ? totalCount : 82;
+  const displayTop       = isPreview ? DEMO_MODE_TOTALS[0]! : isUnlocked ? topSource  : { source: "ChatGPT", count: 47 };
+  const displaySparks    = isPreview ? DEMO_MODE_SPARKLINES : isUnlocked ? sparklines : DEMO_SPARKLINES;
+  const displayPages     = isPreview ? DEMO_MODE_PAGES   : isUnlocked ? topPages   : DEMO_PAGES;
+  const displayBots      = isPreview ? DEMO_MODE_BOTS    : isUnlocked ? botTotals.map(({ source, count }) => ({
     source, count, lastSeen: timeAgo(botLastSeen.get(source) ?? new Date().toISOString()),
   })) : DEMO_BOTS;
-  const displayCrawledPages = demoMode ? DEMO_MODE_CRAWLED_PAGES : isUnlocked ? topPages : DEMO_CRAWLED_PAGES;
-  const totalBotCrawls   = demoMode ? 13595 : isUnlocked ? bots.length : 654;
-  const botsDetected     = demoMode ? 4     : isUnlocked ? botTotals.length : 4;
+  const displayCrawledPages = isPreview ? DEMO_MODE_CRAWLED_PAGES : isUnlocked ? topPages : DEMO_CRAWLED_PAGES;
+  const totalBotCrawls   = isPreview ? 13595 : isUnlocked ? bots.length : 654;
+  const botsDetected     = isPreview ? 4     : isUnlocked ? botTotals.length : 4;
 
   return (
     <>
@@ -354,21 +357,36 @@ export function VisitorsPage({ profile, demoMode }: Props) {
               See real visits and bot crawls from AI tools for {profile.brand_name}.
             </p>
           </div>
-          {token && (
-            <button
-              onClick={() => setModalOpen(true)}
-              className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[12px] font-semibold transition-colors"
-              style={isUnlocked
-                ? { borderColor: "#d1fae5", background: "#f0fdf4", color: "#059669" }
-                : { borderColor: "#e5e5e5", background: "#fafafa", color: "#6b6b6b" }
-              }
-            >
-              {isUnlocked
-                ? <><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Active · View script</>
-                : <><Code2 className="w-3.5 h-3.5" /> Get snippet</>
-              }
-            </button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {!demoMode && !isUnlocked && (
+              <button
+                onClick={() => setPreviewMode(v => !v)}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[12px] font-semibold transition-colors"
+                style={previewMode
+                  ? { borderColor: "#c4b5fd", background: "#f3eeff", color: "#5B2D91" }
+                  : { borderColor: "#e5e5e5", background: "#fafafa", color: "#6b6b6b" }
+                }
+              >
+                <Zap className="w-3.5 h-3.5" />
+                {previewMode ? "Exit preview" : "Preview sample data"}
+              </button>
+            )}
+            {token && (
+              <button
+                onClick={() => setModalOpen(true)}
+                className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[12px] font-semibold transition-colors"
+                style={isUnlocked
+                  ? { borderColor: "#d1fae5", background: "#f0fdf4", color: "#059669" }
+                  : { borderColor: "#e5e5e5", background: "#fafafa", color: "#6b6b6b" }
+                }
+              >
+                {isUnlocked
+                  ? <><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Active · View script</>
+                  : <><Code2 className="w-3.5 h-3.5" /> Get snippet</>
+                }
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}

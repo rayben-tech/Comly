@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
-  MessageCircle, Send, Check, ExternalLink, Sparkles,
-  Bookmark, X, CornerUpLeft, ArrowUpDown, Info, RefreshCw,
+  MessageCircle, Check, ExternalLink, Sparkles,
+  Bookmark, X, CornerUpLeft, ArrowUpDown, Info, RefreshCw, Link,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 
@@ -84,8 +84,8 @@ const SORT_OPTIONS: { id: SortOption; label: string }[] = [
 
 const HOW_IT_WORKS = [
   { icon: <MessageCircle className="w-4 h-4" />, color: "#b92b27", bg: "#b92b271a", title: "We find the questions", desc: "Scanned from Quora based on your category, pain points, and competitors." },
-  { icon: <Sparkles      className="w-4 h-4" />, color: "#5B2D91", bg: "#f3eeff",   title: "Pick your answer",     desc: "3 AI-drafted answers tailored to the question's context and your brand." },
-  { icon: <Send          className="w-4 h-4" />, color: "#10b981", bg: "#f0fdf4",   title: "One-click engage",     desc: "Answer is copied to clipboard and the Quora question opens instantly." },
+  { icon: <Sparkles      className="w-4 h-4" />, color: "#5B2D91", bg: "#f3eeff",   title: "Write or auto-generate", desc: "Type your own answer or hit Magic write for an AI-drafted response tailored to the question." },
+  { icon: <Check         className="w-4 h-4" />, color: "#10b981", bg: "#f0fdf4",   title: "One-click engage",       desc: "Answer is copied to clipboard and the Quora question opens instantly." },
 ];
 
 // ── component ─────────────────────────────────────────────────────────────
@@ -113,13 +113,14 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
     typeof window !== "undefined" ? loadSet(`comly_quora_replied_${slug}`) : new Set()
   );
 
-  const [activeThread,   setActiveThread]   = useState<Thread | null>(null);
-  const [replies,        setReplies]        = useState<string[]>([]);
-  const [repliesLoading, setRepliesLoading] = useState(false);
-  const [selectedReply,  setSelectedReply]  = useState(0);
-  const [copied,         setCopied]         = useState(false);
+  const [activeThread,  setActiveThread]  = useState<Thread | null>(null);
+  const [replyText,     setReplyText]     = useState("");
+  const [isGenerating,  setIsGenerating]  = useState(false);
+  const [magicError,    setMagicError]    = useState("");
+  const [copied,        setCopied]        = useState(false);
 
-  const sortBtnRef = useRef<HTMLButtonElement>(null);
+  const sortBtnRef  = useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ── init: load threads from localStorage, auto-fetch if empty ──────────
   useEffect(() => {
@@ -196,30 +197,52 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
     }
   }
 
-  async function openReplyPanel(thread: Thread) {
+  function openReplyPanel(thread: Thread) {
     setActiveThread(thread);
-    setReplies([]);
-    setSelectedReply(0);
+    setReplyText("");
+    setMagicError("");
     setCopied(false);
-    setRepliesLoading(true);
+  }
+
+  function insertFormatting(before: string, after: string = before) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    const sel   = replyText.slice(start, end);
+    const next  = replyText.slice(0, start) + before + sel + after + replyText.slice(end);
+    setReplyText(next);
+    setTimeout(() => {
+      ta.focus();
+      ta.setSelectionRange(start + before.length, start + before.length + sel.length);
+    }, 0);
+  }
+
+  async function magicWrite() {
+    if (!activeThread) return;
+    setIsGenerating(true);
+    setMagicError("");
     try {
-      const res = await fetch("/api/generate-quora-reply", {
+      const res  = await fetch("/api/generate-quora-reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thread: { title: thread.title }, profile }),
+        body: JSON.stringify({ thread: { title: activeThread.title }, profile }),
       });
-      setReplies((await res.json()).replies ?? []);
-    } catch {
-      setReplies([]);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      const first = Array.isArray(data.replies) && data.replies[0] ? data.replies[0] : "";
+      if (!first) throw new Error("No answer was generated. Try again.");
+      setReplyText(first);
+    } catch (err) {
+      setMagicError(err instanceof Error ? err.message : "Could not generate answer. Try again.");
     } finally {
-      setRepliesLoading(false);
+      setIsGenerating(false);
     }
   }
 
   async function engage() {
-    const reply = replies[selectedReply];
-    if (!reply || !activeThread) return;
-    await navigator.clipboard.writeText(reply);
+    if (!replyText.trim() || !activeThread) return;
+    await navigator.clipboard.writeText(replyText);
     setCopied(true);
     setRepliedTo(prev => new Set([...prev, activeThread.id]));
     window.open(activeThread.url, "_blank");
@@ -501,8 +524,10 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
       {activeThread && typeof document !== "undefined" && createPortal(
         <div className={`${demoMode ? "absolute" : "fixed"} inset-0 z-50 flex`}>
           <div className="flex-1 bg-black/30" onClick={() => setActiveThread(null)} />
-          <div className="w-[440px] bg-white h-full overflow-y-auto flex flex-col shadow-2xl">
-            <div className="px-5 py-4 border-b border-[#f0f0f0]">
+          <div className="w-[440px] bg-white h-full flex flex-col shadow-2xl">
+
+            {/* Panel header */}
+            <div className="px-5 py-4 border-b border-[#f0f0f0] shrink-0">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold" style={{ color: "#b92b27" }}>Quora</p>
@@ -515,68 +540,90 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
               </a>
             </div>
 
-            <div className="flex-1 px-5 py-4">
-              <p className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-widest mb-3">
-                {repliesLoading ? "Generating answers…" : "Choose an answer"}
-              </p>
-              {repliesLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="rounded-xl border border-[#f0f0f0] p-4 animate-pulse space-y-2">
-                      <div className="h-3 bg-[#f0f0f0] rounded w-full" />
-                      <div className="h-3 bg-[#f0f0f0] rounded w-5/6" />
-                      <div className="h-3 bg-[#f0f0f0] rounded w-2/3" />
-                    </div>
-                  ))}
+            {/* Editor body */}
+            <div className="flex-1 px-5 py-4 flex flex-col min-h-0">
+              <p className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-widest mb-3 shrink-0">Your answer</p>
+
+              {/* Editor card */}
+              <div className="flex-1 flex flex-col rounded-xl border border-[#e5e5e5] overflow-hidden focus-within:border-[#5B2D91]/40 transition-colors min-h-0">
+
+                {/* Toolbar */}
+                <div className="flex items-center gap-0.5 px-3 py-2 border-b border-[#f0f0f0] bg-[#fafafa] shrink-0">
+                  <button title="Heading" onClick={() => insertFormatting("# ", "")}
+                    className="w-7 h-7 rounded-md text-[12px] font-bold text-[#6b6b6b] hover:bg-[#eeeeee] hover:text-[#0a0a0a] transition-colors flex items-center justify-center">H</button>
+                  <button title="Bold" onClick={() => insertFormatting("**")}
+                    className="w-7 h-7 rounded-md text-[12px] font-bold text-[#6b6b6b] hover:bg-[#eeeeee] hover:text-[#0a0a0a] transition-colors flex items-center justify-center">B</button>
+                  <button title="Italic" onClick={() => insertFormatting("*")}
+                    className="w-7 h-7 rounded-md text-[12px] italic text-[#6b6b6b] hover:bg-[#eeeeee] hover:text-[#0a0a0a] transition-colors flex items-center justify-center">I</button>
+                  <button title="Strikethrough" onClick={() => insertFormatting("~~")}
+                    className="w-7 h-7 rounded-md text-[12px] line-through text-[#6b6b6b] hover:bg-[#eeeeee] hover:text-[#0a0a0a] transition-colors flex items-center justify-center">S</button>
+                  <button title="Underline (not supported on Quora)" disabled
+                    className="w-7 h-7 rounded-md text-[12px] underline text-[#cccccc] flex items-center justify-center cursor-not-allowed">U</button>
+                  <button title="Link" onClick={() => insertFormatting("[", "](url)")}
+                    className="w-7 h-7 rounded-md flex items-center justify-center text-[#6b6b6b] hover:bg-[#eeeeee] hover:text-[#0a0a0a] transition-colors">
+                    <Link className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="flex-1" />
+
+                  {/* Magic write */}
+                  <button onClick={magicWrite} disabled={isGenerating}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#5B2D91] bg-[#f3eeff] hover:bg-[#e8d8ff] disabled:opacity-60 transition-colors">
+                    {isGenerating ? (
+                      <div className="w-3 h-3 border border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    {isGenerating ? "Writing…" : "Magic write"}
+                  </button>
                 </div>
-              ) : replies.length === 0 ? (
-                <p className="text-[13px] text-[#9ca3af] italic">Could not generate answers. Try again.</p>
-              ) : (
-                <div className="space-y-3">
-                  {replies.map((reply, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedReply(i)}
-                      className={`w-full text-left rounded-xl border p-4 transition-all ${
-                        selectedReply === i ? "border-[#5B2D91]/30 bg-[#5B2D91]/[0.03]" : "border-[#f0f0f0] bg-white hover:border-[#d0d0d0]"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <p className="text-[12px] text-[#3a3a3a] leading-relaxed flex-1">{reply}</p>
-                        <div className={`shrink-0 w-4 h-4 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                          selectedReply === i ? "border-[#5B2D91] bg-[#5B2D91]" : "border-[#d0d0d0]"
-                        }`}>
-                          {selectedReply === i && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+
+                {/* Magic write error */}
+                {magicError && (
+                  <div className="px-4 py-2 bg-red-50 border-b border-red-100">
+                    <p className="text-[11px] text-red-500">{magicError}</p>
+                  </div>
+                )}
+
+                {/* Textarea */}
+                <textarea
+                  ref={textareaRef}
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                  placeholder="Write your answer here, or click Magic write to generate one with AI…"
+                  className="flex-1 resize-none p-4 text-[13px] text-[#1a1a1a] placeholder:text-[#c0c0c0] focus:outline-none leading-relaxed bg-white"
+                />
+
+                {/* Char count */}
+                <div className="px-4 py-2 border-t border-[#f5f5f5] bg-[#fafafa] shrink-0">
+                  <span className="text-[10px] text-[#cccccc]">{replyText.length} chars</span>
                 </div>
-              )}
+              </div>
             </div>
 
-            {!repliesLoading && replies.length > 0 && (
-              <div className="px-5 pb-6 pt-3 border-t border-[#f0f0f0]">
-                <button
-                  onClick={engage}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #b92b27, #e53e3a)" }}
-                >
-                  {copied ? (
-                    <><Check className="w-4 h-4" /> Copied! Quora is opening…</>
-                  ) : (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://www.google.com/s2/favicons?domain=quora.com&sz=32" alt="" width={14} height={14} className="w-3.5 h-3.5" />
-                      Answer on Quora
-                    </>
-                  )}
-                </button>
-                <p className="text-[10px] text-[#aaaaaa] text-center mt-2">
-                  Answer is copied to your clipboard · Paste it in the answer box
-                </p>
-              </div>
-            )}
+            {/* Engage button */}
+            <div className="px-5 pb-6 pt-3 border-t border-[#f0f0f0] shrink-0">
+              <button
+                onClick={engage}
+                disabled={!replyText.trim()}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                style={{ background: "linear-gradient(135deg, #b92b27, #e53e3a)" }}
+              >
+                {copied ? (
+                  <><Check className="w-4 h-4" /> Copied! Quora is opening…</>
+                ) : (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="https://www.google.com/s2/favicons?domain=quora.com&sz=32" alt="" width={14} height={14} className="w-3.5 h-3.5" />
+                    Answer on Quora
+                  </>
+                )}
+              </button>
+              <p className="text-[10px] text-[#aaaaaa] text-center mt-2">
+                Answer is copied to your clipboard · Paste it in the answer box
+              </p>
+            </div>
+
           </div>
         </div>,
         (demoMode && document.getElementById("demo-dashboard-root")) || document.body

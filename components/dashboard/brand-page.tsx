@@ -14,9 +14,10 @@ function domainFromUrl(url: string): string {
   }
 }
 
-function BrandFaviconLarge({ domain, name }: { domain: string; name: string }) {
+function BrandFaviconLarge({ domain, name, logoUrl }: { domain: string; name: string; logoUrl?: string }) {
   const [err, setErr] = useState(false);
-  if (err || !domain) {
+  const src = logoUrl || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : "");
+  if (err || !src) {
     return (
       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#5B2D91] to-[#8B5CF6] flex items-center justify-center text-white font-bold text-xl shrink-0 shadow-sm">
         {name.charAt(0).toUpperCase()}
@@ -25,7 +26,7 @@ function BrandFaviconLarge({ domain, name }: { domain: string; name: string }) {
   }
   return (
     <img
-      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+      src={src}
       alt={name}
       width={48}
       height={48}
@@ -272,20 +273,47 @@ export function BrandPage({ profile, onSave }: Props) {
 
       <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-5 space-y-4">
         {/* Identity header */}
-        <div className="flex items-center gap-3 pb-4 border-b border-[#f0f0f0]">
-          <BrandFaviconLarge domain={editing ? domain : displayDomain} name={editing ? draft.brand_name : profile.brand_name} />
+        <div className="flex items-start gap-3 pb-4 border-b border-[#f0f0f0]">
+          <div className="relative shrink-0 group">
+            <BrandFaviconLarge
+              domain={editing ? domain : displayDomain}
+              name={editing ? draft.brand_name : profile.brand_name}
+              logoUrl={editing ? draft.logo_url : profile.logo_url}
+            />
+            {editing && (
+              <label
+                title="Change logo"
+                className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Pencil className="w-4 h-4 text-white" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => set("logo_url", reader.result as string);
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+            )}
+          </div>
           {editing ? (
             <div className="flex-1 space-y-2">
-              <TextInput
-                value={draft.brand_name}
-                onChange={(v) => set("brand_name", v)}
-                placeholder="Brand name"
-              />
-              <TextInput
-                value={draft.url}
-                onChange={(v) => set("url", v)}
-                placeholder="Website URL"
-              />
+              <TextInput value={draft.brand_name} onChange={(v) => set("brand_name", v)} placeholder="Brand name" />
+              <TextInput value={draft.url} onChange={(v) => set("url", v)} placeholder="Website URL" />
+              {draft.logo_url && (
+                <button
+                  type="button"
+                  onClick={() => set("logo_url", undefined)}
+                  className="flex items-center gap-1 text-[11px] text-[#aaaaaa] hover:text-[#ef4444] transition-colors"
+                >
+                  <X className="w-3 h-3" /> Remove custom logo
+                </button>
+              )}
             </div>
           ) : (
             <div>
