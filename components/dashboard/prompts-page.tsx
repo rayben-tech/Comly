@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PromptResult, BrandProfile } from "@/types";
-import { ChevronDown, CheckCircle2, XCircle, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, CheckCircle2, XCircle, SlidersHorizontal, Plus, X, Loader2 } from "lucide-react";
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS = [
@@ -39,10 +39,31 @@ const LABEL_STYLES: Record<string, { pill: string; dot: string; color: string }>
   Competitor:     { pill: "bg-orange-50 text-orange-600 border border-orange-100", dot: "bg-orange-500",  color: "#f97316" },
   "Direct Brand": { pill: "bg-purple-50 text-purple-600 border border-purple-100", dot: "bg-purple-500",  color: "#a855f7" },
   "Open Ended":   { pill: "bg-[#f7f7f5] text-[#6b6b6b] border border-[#e5e5e5]",  dot: "bg-[#aaaaaa]",  color: "#aaaaaa" },
+  Custom:         { pill: "bg-sky-50 text-sky-600 border border-sky-100",          dot: "bg-sky-500",     color: "#0ea5e9" },
   Other:          { pill: "bg-[#f7f7f5] text-[#6b6b6b] border border-[#e5e5e5]",  dot: "bg-[#aaaaaa]",  color: "#aaaaaa" },
 };
 
 type Filter = "all" | "mentioned" | "not-mentioned";
+
+interface CustomResult extends PromptResult {
+  customId: string;
+}
+
+function cacheKey(brandName: string) {
+  return `comly_custom_prompts_${brandName.toLowerCase().replace(/\s+/g, "_")}`;
+}
+
+function loadCustomResults(brandName: string): CustomResult[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const v = localStorage.getItem(cacheKey(brandName));
+    return v ? JSON.parse(v) : [];
+  } catch { return []; }
+}
+
+function saveCustomResults(brandName: string, results: CustomResult[]) {
+  try { localStorage.setItem(cacheKey(brandName), JSON.stringify(results)); } catch {}
+}
 
 function highlightBrand(text: string, brandName: string) {
   if (!brandName) return text;
@@ -58,14 +79,25 @@ function highlightBrand(text: string, brandName: string) {
 interface Props {
   promptResults: PromptResult[];
   profile: BrandProfile;
+  demoMode?: boolean;
 }
 
-export function PromptsPage({ promptResults, profile }: Props) {
-  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
-  const [filter, setFilter] = useState<Filter>("all");
+export function PromptsPage({ promptResults, profile, demoMode }: Props) {
+  const [expanded,      setExpanded]      = useState<Record<string, boolean>>({});
+  const [filter,        setFilter]        = useState<Filter>("all");
+  const [customResults, setCustomResults] = useState<CustomResult[]>(() => loadCustomResults(profile.brand_name));
+  const [addOpen,       setAddOpen]       = useState(false);
+  const [inputText,     setInputText]     = useState("");
+  const [isRunning,     setIsRunning]     = useState(false);
+  const [runError,      setRunError]      = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const mentioned = promptResults.filter((r) => r.mentioned).length;
-  const notMentioned = promptResults.length - mentioned;
+  useEffect(() => {
+    if (addOpen) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [addOpen]);
+
+  const allMentioned    = promptResults.filter((r) => r.mentioned).length + customResults.filter((r) => r.mentioned).length;
+  const allNotMentioned = (promptResults.length + customResults.length) - allMentioned;
 
   const categories = ["Discovery", "Competitor", "Direct Brand", "Open Ended"] as const;
   const catStats = categories.map((cat) => {
@@ -75,13 +107,51 @@ export function PromptsPage({ promptResults, profile }: Props) {
     return { cat, hit, total };
   });
 
-  const filtered = promptResults
-    .map((r, i) => ({ ...r, index: i, label: PROMPT_LABELS[i] ?? "Other" }))
-    .filter((r) =>
-      filter === "all" ? true :
-      filter === "mentioned" ? r.mentioned :
-      !r.mentioned
-    );
+  type Row = PromptResult & { rowKey: string; label: string; isCustom?: boolean; customId?: string; displayNum: string };
+
+  const allRows: Row[] = [
+    ...promptResults.map((r, i) => ({ ...r, rowKey: `std-${i}`, label: PROMPT_LABELS[i] ?? "Other", displayNum: String(i + 1).padStart(2, "0") })),
+    ...customResults.map((r, i) => ({ ...r, rowKey: `cus-${r.customId}`, label: "Custom", isCustom: true as const, customId: r.customId, displayNum: `C${i + 1}` })),
+  ];
+
+  const filtered = allRows.filter((r) =>
+    filter === "all" ? true :
+    filter === "mentioned" ? r.mentioned :
+    !r.mentioned
+  );
+
+  async function runPrompt() {
+    const text = inputText.trim();
+    if (!text || isRunning) return;
+    setIsRunning(true);
+    setRunError("");
+    try {
+      const res  = await fetch("/api/run-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: text, profile }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "Request failed");
+      const newResult: CustomResult = { ...data.result, customId: `c_${Date.now()}` };
+      const updated = [...customResults, newResult];
+      setCustomResults(updated);
+      saveCustomResults(profile.brand_name, updated);
+      setInputText("");
+      setAddOpen(false);
+      setExpanded((p) => ({ ...p, [`cus-${newResult.customId}`]: true }));
+    } catch (err) {
+      setRunError(err instanceof Error ? err.message : "Could not run prompt. Try again.");
+    } finally {
+      setIsRunning(false);
+    }
+  }
+
+  function deleteCustom(customId: string) {
+    const updated = customResults.filter((r) => r.customId !== customId);
+    setCustomResults(updated);
+    saveCustomResults(profile.brand_name, updated);
+  }
 
   return (
     <div className="p-6 space-y-5">
@@ -94,15 +164,78 @@ export function PromptsPage({ promptResults, profile }: Props) {
             AI model responses to each audit query
           </p>
         </div>
-        <div className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-semibold ${
-          mentioned > notMentioned
-            ? "bg-emerald-50 border-emerald-100 text-emerald-600"
-            : "bg-red-50 border-red-100 text-red-500"
-        }`}>
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          {mentioned} mentioned
+        <div className="flex items-center gap-2 shrink-0">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-semibold ${
+            allMentioned > allNotMentioned
+              ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+              : "bg-red-50 border-red-100 text-red-500"
+          }`}>
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {allMentioned} mentioned
+          </div>
+          {!demoMode && (
+            <button
+              onClick={() => { setAddOpen((v) => !v); setRunError(""); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-semibold transition-colors ${
+                addOpen
+                  ? "bg-[#5B2D91] border-[#5B2D91] text-white"
+                  : "bg-white border-[#e5e5e5] text-[#5B2D91] hover:border-[#5B2D91]/40 hover:bg-[#faf7ff]"
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add prompt
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Add prompt input */}
+      <AnimatePresence initial={false}>
+        {addOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="bg-white border border-[#5B2D91]/20 rounded-xl p-4 space-y-3" style={{ boxShadow: "0 4px 16px rgba(91,45,145,0.08)" }}>
+              <p className="text-[11px] font-bold text-[#aaaaaa] uppercase tracking-widest">Test a custom prompt</p>
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") runPrompt();
+                    if (e.key === "Escape") { setAddOpen(false); setRunError(""); }
+                  }}
+                  placeholder="e.g. What's the best tool for onboarding enterprise clients?"
+                  className="flex-1 text-[13px] px-3 py-2 rounded-lg border border-[#e5e5e5] focus:outline-none focus:border-[#5B2D91]/40 placeholder:text-[#c0c0c0]"
+                  disabled={isRunning}
+                />
+                <button
+                  onClick={runPrompt}
+                  disabled={!inputText.trim() || isRunning}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold bg-[#5B2D91] text-white hover:bg-[#4a2478] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  {isRunning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {isRunning ? "Running…" : "Run"}
+                </button>
+                <button
+                  onClick={() => { setAddOpen(false); setRunError(""); setInputText(""); }}
+                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#e5e5e5] text-[#aaaaaa] hover:text-[#0a0a0a] hover:border-[#d0d0d0] transition-colors shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {runError && (
+                <p className="text-[11px] text-red-500">{runError}</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Category stats */}
       <div className="grid grid-cols-4 gap-3">
@@ -155,13 +288,17 @@ export function PromptsPage({ promptResults, profile }: Props) {
       {/* Prompt list */}
       <div className="space-y-2">
         {filtered.map((r) => {
-          const isOpen = expanded[r.index] ?? false;
-          const style = LABEL_STYLES[r.label];
+          const isOpen  = expanded[r.rowKey] ?? false;
+          const style   = LABEL_STYLES[r.label] ?? LABEL_STYLES.Other;
           const preview = r.response_text?.slice(0, 120);
+          const stdIdx  = r.isCustom ? -1 : parseInt(r.rowKey.replace("std-", ""));
+          const model   = r.isCustom
+            ? { name: "ChatGPT", domain: "chatgpt.com" }
+            : (PROMPT_MODELS[stdIdx] ?? PROMPT_MODELS[0]);
 
           return (
             <div
-              key={r.index}
+              key={r.rowKey}
               className={`bg-white rounded-xl overflow-hidden transition-all border ${
                 r.mentioned
                   ? isOpen ? "border-[#5B2D91]/20" : "border-[#e5e5e5]"
@@ -171,13 +308,11 @@ export function PromptsPage({ promptResults, profile }: Props) {
             >
               <button
                 className="w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-[#fafafa] transition-colors"
-                onClick={() => setExpanded((p) => ({ ...p, [r.index]: !isOpen }))}
+                onClick={() => setExpanded((p) => ({ ...p, [r.rowKey]: !isOpen }))}
               >
                 {/* Index + status */}
                 <div className="flex flex-col items-center gap-1.5 shrink-0 pt-0.5">
-                  <span className="text-[11px] font-bold text-[#aaaaaa]">
-                    {String(r.index + 1).padStart(2, "0")}
-                  </span>
+                  <span className="text-[11px] font-bold text-[#aaaaaa]">{r.displayNum}</span>
                   {r.mentioned
                     ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     : <XCircle className="w-4 h-4 text-[#d0d0d0]" />
@@ -201,13 +336,23 @@ export function PromptsPage({ promptResults, profile }: Props) {
                   <p className={`text-[13px] font-medium leading-snug ${r.mentioned ? "text-[#0a0a0a]" : "text-[#6b6b6b]"}`}>
                     &ldquo;{r.prompt}&rdquo;
                   </p>
-                  {/* Response preview — only when not expanded and mentioned */}
                   {!isOpen && r.mentioned && preview && (
                     <p className="mt-1.5 text-[12px] text-[#aaaaaa] leading-relaxed line-clamp-1">
                       {preview}…
                     </p>
                   )}
                 </div>
+
+                {/* Delete button for custom prompts */}
+                {r.isCustom && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteCustom(r.customId!); }}
+                    className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-red-400 hover:bg-red-50 transition-colors"
+                    title="Remove custom prompt"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
 
                 {/* Chevron */}
                 <motion.div
@@ -231,21 +376,15 @@ export function PromptsPage({ promptResults, profile }: Props) {
                 >
                 <div className="border-t border-[#f0f0f0] bg-[#fafafa]">
                   {/* Model header */}
-                  {(() => {
-                    const model = PROMPT_MODELS[r.index] ?? PROMPT_MODELS[0];
-                    return (
-                      <div className="flex items-center gap-2.5 px-5 py-3 border-b border-[#f0f0f0]">
-                        <img
-                          src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`}
-                          alt={model.name}
-                          width={18}
-                          height={18}
-                          className="w-[18px] h-[18px] rounded-md"
-                        />
-                        <span className="text-[12px] font-semibold text-[#0a0a0a]">{model.name}</span>
-                      </div>
-                    );
-                  })()}
+                  <div className="flex items-center gap-2.5 px-5 py-3 border-b border-[#f0f0f0]">
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`}
+                      alt={model.name}
+                      width={18} height={18}
+                      className="w-[18px] h-[18px] rounded-md"
+                    />
+                    <span className="text-[12px] font-semibold text-[#0a0a0a]">{model.name}</span>
+                  </div>
 
                   {/* Response body */}
                   <div className="px-5 py-4">
@@ -297,4 +436,3 @@ export function PromptsPage({ promptResults, profile }: Props) {
     </div>
   );
 }
-
