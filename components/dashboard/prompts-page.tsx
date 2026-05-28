@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PromptResult, BrandProfile } from "@/types";
-import { ChevronDown, CheckCircle2, XCircle, SlidersHorizontal, Plus, X, Clock } from "lucide-react";
+import { ChevronDown, CheckCircle2, XCircle, Plus, X, Clock } from "lucide-react";
 import { PROMPT_MODELS } from "@/lib/prompt-models";
 
 const PROMPT_LABELS = [
@@ -83,6 +83,7 @@ export function PromptsPage({ promptResults, profile, demoMode }: Props) {
 
   const [expanded,      setExpanded]      = useState<Record<string, boolean>>({});
   const [filter,        setFilter]        = useState<Filter>("all");
+  const [catFilter,     setCatFilter]     = useState<string>("all");
   const [deletedIdx,    setDeletedIdx]    = useState<number[]>(initialEdits.deleted);
   const [queued,        setQueued]        = useState<QueuedPrompt[]>(initialEdits.queued);
   const [inputText,     setInputText]     = useState("");
@@ -135,19 +136,23 @@ export function PromptsPage({ promptResults, profile, demoMode }: Props) {
   const notMentioned = visibleResults.length - mentioned;
 
   const categories = ["Discovery", "Competitor", "Direct Brand", "Open Ended"] as const;
-  const catStats = categories.map((cat) => {
-    const indices = PROMPT_LABELS.reduce<number[]>((acc, l, i) => (l === cat && !deletedSet.has(i) ? [...acc, i] : acc), []);
-    const total = indices.length;
-    const hit = indices.filter((i) => promptResults[i]?.mentioned).length;
-    return { cat, hit, total };
+  const catCounts = Object.fromEntries(
+    categories.map((cat) => {
+      const count = visibleResults.filter((r) => r.label === cat).length;
+      return [cat, count];
+    })
+  ) as Record<string, number>;
+
+  const filteredStd = visibleResults.filter((r) => {
+    const passesFilter = filter === "all" ? true : filter === "mentioned" ? r.mentioned : !r.mentioned;
+    const passesCat    = catFilter === "all" ? true : catFilter === "Custom" ? false : r.label === catFilter;
+    return passesFilter && passesCat;
   });
 
-  const filteredStd = visibleResults.filter((r) =>
-    filter === "all" ? true : filter === "mentioned" ? r.mentioned : !r.mentioned
-  );
+  // Queued prompts only show in "all" filter + "Custom" or "all" cat filter
+  const filteredQueued = filter !== "not-mentioned" && (catFilter === "all" || catFilter === "Custom") ? queued : [];
 
-  // Queued prompts only show in "all" filter (no result yet)
-  const filteredQueued = filter === "all" ? queued : [];
+  const totalVisible = filteredStd.length + filteredQueued.length;
 
   return (
     <div className="p-6 space-y-5">
@@ -223,34 +228,31 @@ export function PromptsPage({ promptResults, profile, demoMode }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Category stats */}
-      <div className="grid grid-cols-4 gap-3">
-        {catStats.map(({ cat, hit, total }) => {
-          const style = LABEL_STYLES[cat];
+      {/* Category pill filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {([
+          { key: "all", label: "All", count: visibleResults.length + queued.length },
+          ...categories.map((cat) => ({ key: cat, label: cat, count: catCounts[cat] ?? 0 })),
+          ...(queued.length > 0 ? [{ key: "Custom", label: "Custom", count: queued.length }] : []),
+        ]).map(({ key, label, count }) => {
+          const active = catFilter === key;
           return (
-            <div key={cat} className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-3" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}>
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${style.dot}`} />
-                <span className="text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wide truncate">{cat}</span>
-              </div>
-              <p className="text-[22px] font-bold text-[#0a0a0a] leading-none">
-                {hit}<span className="text-[14px] font-semibold text-[#aaaaaa]"> hits</span>
-              </p>
-              <div className="mt-2 h-1 bg-[#f0f0f0] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: total > 0 ? `${(hit / total) * 100}%` : "0%", backgroundColor: style.color }}
-                />
-              </div>
-            </div>
+            <button
+              key={key}
+              onClick={() => setCatFilter(key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all border ${
+                active
+                  ? "bg-[#0a0a0a] text-white border-[#0a0a0a]"
+                  : "bg-white text-[#6b6b6b] border-[#e5e5e5] hover:border-[#c0c0c0] hover:text-[#0a0a0a]"
+              }`}
+            >
+              {label}
+              <span className={`text-[12px] ${active ? "text-white/70" : "text-[#aaaaaa]"}`}>({count})</span>
+            </button>
           );
         })}
-      </div>
 
-      {/* Filter bar */}
-      <div className="flex items-center gap-2">
-        <SlidersHorizontal className="w-3.5 h-3.5 text-[#aaaaaa] shrink-0" />
-        <div className="flex items-center gap-1 bg-[#f7f7f5] border border-[#e5e5e5] rounded-lg p-0.5">
+        <div className="ml-auto flex items-center gap-1 bg-[#f7f7f5] border border-[#e5e5e5] rounded-lg p-0.5">
           {([
             { key: "all",           label: "All" },
             { key: "mentioned",     label: "Mentioned" },
