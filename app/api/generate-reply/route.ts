@@ -45,7 +45,8 @@ Return ONLY a valid JSON array of 3 strings, nothing else. Example format:
     // Extract JSON array even if the model added extra text
     const match = content.match(/\[[\s\S]*\]/);
     if (!match) throw new Error("Model returned unexpected format");
-    const replies = JSON.parse(match[0]);
+    const cleaned = match[0].replace(/,\s*([}\]])/g, "$1");
+    const replies = JSON.parse(cleaned);
     if (!Array.isArray(replies) || replies.length === 0) throw new Error("Empty replies from model");
     return NextResponse.json({ replies });
   } catch (err) {
