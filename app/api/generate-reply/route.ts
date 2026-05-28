@@ -40,13 +40,17 @@ Return ONLY a valid JSON array of 3 strings, nothing else. Example format:
       max_tokens: 600,
     });
 
-    const raw = response.choices[0].message.content ?? "[]";
+    const raw = response.choices[0].message.content ?? "";
     const content = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-    const replies = JSON.parse(content);
+    // Extract JSON array even if the model added extra text
+    const match = content.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error("Model returned unexpected format");
+    const replies = JSON.parse(match[0]);
+    if (!Array.isArray(replies) || replies.length === 0) throw new Error("Empty replies from model");
     return NextResponse.json({ replies });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("generate-reply error:", msg);
-    return NextResponse.json({ replies: [], error: msg });
+    return NextResponse.json({ replies: [], error: msg }, { status: 500 });
   }
 }
