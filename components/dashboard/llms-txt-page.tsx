@@ -484,60 +484,6 @@ export function LlmsTxtPage({ profile, locked, onGenerated }: Props) {
             )}
           </div>
 
-          {/* Refine CTA */}
-          <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] p-6 space-y-3">
-            <div>
-              <h2 className="text-[15px] font-bold text-[#0a0a0a]">Want to improve your llms.txt?</h2>
-              <p className="text-[13px] text-[#6b6b6b] mt-1">
-                AI will review your existing file, fill any gaps, and optimize it for better AI citations — without replacing accurate information.
-              </p>
-            </div>
-
-            <button
-              onClick={() => generate(existingContent!)}
-              disabled={loading}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-[13px] font-semibold transition-opacity disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {loading ? "Refining your llms.txt…" : "Refine with AI →"}
-            </button>
-
-            {/* Result after refine */}
-            {(generatedContent || error) && (
-              <div className="pt-1">
-                {error && (
-                  <div className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">{error}</div>
-                )}
-                {generatedContent && (
-                  <div className="space-y-3">
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 flex items-center gap-2.5">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <p className="text-[13px] font-semibold text-emerald-800">Refined llms.txt downloaded</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={copyText}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-[12px] font-semibold text-[#666] hover:bg-[#f7f7f5] transition-colors"
-                      >
-                        {copied
-                          ? <><Check className="w-3.5 h-3.5 text-emerald-500" /> Copied!</>
-                          : <><Copy className="w-3.5 h-3.5" /> Copy</>}
-                      </button>
-                      <button
-                        onClick={() => triggerDownload(generatedContent)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-[12px] font-semibold text-[#666] hover:bg-[#f7f7f5] transition-colors"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Download again
-                      </button>
-                    </div>
-                    <CodeBlock content={generatedContent} />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         </>
       )}
 
