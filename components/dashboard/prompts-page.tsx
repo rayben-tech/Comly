@@ -274,7 +274,15 @@ export function PromptsPage({ promptResults, profile, demoMode }: Props) {
       </div>
 
       {/* Prompt list */}
-      <div className="space-y-2">
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={`${catFilter}-${filter}`}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -4 }}
+        transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+        className="space-y-2"
+      >
 
         {/* Standard results */}
         {filteredStd.map((r) => {
@@ -448,7 +456,8 @@ export function PromptsPage({ promptResults, profile, demoMode }: Props) {
             <p className="text-[14px] text-[#aaaaaa]">No prompts match this filter.</p>
           </div>
         )}
-      </div>
+      </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
