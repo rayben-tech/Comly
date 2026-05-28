@@ -23,7 +23,7 @@ const LLM_ICONS: Record<string, string> = {
   Perplexity: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=32",
   Claude:     "https://www.google.com/s2/favicons?domain=claude.ai&sz=32",
   Gemini:     "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32",
-  Copilot:    "https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=32",
+  Copilot:    "https://www.google.com/s2/favicons?domain=bing.com&sz=32",
 };
 
 function getScript(token: string) {
