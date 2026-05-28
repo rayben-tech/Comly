@@ -130,10 +130,12 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
     }
 
     const cached = loadThreads(`comly_quora_threads_${slug}`);
-    if (cached.length > 0) {
+    const cacheValid = cached.length > 0 && cached.every(t => t.id && t.id !== "");
+    if (cacheValid) {
       setThreads(cached);
       setLoading(false);
     } else {
+      if (cached.length > 0) localStorage.removeItem(`comly_quora_threads_${slug}`);
       setLoading(true);
       setError(false);
       fetch("/api/quora-threads", {
@@ -364,7 +366,7 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
             </div>
           ) : (
             displayed.map((t) => {
-              const tid = t.id || btoa(t.url).slice(-24);
+              const tid = t.id || t.url || t.title;
               const relevance = getRelevanceTag(t.title);
               const keyword   = extractKeyword(t.title);
               const isSaved   = saved.has(tid);

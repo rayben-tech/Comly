@@ -41,6 +41,21 @@ const DEMO_CHART_DATA: Record<string, number | string | null>[] = [
   { label: "6 May",  value: 72, Confluence: 64, Asana: 78, ClickUp: 60 },
 ];
 const DEMO_COMP_NAMES = ["Confluence", "Asana", "ClickUp"];
+
+const DEMO_SOURCES = [
+  { domain: "reddit.com", title: "Best project management tools for remote teams in 2024?", count: 5 },
+  { domain: "reddit.com", title: "Anyone switched from Notion to something else? Sharing my experience", count: 3 },
+  { domain: "g2.com",     title: "Top 10 Project Management Software — G2 Rankings & Reviews", count: 2 },
+];
+
+function sourceCategory(domain: string): { label: string; color: string; bg: string } {
+  if (domain.includes("reddit")) return { label: "Reddit", color: "#ff4500", bg: "#fff1ec" };
+  if (["g2", "capterra", "trustradius", "trustpilot", "getapp", "softwareadvice"].some(k => domain.includes(k)))
+    return { label: "Review site", color: "#1472E0", bg: "#eff6ff" };
+  if (["techcrunch", "producthunt", "forbes", "wired", "venturebeat", "hackernews", "ycombinator"].some(k => domain.includes(k)))
+    return { label: "Press", color: "#16a34a", bg: "#f0fdf4" };
+  return { label: "Web", color: "#6b7280", bg: "#f7f7f5" };
+}
 const DEMO_MODEL_COVERAGE = [
   { name: "ChatGPT",    hit: 10, total: 15, indices: [] as number[], domain: "chatgpt.com",       color: "#10a37f" },
   { name: "Gemini",     hit:  8, total: 10, indices: [] as number[], domain: "gemini.google.com", color: "#4285F4" },
@@ -176,11 +191,66 @@ export function OverviewPanel({
   const [modelDropOpen, setModelDropOpen] = useState(false);
   const [brandDropOpen, setBrandDropOpen] = useState(false);
   const [llmsTxtExists, setLlmsTxtExists] = useState(demoMode === true);
+  const [overviewSources, setOverviewSources] = useState<{ domain: string; title: string; category: string; count: number }[]>([]);
 
   useEffect(() => {
     if (demoMode || !userId) return;
     getAuditHistory(userId, timeRange).then(setHistory).catch(() => {});
   }, [userId, timeRange, demoMode]);
+
+  useEffect(() => {
+    if (demoMode || !profile.brand_name) return;
+    const cacheKey = `comly_brand_sources_${profile.brand_name.toLowerCase().replace(/\s+/g, "_")}`;
+
+    function buildTop3(raw: { domain: string; title: string; category: string }[]) {
+      const domainMap: Record<string, { domain: string; title: string; category: string; count: number }> = {};
+      for (const s of raw) {
+        if (!domainMap[s.domain]) domainMap[s.domain] = { ...s, count: 0 };
+        domainMap[s.domain].count++;
+      }
+      const sorted = Object.values(domainMap).sort((a, b) => b.count - a.count);
+      const result: typeof sorted = [];
+      const baseCounts: Record<string, number> = {};
+      for (const s of sorted) {
+        const base = s.domain.replace(/^www\./, "").split(".").slice(-2).join(".");
+        if ((baseCounts[base] ?? 0) < 2) {
+          result.push(s);
+          baseCounts[base] = (baseCounts[base] ?? 0) + 1;
+        }
+        if (result.length === 3) break;
+      }
+      return result;
+    }
+
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { data?: { domain: string; title: string; category: string }[]; savedAt: number };
+        if (Array.isArray(parsed.data) && parsed.data.length > 0 && Date.now() - parsed.savedAt < 7 * 24 * 60 * 60 * 1000) {
+          setOverviewSources(buildTop3(parsed.data));
+          return;
+        }
+      }
+    } catch {}
+
+    // Not cached yet — fetch silently in background
+    fetch("/api/brand-sources", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    })
+      .then(r => r.json())
+      .then(json => {
+        if (Array.isArray(json.sources) && json.sources.length > 0) {
+          setOverviewSources(buildTop3(json.sources));
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify({ data: json.sources, savedAt: Date.now() }));
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.brand_name]);
 
   useEffect(() => {
     if (demoMode || !domain) return;
@@ -364,6 +434,8 @@ export function OverviewPanel({
   const finalChartData = demoMode ? activeDemoData : chartData;
   const finalTopCompNames = demoMode ? activeDemoCompNames : topCompNames;
   const finalHasCompetitorData = demoMode || hasCompetitorData;
+
+  const topSources = demoMode ? DEMO_SOURCES : overviewSources;
 
   const showDots = finalChartData.filter(d => d.value !== null).length <= 3;
   const xInterval = finalChartData.length > 10 ? 3 : 0;
@@ -1094,6 +1166,79 @@ export function OverviewPanel({
           </div>
         )}
       </motion.div>
+
+      {/* ── Top Sources ── */}
+      {topSources.length > 0 && (
+        <motion.div
+          custom={6} initial="hidden" animate="visible" variants={cardVariants}
+          className="mx-6 mb-6 bg-white rounded-xl overflow-hidden"
+          style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
+        >
+          {/* Card header — same pattern as Prompt Performance */}
+          <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: "0.5px solid #f0f0f0" }}>
+            <div>
+              <h3 className="text-[13px] font-bold text-[#0a0a0a]">Top Sources</h3>
+              <p className="text-[11px] text-[#6b7280] mt-0.5">Pages AI cited when answering about {brandName}</p>
+            </div>
+            <button
+              onClick={() => onNavigate("sources")}
+              className="text-[11px] font-semibold text-[#5B2D91] hover:underline shrink-0"
+            >
+              View all sources →
+            </button>
+          </div>
+
+          {/* 3 stat cards inside the card body */}
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {topSources.map((src, i) => {
+              const cat = demoMode ? sourceCategory(src.domain) : (() => {
+                const c = (src as { category?: string }).category;
+                if (c === "reddit") return { label: "Reddit", color: "#ff4500", bg: "#fff1ec" };
+                if (c === "review") return { label: "Review site", color: "#1472E0", bg: "#eff6ff" };
+                if (c === "press")  return { label: "Press", color: "#16a34a", bg: "#f0fdf4" };
+                return sourceCategory(src.domain);
+              })();
+              return (
+                <div
+                  key={src.domain + i}
+                  className="rounded-xl p-4 cursor-pointer hover:border-[#5B2D91]/30 transition-all"
+                  style={{ border: "0.5px solid #eeeeee", background: "#fafafa" }}
+                  onClick={() => onNavigate("sources")}
+                >
+                  {/* Domain row */}
+                  <div className="flex items-center gap-2 mb-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${src.domain}&sz=32`}
+                      alt={src.domain} width={14} height={14}
+                      className="w-[14px] h-[14px] rounded-sm object-contain shrink-0"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                    <span className="text-[12px] font-bold text-[#0a0a0a] truncate flex-1">
+                      {src.domain.replace(/^www\./, "")}
+                    </span>
+                    <span
+                      className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{ background: cat.bg, color: cat.color }}
+                    >
+                      {cat.label}
+                    </span>
+                  </div>
+
+                  {/* Citation count */}
+                  <div className="mb-2.5">
+                    <div className="text-[30px] font-black text-[#0a0a0a] leading-none">{src.count}</div>
+                    <div className="text-[10px] text-[#9ca3af] mt-1">AI citations</div>
+                  </div>
+
+                  {/* Source title */}
+                  <p className="text-[11px] text-[#6b7280] line-clamp-2 leading-relaxed">{src.title}</p>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
     </div>
   );

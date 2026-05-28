@@ -409,7 +409,9 @@ function LLMConversations() {
                 : "bg-white border-[#e5e5e5] text-[#555] hover:border-[#bbb] hover:shadow-sm"
             }`}
           >
-            <img src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`} width={18} height={18} className="rounded-full" alt={model.name} />
+            <span className={`flex items-center justify-center w-[22px] h-[22px] rounded-full shrink-0 ${i === activeIdx ? "bg-white" : ""}`}>
+              <img src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`} width={16} height={16} className="rounded-full" alt={model.name} />
+            </span>
             <span className="text-[13px]">{model.name}</span>
           </button>
         ))}

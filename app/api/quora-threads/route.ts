@@ -120,7 +120,14 @@ export async function POST(req: NextRequest) {
     const queries = await getQueries(profile);
     console.log("[quora] queries:", queries);
     if (queries.length === 0) {
-      return NextResponse.json({ threads: await generateFallbackQuestions(profile) });
+      const fallback = await generateFallbackQuestions(profile);
+      return NextResponse.json({
+        threads: fallback.map(f => ({
+          id: Buffer.from(f.url).toString("base64").slice(-24),
+          title: f.title,
+          url: f.url,
+        })),
+      });
     }
 
     // Run all searches in parallel to stay under Hobby 10s limit
