@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, TrendingUp, Eye, ChevronsUpDown } from "lucide-react";
+import { ChevronDown, TrendingUp, Eye, ChevronsUpDown, Zap, User, Users, BarChart2, LineChart, Heart, PieChart } from "lucide-react";
 import {
-  ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid,
+  ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, ResponsiveContainer,
 } from "recharts";
 import { PromptResult, CompetitorRanking, BrandProfile } from "@/types";
@@ -102,6 +102,19 @@ const LLM_DOMAINS: Record<string, string> = {
   Perplexity: "perplexity.ai",
 };
 
+function computeSentimentScore(prompts: PromptResult[], total: number): number {
+  const score = prompts.reduce((sum, p) => {
+    if (!p.mentioned) return sum;
+    const pos = p.position ?? 5;
+    return sum + Math.max(0, 100 - (pos - 1) * 20);
+  }, 0);
+  return Math.round(score / total);
+}
+
+function computeSoV(brandMentions: number, allMentions: number): number {
+  return allMentions > 0 ? Math.round((brandMentions / allMentions) * 100) : 0;
+}
+
 function useCountUp(target: number, duration = 1000) {
   const [value, setValue] = useState(0);
   useEffect(() => {
@@ -190,6 +203,10 @@ export function OverviewPanel({
   const [demoBrandFilter, setDemoBrandFilter] = useState<"all" | "Confluence" | "Asana" | "ClickUp">("all");
   const [modelDropOpen, setModelDropOpen] = useState(false);
   const [brandDropOpen, setBrandDropOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [chartMetric, setChartMetric] = useState<"visibility" | "sentiment" | "sov">("visibility");
+  const [chartView, setChartView] = useState<"brand" | "competitors">("competitors");
+  const [chartType, setChartType] = useState<"line" | "bar">("line");
   const [llmsTxtExists, setLlmsTxtExists] = useState(demoMode === true);
   const [overviewSources, setOverviewSources] = useState<{ domain: string; title: string; category: string; count: number }[]>([]);
 
@@ -291,12 +308,15 @@ export function OverviewPanel({
   const rank = activeCompRankings.filter(c => c.mentions > activeMentions).length + 1;
   const animRank = useCountUp(rank, 800);
 
-  const [chartRevealed, setChartRevealed] = useState(false);
+  // Delay-mount the chart so the flex container fully lays out before ResponsiveContainer measures
+  const [chartReady, setChartReady] = useState(demoMode === true);
   useEffect(() => {
-    setChartRevealed(false);
-    const t = setTimeout(() => setChartRevealed(true), 60);
+    if (demoMode) { setChartReady(true); return; }
+    setChartReady(false);
+    const t = setTimeout(() => setChartReady(true), 80);
     return () => clearTimeout(t);
-  }, [activeEntry, timeRange]);
+  }, [demoMode, previewMode]);
+
 
   const citationPct = Math.round((activeMentions / totalPrompts) * 100);
 
@@ -336,12 +356,22 @@ export function OverviewPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeEntry, score, totalMentions]);
 
-  const tableRows = [
-    { name: brandName, domain, mentions: activeMentions, isYou: true },
-    ...activeCompRankings.slice(0, 4).map(c => ({
-      name: c.name, domain: c.domain || "", mentions: c.mentions, isYou: false,
-    })),
-  ].sort((a, b) => b.mentions - a.mentions);
+  const tableRows = (() => {
+    if (previewMode && !demoMode && activeCompRankings.length === 0) {
+      const names = DEMO_COMP_NAMES;
+      const fakeScores = [8, 5, 6, 3];
+      return [
+        { name: brandName, domain, mentions: 7, isYou: true as const },
+        ...names.map((name, i) => ({ name, domain: "", mentions: fakeScores[i] ?? 2, isYou: false as const })),
+      ].sort((a, b) => b.mentions - a.mentions);
+    }
+    return [
+      { name: brandName, domain, mentions: activeMentions, isYou: true as const },
+      ...activeCompRankings.slice(0, 4).map(c => ({
+        name: c.name, domain: c.domain || "", mentions: c.mentions, isYou: false as const,
+      })),
+    ].sort((a, b) => b.mentions - a.mentions);
+  })();
 
   const aiMentions = activePromptResults.filter(p => p.response_text).slice(0, 2);
 
@@ -386,26 +416,37 @@ export function OverviewPanel({
     const isToday = lbl === todayStr;
 
     if (entry && entry.results) {
-      // Only plot days where we have full data (brand + competitors together)
-      const pt: Record<string, number | string | null> = { label: lbl, value: entry.score };
       const r = entry.results as { prompt_results?: PromptResult[]; competitor_rankings?: CompetitorRanking[] };
-      const tp = r.prompt_results?.length || 11;
+      const prompts = r.prompt_results ?? [];
+      const comps = r.competitor_rankings ?? [];
+      const tp = prompts.length || 11;
+      const brandM = prompts.filter(p => p.mentioned).length;
+      const compTotalM = comps.reduce((s, c) => s + c.mentions, 0);
+      const allM = brandM + compTotalM;
+      const brandVal = chartMetric === "sentiment" ? computeSentimentScore(prompts, tp)
+        : chartMetric === "sov" ? computeSoV(brandM, allM) : entry.score;
+      const pt: Record<string, number | string | null> = { label: lbl, value: brandVal };
       topCompNames.forEach(name => {
-        const comp = r.competitor_rankings?.find(c => c.name.toLowerCase() === name.toLowerCase());
-        pt[name] = comp ? Math.round((comp.mentions / tp) * 100) : 0;
+        const comp = comps.find(c => c.name.toLowerCase() === name.toLowerCase());
+        const cM = comp?.mentions ?? 0;
+        pt[name] = chartMetric === "sov" ? (allM > 0 ? Math.round((cM / allM) * 100) : 0) : Math.round((cM / tp) * 100);
       });
       return pt;
     } else if (isToday) {
-      // Today always shows current audit data even if not yet saved to history
       const tp = promptResults.length || 11;
-      const pt: Record<string, number | string | null> = { label: lbl, value: score };
+      const brandM = promptResults.filter(p => p.mentioned).length;
+      const compTotalM = competitorRankings.reduce((s, c) => s + c.mentions, 0);
+      const allM = brandM + compTotalM;
+      const brandVal = chartMetric === "sentiment" ? computeSentimentScore(promptResults, tp)
+        : chartMetric === "sov" ? computeSoV(brandM, allM) : score;
+      const pt: Record<string, number | string | null> = { label: lbl, value: brandVal };
       topCompNames.forEach(n => {
         const comp = competitorRankings.find(c => c.name === n);
-        pt[n] = comp ? Math.round((comp.mentions / tp) * 100) : null;
+        const cM = comp?.mentions ?? 0;
+        pt[n] = chartMetric === "sov" ? (allM > 0 ? Math.round((cM / allM) * 100) : null) : (comp ? Math.round((cM / tp) * 100) : null);
       });
       return pt;
     } else {
-      // Empty day — null keeps the x-axis label but leaves a gap in the line
       const pt: Record<string, number | string | null> = { label: lbl, value: null };
       topCompNames.forEach(name => { pt[name] = null; });
       return pt;
@@ -431,9 +472,61 @@ export function OverviewPanel({
 
   const activeDemoCompNames = demoBrandFilter === "all" ? DEMO_COMP_NAMES : [demoBrandFilter];
 
-  const finalChartData = demoMode ? activeDemoData : chartData;
-  const finalTopCompNames = demoMode ? activeDemoCompNames : topCompNames;
-  const finalHasCompetitorData = demoMode || hasCompetitorData;
+  // Derive sentiment / SoV from visibility demo data
+  const activeDemoDataForMetric = useMemo(() => {
+    if (chartMetric === "visibility") return activeDemoData;
+    return (activeDemoData as Record<string, number | string | null>[]).map(row => {
+      const brand = typeof row.value === "number" ? row.value : 0;
+      const conf  = typeof row.Confluence === "number" ? row.Confluence : 0;
+      const asana = typeof row.Asana      === "number" ? row.Asana      : 0;
+      const cu    = typeof row.ClickUp    === "number" ? row.ClickUp    : 0;
+      if (chartMetric === "sentiment") {
+        return {
+          label: row.label,
+          value:      brand > 0 ? Math.min(100, Math.round(brand * 0.90 + 4)) : null,
+          Confluence: conf  > 0 ? Math.min(100, Math.round(conf  * 0.84))     : null,
+          Asana:      asana > 0 ? Math.min(100, Math.round(asana * 0.84))     : null,
+          ClickUp:    cu    > 0 ? Math.min(100, Math.round(cu    * 0.84))     : null,
+        };
+      }
+      const total = brand + conf + asana + cu;
+      return {
+        label: row.label,
+        value:      total > 0 ? Math.round((brand / total) * 100) : null,
+        Confluence: total > 0 ? Math.round((conf  / total) * 100) : null,
+        Asana:      total > 0 ? Math.round((asana / total) * 100) : null,
+        ClickUp:    total > 0 ? Math.round((cu    / total) * 100) : null,
+      };
+    });
+  }, [activeDemoData, chartMetric]);
+
+  // Preview mode: remap demo data keys to the brand's real competitor names
+  const previewCompNamesResolved = useMemo(() => {
+    const comps = (profile.competitors ?? []).slice(0, 3).filter(Boolean);
+    return comps.length > 0 ? comps : DEMO_COMP_NAMES;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.competitors?.join(",")]);
+
+  const previewChartData = useMemo(() => {
+    const keys = ["Confluence", "Asana", "ClickUp"];
+    return (activeDemoDataForMetric as Record<string, number | string | null>[]).map(row => {
+      const out: Record<string, number | string | null> = { label: row.label, value: row.value };
+      previewCompNamesResolved.forEach((name, i) => { out[name] = row[keys[i]] ?? null; });
+      return out;
+    });
+  }, [activeDemoDataForMetric, previewCompNamesResolved]);
+
+  const previewDemoCompNames = demoBrandFilter === "all"
+    ? previewCompNamesResolved
+    : (() => {
+        const idx = ["Confluence", "Asana", "ClickUp"].indexOf(demoBrandFilter);
+        return idx >= 0 && idx < previewCompNamesResolved.length ? [previewCompNamesResolved[idx]] : previewCompNamesResolved;
+      })();
+
+  const finalChartData = (demoMode || previewMode) ? activeDemoDataForMetric : chartData;
+  const finalTopCompNames = (demoMode || previewMode) ? activeDemoCompNames : topCompNames;
+  const finalHasCompetitorData = demoMode || previewMode || hasCompetitorData;
+  const effectiveTopCompNames = chartView === "brand" ? [] : finalTopCompNames;
 
   const topSources = demoMode ? DEMO_SOURCES : overviewSources;
 
@@ -494,7 +587,7 @@ export function OverviewPanel({
         <div className="relative">
           {modelDropOpen && <div className="fixed inset-0 z-10" onClick={() => setModelDropOpen(false)} />}
           <button
-            onClick={() => { if (demoMode) setModelDropOpen(v => !v); }}
+            onClick={() => { if (demoMode || previewMode) setModelDropOpen(v => !v); }}
             className="relative z-20 flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[11px] text-[#6b7280] transition-colors"
             style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
@@ -531,7 +624,7 @@ export function OverviewPanel({
         <div className="relative">
           {brandDropOpen && <div className="fixed inset-0 z-10" onClick={() => setBrandDropOpen(false)} />}
           <button
-            onClick={() => { if (demoMode) setBrandDropOpen(v => !v); }}
+            onClick={() => { if (demoMode || previewMode) setBrandDropOpen(v => !v); }}
             className="relative z-20 flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[11px] text-[#6b7280] transition-colors"
             style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}
           >
@@ -578,7 +671,11 @@ export function OverviewPanel({
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-[13px] font-bold text-[#0a0a0a]">Brand Visibility</h3>
-              <p className="text-[11px] text-[#6b7280]">Track your visibility across AI answers</p>
+              <p className="text-[11px] text-[#6b7280]">
+                {chartMetric === "sentiment" ? "How positively AI mentions your brand"
+                  : chartMetric === "sov" ? "Your share of voice across AI answers"
+                  : "Track your visibility across AI answers"}
+              </p>
             </div>
             <div className="flex items-center gap-5">
               <div>
@@ -605,96 +702,126 @@ export function OverviewPanel({
             </div>
           </div>
 
-          {/* Chart — locked placeholder when data is sparse, line chart when there's enough history */}
+          {/* Chart — locked placeholder when data is sparse, interactive chart when unlocked */}
           {showDots && !demoMode ? (
-            <ChartLockedPlaceholder />
-          ) : (
-            <div
-              className="h-[120px] -mx-1"
-              style={{
-                clipPath: chartRevealed ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-                transition: "clip-path 1100ms cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={finalChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="ovStroke" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#cc6666" />
-                      <stop offset="100%" stopColor="#5B2D91" />
-                    </linearGradient>
-                    <linearGradient id="ovFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#5B2D91" stopOpacity={0.08} />
-                      <stop offset="100%" stopColor="#5B2D91" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} stroke="#f0f0f0" strokeWidth={0.5} />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
-                    axisLine={false}
-                    tickLine={false}
-                    interval={xInterval}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={28}
-                    tickFormatter={(v) => `${v}%`}
-                    ticks={[0, 25, 50, 75]}
-                    domain={[0, 100]}
-                  />
-                  <RTooltip
-                    contentStyle={{ background: "white", border: "0.5px solid #e5e5e5", borderRadius: 8, fontSize: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-                    formatter={(v: number, name: string) => [`${v}%`, name === "value" ? brandName : name]}
-                    labelStyle={{ color: "#6b7280", marginBottom: 2 }}
-                  />
-                  {finalHasCompetitorData && finalTopCompNames.map((name, i) => (
-                    <Line
-                      key={name}
-                      type="monotone"
-                      dataKey={name}
-                      stroke={COMP_COLORS[i % COMP_COLORS.length]}
-                      strokeWidth={1.5}
-                      strokeDasharray="3 2"
-                      strokeOpacity={0.65}
-                      connectNulls={false}
-                      dot={false}
-                      activeDot={{ r: 3 }}
-                      isAnimationActive
-                      animationDuration={650}
-                      animationEasing="ease-out"
-                    />
-                  ))}
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="url(#ovStroke)"
-                    strokeWidth={2.5}
-                    fill="url(#ovFill)"
-                    connectNulls={false}
-                    dot={false}
-                    activeDot={{ r: 4, fill: "#5B2D91", stroke: "white", strokeWidth: 2 }}
-                    isAnimationActive
-                    animationDuration={650}
-                    animationEasing="ease-out"
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
+            <div className="flex flex-col items-center gap-2">
+              <ChartLockedPlaceholder />
+              <button
+                onClick={() => setPreviewMode(true)}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5B2D91] hover:underline"
+              >
+                <Zap className="w-3.5 h-3.5" /> Preview sample data
+              </button>
             </div>
+          ) : (
+            <>
+              {/* Metric + view + chart-type controls */}
+              <div className="flex items-center gap-1.5 -mt-1">
+                {/* Metric group */}
+                <div className="flex items-center gap-0.5 bg-[#f3f3f3] rounded-lg p-0.5">
+                  {([
+                    { id: "visibility" as const, Icon: Eye,       title: "Visibility"     },
+                    { id: "sentiment"  as const, Icon: Heart,     title: "Sentiment"      },
+                    { id: "sov"        as const, Icon: PieChart,  title: "Share of Voice" },
+                  ] as const).map(({ id, Icon, title }) => (
+                    <button key={id} onClick={() => setChartMetric(id)} title={title}
+                      className={`p-1.5 rounded-md transition-all ${chartMetric === id ? "bg-white text-[#5B2D91] shadow-sm" : "text-[#aaaaaa] hover:text-[#6b7280]"}`}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </button>
+                  ))}
+                </div>
+
+                {/* View group */}
+                <div className="flex items-center gap-0.5 bg-[#f3f3f3] rounded-lg p-0.5">
+                  <button onClick={() => setChartView("brand")} title="Brand only"
+                    className={`p-1.5 rounded-md transition-all ${chartView === "brand" ? "bg-white text-[#5B2D91] shadow-sm" : "text-[#aaaaaa] hover:text-[#6b7280]"}`}>
+                    <User className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setChartView("competitors")} title="With competitors"
+                    className={`p-1.5 rounded-md transition-all ${chartView === "competitors" ? "bg-white text-[#5B2D91] shadow-sm" : "text-[#aaaaaa] hover:text-[#6b7280]"}`}>
+                    <Users className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Chart type group */}
+                <div className="flex items-center gap-0.5 bg-[#f3f3f3] rounded-lg p-0.5">
+                  <button onClick={() => setChartType("line")} title="Line chart"
+                    className={`p-1.5 rounded-md transition-all ${chartType === "line" ? "bg-white text-[#5B2D91] shadow-sm" : "text-[#aaaaaa] hover:text-[#6b7280]"}`}>
+                    <LineChart className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setChartType("bar")} title="Bar chart"
+                    className={`p-1.5 rounded-md transition-all ${chartType === "bar" ? "bg-white text-[#5B2D91] shadow-sm" : "text-[#aaaaaa] hover:text-[#6b7280]"}`}>
+                    <BarChart2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {previewMode && !demoMode && (
+                <div className="flex items-center justify-between -mt-1 mb-0.5">
+                  <span className="text-[10px] text-[#9ca3af] italic flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-[#5B2D91]" /> Showing sample data
+                  </span>
+                  <button onClick={() => setPreviewMode(false)} className="text-[10px] text-[#5B2D91] font-semibold hover:underline">
+                    Exit preview ×
+                  </button>
+                </div>
+              )}
+
+              <div className="-mx-1" style={{ height: 140 }}>
+              {chartReady && <ResponsiveContainer width="100%" height={140}>
+                  <ComposedChart data={finalChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="ovStroke" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#cc6666" />
+                        <stop offset="100%" stopColor="#5B2D91" />
+                      </linearGradient>
+                      <linearGradient id="ovFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#5B2D91" stopOpacity={0.08} />
+                        <stop offset="100%" stopColor="#5B2D91" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="#f0f0f0" strokeWidth={0.5} />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} interval={xInterval} />
+                    <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={28} tickFormatter={(v) => `${v}%`} ticks={[0, 25, 50, 75]} domain={[0, 100]} />
+                    <RTooltip
+                      contentStyle={{ background: "white", border: "0.5px solid #e5e5e5", borderRadius: 8, fontSize: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+                      formatter={(v: number, name: string) => [`${v}%`, name === "value" ? brandName : name]}
+                      labelStyle={{ color: "#6b7280", marginBottom: 2 }}
+                    />
+                    {finalHasCompetitorData && chartType === "bar" && effectiveTopCompNames.map((name, i) => (
+                      <Bar key={name} dataKey={name} fill={COMP_COLORS[i % COMP_COLORS.length]} fillOpacity={0.5} radius={[2, 2, 0, 0]} maxBarSize={14} isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                    ))}
+                    {chartType === "bar" && (
+                      <Bar dataKey="value" fill="#5B2D91" fillOpacity={0.85} radius={[2, 2, 0, 0]} maxBarSize={14} isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                    )}
+                    {finalHasCompetitorData && chartType !== "bar" && effectiveTopCompNames.map((name, i) => (
+                      <Line key={name} type="monotone" dataKey={name} stroke={COMP_COLORS[i % COMP_COLORS.length]} strokeWidth={1.5} strokeDasharray="3 2" strokeOpacity={0.65} connectNulls={false} dot={false} activeDot={{ r: 3 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                    ))}
+                    {chartType !== "bar" && (
+                      <Area type="monotone" dataKey="value" stroke="#5B2D91" strokeWidth={2.5} fill="#5B2D91" fillOpacity={0.07} connectNulls={false} dot={false} activeDot={{ r: 4, fill: "#5B2D91", stroke: "white", strokeWidth: 2 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                    )}
+                  </ComposedChart>
+                </ResponsiveContainer>}
+              </div>
+            </>
           )}
 
-          {/* Chart legend — only shown with the line chart, not the sparse score card */}
-          {!showDots && finalChartData.length > 0 && finalHasCompetitorData && finalTopCompNames.length > 0 && (
+          {/* Chart legend */}
+          {!showDots && finalChartData.length > 0 && (
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#5B2D91" }} />
+                {chartType === "bar"
+                  ? <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: "#5B2D91" }} />
+                  : <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#5B2D91" }} />
+                }
                 <span className="text-[11px] font-semibold text-[#0a0a0a]">{brandName}</span>
               </div>
-              {finalTopCompNames.map((name, i) => (
+              {effectiveTopCompNames.map((name, i) => (
                 <div key={name} className="flex items-center gap-1.5">
-                  <div className="w-6 shrink-0" style={{ height: 1.5, background: COMP_COLORS[i % COMP_COLORS.length], opacity: 0.65 }} />
+                  {chartType === "bar"
+                    ? <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: COMP_COLORS[i % COMP_COLORS.length], opacity: 0.65 }} />
+                    : <div className="w-6 shrink-0" style={{ height: 1.5, background: COMP_COLORS[i % COMP_COLORS.length], opacity: 0.65 }} />
+                  }
                   <span className="text-[11px] text-[#6b7280]">{name}</span>
                 </div>
               ))}
