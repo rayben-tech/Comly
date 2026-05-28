@@ -610,15 +610,17 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
                   <div className="flex-1" />
 
                   {/* Magic write */}
-                  <button onClick={magicWrite} disabled={isGenerating}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#5B2D91] bg-[#f3eeff] hover:bg-[#e8d8ff] disabled:opacity-60 transition-colors">
-                    {isGenerating ? (
-                      <div className="w-3 h-3 border border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Sparkles className="w-3 h-3" />
-                    )}
-                    {isGenerating ? "Writing…" : generatedReplies.length > 0 ? "Regenerate" : "Magic write"}
-                  </button>
+                  {!demoMode && (
+                    <button onClick={magicWrite} disabled={isGenerating}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#5B2D91] bg-[#f3eeff] hover:bg-[#e8d8ff] disabled:opacity-60 transition-colors">
+                      {isGenerating ? (
+                        <div className="w-3 h-3 border border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3 h-3" />
+                      )}
+                      {isGenerating ? "Writing…" : generatedReplies.length > 0 ? "Regenerate" : "Magic write"}
+                    </button>
+                  )}
                 </div>
 
                 {/* Magic write error */}
