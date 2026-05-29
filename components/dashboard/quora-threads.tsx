@@ -224,8 +224,28 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
     }, 0);
   }
 
+  function getMagicWriteCount(): number {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const raw = localStorage.getItem(`comly_magic_write_${today}`);
+      return raw ? parseInt(raw, 10) : 0;
+    } catch { return 0; }
+  }
+
+  function incrementMagicWriteCount() {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const count = getMagicWriteCount();
+      localStorage.setItem(`comly_magic_write_${today}`, String(count + 1));
+    } catch {}
+  }
+
   async function magicWrite() {
     if (!activeThread) return;
+    if (getMagicWriteCount() >= 5) {
+      setMagicError("You've used all 5 Magic write credits for today. Come back tomorrow.");
+      return;
+    }
     setIsGenerating(true);
     setMagicError("");
     try {
@@ -239,6 +259,7 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
       const first = Array.isArray(data.replies) && data.replies[0] ? data.replies[0] : "";
       if (!first) throw new Error("No answer was generated. Try again.");
       setReplyText(first);
+      incrementMagicWriteCount();
     } catch (err) {
       setMagicError(err instanceof Error ? err.message : "Could not generate answer. Try again.");
     } finally {
@@ -318,16 +339,6 @@ export function QuoraThreadsPage({ profile, demoMode, demoThreads }: Props) {
               </div>
               <p className="text-[12px] text-[#aaaaaa] mt-0.5">Real-time matched questions</p>
             </div>
-            {!demoMode && (
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing || loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e8e8e8] text-[11px] text-[#6b6b6b] hover:bg-[#f5f5f5] disabled:opacity-50 transition-colors"
-              >
-                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-                {refreshing ? "Refreshing…" : "Refresh"}
-              </button>
-            )}
           </div>
 
           {/* Filter tabs + sort */}

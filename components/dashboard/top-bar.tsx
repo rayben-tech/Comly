@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RefreshCw, PanelLeftOpen } from "lucide-react";
+import { PanelLeftOpen } from "lucide-react";
 import { PromptResult } from "@/types";
 import { FaviconImg } from "@/components/ui/favicon-img";
 
@@ -10,40 +10,12 @@ interface TopBarProps {
   score: number;
   totalMentions: number;
   promptResults: PromptResult[];
-  onReset: () => void;
-  onRerun: () => void;
+  onReset?: () => void;
+  onRerun?: () => void;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
 }
 
-function exportCSV(brandName: string, score: number, promptResults: PromptResult[]) {
-  const rows: string[][] = [
-    ["Comly AI Visibility Audit"],
-    ["Brand", brandName],
-    ["Score", String(score)],
-    ["Visibility", `${Math.round((promptResults.filter((r) => r.mentioned).length / promptResults.length) * 100)}%`],
-    ["Date", new Date().toLocaleDateString()],
-    [],
-    ["#", "Prompt", "Mentioned", "Position", "Competitors Mentioned"],
-    ...promptResults.map((r, i) => [
-      String(i + 1),
-      r.prompt,
-      r.mentioned ? "Yes" : "No",
-      r.position !== null ? String(r.position) : "—",
-      r.competitors_mentioned.map((c) => c.name).join("; "),
-    ]),
-  ];
-  const csv = rows
-    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `comly-audit-${brandName.toLowerCase().replace(/\s+/g, "-")}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 export function TopBar({
   brandName,
@@ -99,24 +71,6 @@ export function TopBar({
           {visibilityPct}% visible
         </span>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={onRerun}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#252536] text-[12px] font-semibold text-[#6e6e8a] hover:border-[#5B2D91]/50 hover:text-[#c4b5fd] transition-colors"
-          >
-            <RefreshCw className="w-3 h-3" />
-            <span className="hidden sm:inline">Re-run</span>
-          </button>
-          <button
-            onClick={() => exportCSV(brandName, score, promptResults)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-opacity active:opacity-80"
-            style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-          >
-            <Download className="w-3 h-3" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
-        </div>
       </div>
 
     </div>

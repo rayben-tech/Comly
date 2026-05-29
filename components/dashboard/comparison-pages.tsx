@@ -119,9 +119,6 @@ export function ComparisonPagesPage({ profile, competitorRankings }: Props) {
   const [activeTab, setActiveTab] = useState("any");
   const [trackedUrls, setTrackedUrls] = useState<TrackedUrl[]>([]);
   const [urlInput, setUrlInput] = useState("");
-  const [customInput, setCustomInput] = useState("");
-  const [showCustomInput, setShowCustomInput] = useState(false);
-
   // Existence check: map of competitor → existing URL on their site
   const [existingUrls, setExistingUrls] = useState<Record<string, string>>({});
   const [checkState, setCheckState] = useState<"idle" | "checking" | "done">("idle");
@@ -363,6 +360,7 @@ ${toHtml(content)}
           <div>
             <h2 className="text-[16px] font-bold text-[#0a0a0a]">Your suggested comparison pages</h2>
             <p className="text-[13px] text-[#6b6b6b] mt-0.5">One "vs" page per competitor detected in your audit</p>
+            <p className="text-[12px] text-[#5B2D91] font-medium mt-1.5">✦ New comparison page ideas added every week</p>
           </div>
         </div>
 
@@ -465,59 +463,6 @@ ${toHtml(content)}
           </div>
         )}
 
-        {/* Custom comparison */}
-        {!showCustomInput ? (
-          <button
-            onClick={() => setShowCustomInput(true)}
-            className="flex items-center gap-2 text-[13px] font-semibold text-[#5B2D91] hover:text-[#4a2478] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4" />
-            Create custom comparison
-          </button>
-        ) : (
-          <div className="border border-[#e5e5e5] rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-[#0a0a0a]">Compare {profile.brand_name} vs</p>
-              <button
-                onClick={() => { setShowCustomInput(false); setCustomInput(""); }}
-                className="text-[#aaaaaa] hover:text-[#666] transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <input
-                autoFocus
-                type="text"
-                value={customInput}
-                onChange={(e) => setCustomInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && customInput.trim()) {
-                    generate(customInput.trim(), "vs");
-                    setShowCustomInput(false);
-                    setCustomInput("");
-                  }
-                }}
-                placeholder="e.g. HubSpot"
-                className="flex-1 border border-[#e5e5e5] rounded-lg px-3 py-2 text-[13px] text-[#0a0a0a] outline-none focus:border-[#5B2D91]/50 transition-colors placeholder:text-[#cccccc]"
-              />
-              <button
-                onClick={() => {
-                  if (customInput.trim()) {
-                    generate(customInput.trim(), "vs");
-                    setShowCustomInput(false);
-                    setCustomInput("");
-                  }
-                }}
-                disabled={!customInput.trim() || loading}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-[13px] font-semibold disabled:opacity-40 transition-opacity"
-                style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-              >
-                Generate →
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── SECTION 3: Result ────────────────────────────────── */}

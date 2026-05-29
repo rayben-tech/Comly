@@ -400,6 +400,9 @@ function AuditFlow() {
     setIsAuditing(true);
 
     const MIN_FIRING_MS = 11000;
+    const { data: { session: auditSession } } = await supabase.auth.getSession();
+    const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (auditSession?.access_token) authHeaders["Authorization"] = `Bearer ${auditSession.access_token}`;
 
     try {
       const batchSize = Math.ceil(allPrompts.length / 3);
@@ -412,7 +415,7 @@ function AuditFlow() {
       const callBatch = (batchPrompts: string[]) =>
         fetch("/api/run-audit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders,
           body: JSON.stringify({ profile: activeProfile, customPrompts: batchPrompts }),
         }).then(async (r) => {
           const text = await r.text();

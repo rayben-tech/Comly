@@ -328,6 +328,17 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               </IconBtn>
             </div>
 
+            {/* Feedback */}
+            <div className="py-2 flex items-center justify-center border-t border-[#f0f0f0]">
+              <a
+                href="mailto:feedback@trycomly.com"
+                title="Share feedback"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#9ca3af] hover:text-[#5B2D91] hover:bg-[#f3eeff] transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </a>
+            </div>
+
             {/* Footer — logo only */}
             <div className="py-3 flex items-center justify-center border-t border-[#f0f0f0]">
               <svg width="18" height="20" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -535,6 +546,13 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                   <span className="text-[11px] text-[#6b7280]">Re-audited daily at 2:00 AM UTC</span>
                 )}
               </div>
+              <a
+                href="mailto:feedback@trycomly.com"
+                className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5e5e5] hover:border-[#5B2D91]/30 hover:bg-[#faf7ff] transition-colors group"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-[#9ca3af] group-hover:text-[#5B2D91] shrink-0 transition-colors" />
+                <span className="text-[12px] font-medium text-[#6b7280] group-hover:text-[#5B2D91] transition-colors">Share feedback</span>
+              </a>
             </div>
           </motion.div>
         )}

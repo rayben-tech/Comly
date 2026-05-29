@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BrandProfile } from "@/types";
 import {
   FileText, ChevronRight, Copy, Download,
-  RefreshCw, Loader2, Plus, X, Check, Sparkles, Globe, Search,
+  RefreshCw, Loader2, Check, Sparkles, Globe, Search,
 } from "lucide-react";
 
 interface Suggestion {
@@ -129,8 +129,6 @@ export function ListiclesPage({ profile }: Props) {
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTitle, setActiveTitle] = useState<string | null>(null);
-  const [customInput, setCustomInput] = useState("");
-  const [showCustomInput, setShowCustomInput] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -297,6 +295,7 @@ ${toHtml(content)}
             <p className="text-[13px] text-[#6b6b6b] mt-0.5">
               We&apos;ll create ready-to-publish pages based on your brand profile
             </p>
+            <p className="text-[12px] text-[#5B2D91] font-medium mt-1.5">✦ New listicle ideas added every week</p>
           </div>
         </div>
 
@@ -335,60 +334,6 @@ ${toHtml(content)}
           ))}
         </div>
 
-        {/* Custom idea */}
-        {!showCustomInput ? (
-          <button
-            onClick={() => setShowCustomInput(true)}
-            className="flex items-center gap-2 text-[13px] font-semibold text-[#5B2D91] hover:text-[#4a2478] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add custom listicle idea
-          </button>
-        ) : (
-          <div className="border border-[#e5e5e5] rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-[#0a0a0a]">What topic do you want to rank for?</p>
-              <button
-                onClick={() => { setShowCustomInput(false); setCustomInput(""); }}
-                className="text-[#aaaaaa] hover:text-[#666] transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customInput}
-                onChange={(e) => setCustomInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && customInput.trim()) {
-                    generate(customInput.trim());
-                    setShowCustomInput(false);
-                    setCustomInput("");
-                  }
-                }}
-                placeholder="e.g. Best tools for ecommerce founders"
-                className="flex-1 border border-[#e5e5e5] rounded-lg px-3 py-2 text-[13px] text-[#0a0a0a] outline-none focus:border-[#5B2D91]/50 transition-colors placeholder:text-[#cccccc]"
-                autoFocus
-              />
-              <button
-                onClick={() => {
-                  if (customInput.trim()) {
-                    generate(customInput.trim());
-                    setShowCustomInput(false);
-                    setCustomInput("");
-                  }
-                }}
-                disabled={!customInput.trim() || loading}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-[13px] font-semibold disabled:opacity-40 transition-opacity"
-                style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-              >
-                Generate
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── SECTION 3: Result ────────────────────────────────────── */}

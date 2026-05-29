@@ -243,8 +243,28 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
     }, 0);
   }
 
+  function getMagicWriteCount(): number {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const raw = localStorage.getItem(`comly_magic_write_${today}`);
+      return raw ? parseInt(raw, 10) : 0;
+    } catch { return 0; }
+  }
+
+  function incrementMagicWriteCount() {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const count = getMagicWriteCount();
+      localStorage.setItem(`comly_magic_write_${today}`, String(count + 1));
+    } catch {}
+  }
+
   async function magicWrite() {
     if (!activeThread) return;
+    if (!demoMode && getMagicWriteCount() >= 5) {
+      setMagicError("You've used all 5 Magic write credits for today. Come back tomorrow.");
+      return;
+    }
     setIsGenerating(true);
     setMagicError("");
     setGeneratedReplies([]);
@@ -268,6 +288,7 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
       const replies = Array.isArray(data.replies) ? data.replies.filter(Boolean) : [];
       if (!replies.length) throw new Error("No reply was generated. Try again.");
       setGeneratedReplies(replies);
+      incrementMagicWriteCount();
     } catch (err) {
       setMagicError(err instanceof Error ? err.message : "Could not generate reply. Try again.");
     } finally {
