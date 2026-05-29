@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     });
     const { userEmail, returnTo } = await req.json() as { userEmail?: string; userName?: string; returnTo?: string };
 
-    const origin = req.headers.get("origin") ?? "https://trycomly.com";
+    const origin = "https://www.trycomly.com";
     const returnUrl = returnTo ? `${origin}${returnTo}` : `${origin}/`;
 
     const session = await dodo.checkoutSessions.create({
