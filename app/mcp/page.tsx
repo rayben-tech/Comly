@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Copy, Check, ArrowRight, Zap, BarChart3, Users, MessageSquare } from "lucide-react";
+import { ArrowRight, Copy, Check, Terminal, TrendingUp, ListChecks, Users2, MessageSquare } from "lucide-react";
+import { useScroll } from "@/components/ui/use-scroll";
+import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // ── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -15,104 +19,183 @@ function ComlyLogo({ size = 28 }: { size?: number }) {
   );
 }
 
+// ── Navbar ────────────────────────────────────────────────────────────────────
+
+function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const scrolled = useScroll(10);
+  const [overPurple, setOverPurple] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const section = document.getElementById("mcp-purple");
+      if (!section) return;
+      const y = window.scrollY + 60;
+      setOverPurple(y >= section.offsetTop && y < section.offsetTop + section.offsetHeight);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
+  const links = [
+    { label: "Home",     href: "/" },
+    { label: "Features", href: "/#features" },
+    { label: "Pricing",  href: "/#pricing" },
+    { label: "MCP",      href: "/mcp" },
+  ];
+
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-50 mx-auto w-full border-b border-transparent",
+        "md:rounded-xl md:border",
+        "md:[transition:max-width_500ms_cubic-bezier(0.4,0,0.2,1),top_500ms_cubic-bezier(0.4,0,0.2,1),background-color_300ms_ease,box-shadow_300ms_ease,border-color_300ms_ease]",
+        overPurple && !menuOpen
+          ? "bg-white/10 backdrop-blur-md border-white/15 md:top-4"
+          : scrolled && !menuOpen
+          ? "bg-white/95 supports-[backdrop-filter]:bg-white/80 border-[#e5e5e5] backdrop-blur-lg md:top-4 md:shadow-sm"
+          : menuOpen
+          ? "bg-white/95"
+          : "bg-white border-transparent",
+      )}
+      style={{
+        maxWidth: scrolled && !menuOpen ? "896px" : "1280px",
+        transition: "max-width 500ms cubic-bezier(0.4,0,0.2,1), top 500ms cubic-bezier(0.4,0,0.2,1), background-color 300ms ease, box-shadow 300ms ease, border-color 300ms ease",
+      }}
+    >
+      <nav
+        className={cn(
+          "flex h-14 w-full items-center justify-between",
+          "px-6 [transition:padding_400ms_cubic-bezier(0.4,0,0.2,1)]",
+          scrolled && "md:px-4",
+        )}
+      >
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <ComlyLogo size={28} />
+          <span className={cn("font-bold text-base tracking-tight [font-family:var(--font-outfit)] transition-colors duration-300", overPurple ? "text-white" : "text-[#0a0a0a]")}>
+            Comly
+          </span>
+        </Link>
+
+        <div className="hidden md:flex items-center gap-1">
+          {links.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={buttonVariants({ variant: "ghost", size: "sm", className: cn("transition-colors duration-300", overPurple ? "text-white/80 hover:text-white hover:bg-white/10" : "text-[#6b6b6b] hover:text-[#0a0a0a]", l.href === "/mcp" && !overPurple && "text-[#5B2D91] font-semibold") })}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="hidden md:flex items-center gap-2">
+          <Link
+            href="/audit"
+            className="flex items-center gap-1.5 bg-[#5B2D91] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#4a2478] transition-all hover:scale-[1.02]"
+          >
+            Get started <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <button
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-[#e5e5e5] text-[#0a0a0a] hover:bg-[#f7f7f5] transition-colors"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+        >
+          <MenuToggleIcon open={menuOpen} className="w-5 h-5" duration={300} />
+        </button>
+      </nav>
+
+      <div className={cn("fixed top-14 right-0 bottom-0 left-0 z-50 bg-white/95 backdrop-blur-lg md:hidden border-t border-[#e5e5e5] overflow-hidden", menuOpen ? "flex flex-col" : "hidden")}>
+        <div
+          data-slot={menuOpen ? "open" : "closed"}
+          className="data-[slot=open]:animate-in data-[slot=open]:zoom-in-95 data-[slot=closed]:animate-out data-[slot=closed]:zoom-out-95 ease-out flex h-full w-full flex-col justify-between gap-y-2 p-6"
+        >
+          <div className="grid gap-y-1">
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)}
+                className={buttonVariants({ variant: "ghost", className: "justify-start text-base text-[#0a0a0a]" })}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
+          <Link href="/audit" onClick={() => setMenuOpen(false)} className="w-full text-center bg-[#5B2D91] text-white text-sm font-semibold py-3 rounded-full hover:bg-[#4a2478] transition-colors">
+            Get started →
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 // ── Copy button ───────────────────────────────────────────────────────────────
 
-function CopyButton({ text, className = "" }: { text: string; className?: string }) {
+function CopyBtn({ text, className = "" }: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
-  function copy() {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
   return (
-    <button
-      onClick={copy}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${className}`}
-    >
-      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? "Copied!" : "Copy"}
+    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${className}`}>
+      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+      {copied ? "Copied" : "Copy"}
     </button>
   );
 }
 
-// ── Claude chat mockup ────────────────────────────────────────────────────────
+// ── Terminal mockup ───────────────────────────────────────────────────────────
 
-function ChatMockup() {
+function TerminalMockup() {
   return (
-    <div className="w-full max-w-md mx-auto">
-      {/* Tool result card */}
-      <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-lg overflow-hidden mb-3">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[#f0f0f0]">
-          <ComlyLogo size={16} />
-          <span className="text-[11px] font-bold text-[#0a0a0a]">get_visibility_score</span>
-          <span className="ml-auto text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+ 72</span>
-        </div>
-        <div className="px-4 py-3 grid grid-cols-3 gap-3">
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-[#aaaaaa]">Score</p>
-            <p className="text-[15px] font-black text-[#0a0a0a]">72<span className="text-[10px] font-normal text-[#aaaaaa]">/100</span></p>
-          </div>
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-[#aaaaaa]">Grade</p>
-            <p className="text-[15px] font-black text-[#5B2D91]">B+</p>
-          </div>
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-[#aaaaaa]">Mentions</p>
-            <p className="text-[15px] font-black text-[#0a0a0a]">7/10</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Claude chat window */}
-      <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-xl overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[#f0f0f0] bg-[#fafafa]">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
-          </div>
-          <div className="flex items-center gap-1.5 ml-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="Claude" width={14} height={14} className="w-3.5 h-3.5 rounded-sm" />
-            <span className="text-[11px] font-semibold text-[#0a0a0a]">Claude · comly-mcp</span>
-          </div>
+    <div className="w-full max-w-lg mx-auto">
+      <div className="bg-[#0f0f10] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+        {/* Window bar */}
+        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5">
+          <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+          <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+          <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+          <span className="ml-3 text-[11px] text-white/30 font-mono">claude — comly mcp</span>
         </div>
 
-        <div className="px-4 py-4 space-y-3">
-          {/* User message */}
-          <div className="flex justify-end">
-            <div className="bg-[#5B2D91] text-white text-[12px] rounded-2xl rounded-tr-sm px-3.5 py-2 max-w-[80%]">
-              How's my brand doing on AI search this week?
-            </div>
+        <div className="p-5 space-y-4 font-mono text-[12px]">
+          {/* User prompt */}
+          <div>
+            <span className="text-white/30">{">"} </span>
+            <span className="text-white">Which prompts is my brand missing from?</span>
           </div>
 
-          {/* Tool calls */}
-          <div className="flex items-center gap-2 text-[10px] text-[#aaaaaa]">
-            <ComlyLogo size={12} />
-            <span className="font-mono">comly · <span className="text-[#5B2D91] font-semibold">get_visibility_score</span></span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-[#aaaaaa]">
-            <ComlyLogo size={12} />
-            <span className="font-mono">comly · <span className="text-[#5B2D91] font-semibold">get_competitor_rankings</span></span>
+          {/* Tool call */}
+          <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-[#5B2D91]/20 border border-[#5B2D91]/30">
+            <ComlyLogo size={14} />
+            <span className="text-[#a78bfa] text-[11px]">comly.get_prompt_results</span>
+            <span className="text-white/30 text-[10px]">filter: "not_mentioned"</span>
           </div>
 
-          {/* Assistant response */}
-          <div className="flex gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="" width={20} height={20} className="w-5 h-5 rounded-full shrink-0 mt-0.5" />
-            <div className="text-[12px] text-[#1a1a1a] leading-relaxed">
-              Your AI visibility score is <span className="font-semibold text-[#5B2D91]">72/100 (B+)</span>. You appear in 7 of 10 audited prompts. Confluence leads with 85% mentions — you're close behind at #2.
-            </div>
+          {/* Result */}
+          <div className="space-y-1.5">
+            <div className="text-white/40 text-[10px] uppercase tracking-wider">5 gaps found</div>
+            {[
+              "Best AI writing tool for long-form content?",
+              "Top productivity apps for remote teams in 2025?",
+              "What tools do content marketers recommend?",
+            ].map((prompt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-[#ef4444] text-[10px]">✗</span>
+                <span className="text-white/70 text-[11px]">{prompt}</span>
+              </div>
+            ))}
+            <div className="text-white/30 text-[10px]">+ 2 more</div>
           </div>
 
-          {/* Input */}
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex-1 bg-[#f5f5f5] rounded-xl px-3 py-2 text-[11px] text-[#aaaaaa]">
-              Ask Comly…
-            </div>
-            <button className="w-7 h-7 rounded-lg bg-[#0a0a0a] flex items-center justify-center shrink-0">
-              <ArrowRight className="w-3.5 h-3.5 text-white" />
-            </button>
+          {/* Cursor blink */}
+          <div className="flex items-center gap-1">
+            <span className="text-white/30">{">"} </span>
+            <span className="w-2 h-4 bg-[#7c3aed] rounded-sm animate-pulse" />
           </div>
         </div>
       </div>
@@ -120,9 +203,13 @@ function ChatMockup() {
   );
 }
 
-// ── Config snippet ────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 
-const CLAUDE_CONFIG = `{
+const CONFIGS: Record<string, { label: string; domain: string; file: string; code: string }> = {
+  claude: {
+    label: "Claude Desktop", domain: "claude.ai",
+    file: "claude_desktop_config.json",
+    code: `{
   "mcpServers": {
     "comly": {
       "url": "https://trycomly.com/api/mcp",
@@ -131,9 +218,12 @@ const CLAUDE_CONFIG = `{
       }
     }
   }
-}`;
-
-const CURSOR_CONFIG = `{
+}`,
+  },
+  cursor: {
+    label: "Cursor", domain: "cursor.sh",
+    file: "~/.cursor/mcp.json",
+    code: `{
   "mcp": {
     "servers": {
       "comly": {
@@ -144,358 +234,275 @@ const CURSOR_CONFIG = `{
       }
     }
   }
-}`;
+}`,
+  },
+};
 
-// ── Clients ───────────────────────────────────────────────────────────────────
+// ── Tools data ────────────────────────────────────────────────────────────────
 
-const CLIENTS = [
-  { name: "Claude",  domain: "claude.ai"    },
-  { name: "Cursor",  domain: "cursor.sh"    },
-  { name: "VS Code", domain: "code.visualstudio.com" },
-  { name: "n8n",     domain: "n8n.io"       },
-  { name: "Windsurf",domain: "codeium.com"  },
-];
-
-// ── Use cases ─────────────────────────────────────────────────────────────────
-
-const USE_CASES = [
+const TOOLS = [
   {
-    icon: <BarChart3 className="w-5 h-5" />,
-    title: "Weekly visibility brief",
-    desc: "Have Claude pull this week's score, summarize what changed, and draft a Slack-ready note every Monday morning.",
+    icon: <TrendingUp className="w-5 h-5" />,
+    fn: "get_visibility_score()",
+    headline: "Your score at a glance",
+    desc: "Returns your current score (0–100), letter grade, how many prompts you appeared in, and a plain-English verdict on your visibility.",
+    example: "\"What's my AI visibility score this week?\"",
   },
   {
-    icon: <Users className="w-5 h-5" />,
-    title: "Competitor watch in Cursor",
-    desc: "While you're coding, ask Cursor how a specific competitor's AI visibility compares to yours — without leaving the editor.",
+    icon: <ListChecks className="w-5 h-5" />,
+    fn: "get_prompt_results()",
+    headline: "Every prompt, every model",
+    desc: "Full list of tested prompts — whether you appeared, at what position, and which competitors showed up instead. Filter by mentioned or not.",
+    example: "\"Which prompts am I not appearing in?\"",
+  },
+  {
+    icon: <Users2 className="w-5 h-5" />,
+    fn: "get_competitor_rankings()",
+    headline: "Who's beating you",
+    desc: "All competitors ranked by how often AI models mention them across your audit prompts. Includes average position.",
+    example: "\"Who are my top competitors in AI search?\"",
   },
   {
     icon: <MessageSquare className="w-5 h-5" />,
-    title: "Prompt gap analysis",
-    desc: "Ask Claude which prompts you're missing from and get a list of topics to write content about immediately.",
+    fn: "find_threads()",
+    headline: "Where your buyers are talking",
+    desc: "Reddit and Quora threads where people ask questions your brand should be answering. Scoped to your niche and category.",
+    example: "\"Where should I engage on Reddit today?\"",
   },
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function McpLandingPage() {
-  const [activeTab, setActiveTab] = useState<"claude" | "cursor">("claude");
+export default function McpPage() {
+  const [activeClient, setActiveClient] = useState<"claude" | "cursor">("claude");
+  const cfg = CONFIGS[activeClient];
 
   return (
     <div className="min-h-screen bg-white">
+      <Navbar />
 
-      {/* Nav */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-[#f0f0f0]">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ComlyLogo size={26} />
-            <span className="font-bold text-[15px] text-[#0a0a0a] tracking-tight">Comly</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors hidden sm:block">
-              Back to home
-            </Link>
-            <Link
-              href="/audit"
-              className="flex items-center gap-1.5 bg-[#5B2D91] text-white text-[13px] font-semibold px-4 py-2 rounded-full hover:bg-[#4a2478] transition-colors"
-            >
-              Get started <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="relative pt-20 pb-16 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#f5f0ff] to-white pointer-events-none" />
-        <div className="relative max-w-5xl mx-auto">
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <section className="pt-16 pb-20 px-6">
+        <div className="max-w-5xl mx-auto">
 
           {/* Badge */}
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#e4d4ff] bg-white text-[12px] font-semibold text-[#5B2D91] shadow-sm">
-              <Zap className="w-3.5 h-3.5" />
-              NOW LIVE · MCP SERVER
+          <div className="flex justify-center mb-8">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f3eeff] border border-[#e4d4ff] text-[12px] font-semibold text-[#5B2D91]">
+              <Terminal className="w-3.5 h-3.5" />
+              MCP SERVER · NOW LIVE
+            </span>
+          </div>
+
+          <div className="text-center mb-14">
+            <h1 className="text-[44px] sm:text-[60px] font-black text-[#0a0a0a] leading-[1.06] tracking-tight mb-5">
+              Your Comly data,<br />right where you think.
+            </h1>
+            <p className="text-[17px] text-[#6b6b6b] max-w-lg mx-auto leading-relaxed">
+              Connect Comly to Claude, Cursor, or any MCP client.
+              Ask about your AI visibility in plain English — get live answers without opening the dashboard.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+              <Link href="/audit" className="flex items-center gap-2 bg-[#5B2D91] text-white text-[14px] font-semibold px-6 py-3 rounded-full hover:bg-[#4a2478] transition-colors shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                Get your API key <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a href="#setup" className="text-[14px] font-semibold text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors px-4 py-3">
+                View setup guide ↓
+              </a>
             </div>
           </div>
 
-          {/* Headline */}
-          <div className="text-center mb-6">
-            <h1 className="text-[42px] sm:text-[56px] font-black text-[#0a0a0a] leading-[1.08] tracking-tight mb-4">
-              Comly inside every<br />
-              <span style={{ textDecoration: "underline", textDecorationColor: "#5B2D91", textUnderlineOffset: "6px", textDecorationThickness: "4px" }}>
-                AI tool you use.
-              </span>
-            </h1>
-            <p className="text-[16px] sm:text-[18px] text-[#6b6b6b] max-w-xl mx-auto leading-relaxed">
-              Connect Comly's MCP server to Claude, Cursor, VS Code, and n8n.<br className="hidden sm:block" />
-              Query your AI visibility data without leaving your workflow.
+          <TerminalMockup />
+        </div>
+      </section>
+
+      {/* ── PURPLE SECTION ───────────────────────────────────────────────── */}
+      <section id="mcp-purple" className="bg-[#a87be0] py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-white/50 mb-4">Why it matters</p>
+            <h2 className="text-[38px] sm:text-[48px] font-black text-white leading-tight tracking-tight">
+              Stop switching tabs.<br />Just ask.
+            </h2>
+            <p className="mt-4 text-[16px] text-white/70 max-w-xl mx-auto leading-relaxed">
+              Every time you want visibility data, you leave what you're doing. With the MCP server, your workflow stays uninterrupted.
             </p>
           </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
-            <Link
-              href="/audit"
-              className="flex items-center gap-2 bg-[#0a0a0a] text-white text-[14px] font-semibold px-6 py-3 rounded-full hover:bg-[#1a1a1a] transition-colors"
-            >
-              Get your API key <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="#setup"
-              className="flex items-center gap-2 border border-[#e5e5e5] text-[14px] font-semibold px-6 py-3 rounded-full hover:bg-[#f7f7f5] transition-colors text-[#0a0a0a]"
-            >
-              Read the docs
-            </a>
-          </div>
-
-          {/* Chat mockup */}
-          <ChatMockup />
-        </div>
-      </section>
-
-      {/* Works with */}
-      <section className="py-16 px-6 border-t border-[#f0f0f0]">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-[28px] sm:text-[36px] font-black text-[#0a0a0a] mb-3">Works with every MCP client</h2>
-          <p className="text-[15px] text-[#6b6b6b] mb-10 max-w-lg mx-auto">
-            Comly speaks the standard Model Context Protocol — any client that supports MCP can query your AI visibility data.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {CLIENTS.map(({ name, domain }) => (
-              <div key={name} className="flex flex-col items-center gap-2 w-20">
-                <div className="w-14 h-14 rounded-2xl border border-[#e5e5e5] bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt={name} width={28} height={28} className="w-7 h-7 object-contain" />
-                </div>
-                <span className="text-[12px] font-medium text-[#6b6b6b]">{name}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[12px] text-[#aaaaaa] mt-6">…and any future MCP-compatible client. No client-specific code on our side.</p>
-        </div>
-      </section>
-
-      {/* 3 steps */}
-      <section className="py-16 px-6 bg-[#fafafa] border-t border-[#f0f0f0]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-[28px] sm:text-[36px] font-black text-[#0a0a0a] mb-3">Connect Comly in 3 steps</h2>
-            <p className="text-[15px] text-[#6b6b6b]">No SDK, no glue code. Paste a URL, generate a key, ask a question.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              {
-                num: "1",
-                title: "Add Comly to your client",
-                desc: "Paste the Comly MCP server URL into Claude Desktop, Cursor, VS Code — anywhere MCP runs.",
-                visual: (
-                  <div className="bg-[#0a0a0a] rounded-xl p-3 font-mono text-[10px] text-[#e5e5e5] leading-relaxed">
-                    <span className="text-[#7c3aed]">"mcpServers"</span>: {"{"}<br />
-                    {"  "}<span className="text-[#7c3aed]">"comly"</span>: {"{"}<br />
-                    {"    "}<span className="text-[#7c3aed]">"url"</span>: <span className="text-[#10b981]">".../api/mcp"</span><br />
-                    {"  "}{"}"}{"}"}<br />
-                    {"}"}
-                  </div>
-                ),
-              },
-              {
-                num: "2",
-                title: "Generate an API key",
-                desc: "Go to your Comly dashboard → MCP Server. Generate your key and paste it into the config.",
-                visual: (
-                  <div className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-3 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#f3eeff] flex items-center justify-center shrink-0">
-                      <Zap className="w-4 h-4 text-[#5B2D91]" />
+          {/* Before / After cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+            {/* Before */}
+            <div className="bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-5">Without MCP</p>
+              <div className="space-y-3">
+                {[
+                  "Open browser, go to trycomly.com",
+                  "Log in, wait for dashboard to load",
+                  "Navigate to the right section",
+                  "Copy the number you needed",
+                  "Switch back to what you were doing",
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-bold text-white/40">{i + 1}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-wide">API Key</p>
-                      <p className="text-[11px] font-mono text-[#0a0a0a] truncate">cml_a3k…9z2</p>
-                    </div>
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span className="text-[13px] text-white/60">{step}</span>
                   </div>
-                ),
-              },
-              {
-                num: "3",
-                title: "Ask in plain English",
-                desc: "\"How's my AI visibility this week?\" — your client picks the right tool and answers with live Comly data.",
-                visual: (
-                  <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden">
-                    <div className="px-3 py-2 text-[11px] text-[#6b6b6b] border-b border-[#f0f0f0]">How's my brand this week?</div>
-                    <div className="px-3 py-2 flex items-center gap-1.5">
-                      <ComlyLogo size={12} />
-                      <span className="text-[10px] font-mono text-[#5B2D91]">get_visibility_score</span>
-                    </div>
-                  </div>
-                ),
-              },
-            ].map(({ num, title, desc, visual }) => (
-              <div key={num} className="relative bg-white rounded-2xl border border-[#e5e5e5] p-5 shadow-sm">
-                <div className="absolute -top-3.5 left-5 w-7 h-7 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[12px] font-black shadow-md">
-                  {num}
-                </div>
-                <div className="mt-3 mb-4">{visual}</div>
-                <p className="text-[14px] font-bold text-[#0a0a0a] mb-1">{title}</p>
-                <p className="text-[12px] text-[#6b6b6b] leading-relaxed">{desc}</p>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Config snippet */}
-      <section id="setup" className="py-16 px-6 border-t border-[#f0f0f0]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-[28px] sm:text-[36px] font-black text-[#0a0a0a] mb-3">Drop this into your MCP client</h2>
-            <p className="text-[15px] text-[#6b6b6b]">One JSON snippet. Restart your client. Ask Comly anything.</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Left: URL */}
-            <div>
-              <p className="text-[14px] font-bold text-[#0a0a0a] mb-2">Your MCP server URL</p>
-              <p className="text-[13px] text-[#6b6b6b] mb-4 leading-relaxed">
-                Point your client at this endpoint. Add your API key in the Authorization header and you're live.
-              </p>
-              <div className="flex items-center gap-2 bg-[#f7f7f5] border border-[#e5e5e5] rounded-xl px-4 py-3">
-                <code className="text-[13px] font-mono text-[#0a0a0a] flex-1 select-all">
-                  https://trycomly.com/api/mcp
-                </code>
-                <CopyButton
-                  text="https://trycomly.com/api/mcp"
-                  className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] shrink-0"
-                />
+              <div className="mt-5 pt-4 border-t border-white/10">
+                <span className="text-[12px] font-semibold text-white/40">~3 minutes of context switching</span>
               </div>
-              <p className="text-[12px] text-[#aaaaaa] mt-3">
-                No account yet?{" "}
-                <Link href="/audit" className="text-[#5B2D91] font-semibold hover:underline">
-                  Create an account →
-                </Link>
-              </p>
             </div>
 
-            {/* Right: JSON config */}
-            <div>
-              {/* Tab switcher */}
-              <div className="flex items-center gap-1 border border-[#e5e5e5] rounded-xl p-1 bg-[#fafafa] mb-3 w-fit">
-                {([
-                  { id: "claude" as const, label: "Claude Desktop", domain: "claude.ai" },
-                  { id: "cursor" as const, label: "Cursor",          domain: "cursor.sh" },
-                ] as const).map(({ id, label, domain }) => (
-                  <button
-                    key={id}
-                    onClick={() => setActiveTab(id)}
+            {/* After */}
+            <div className="bg-white rounded-2xl p-6 shadow-xl">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91]/60 mb-5">With Comly MCP</p>
+              <div className="bg-[#f7f7f7] rounded-xl p-4 font-mono text-[12px] mb-4">
+                <span className="text-[#aaaaaa]">You: </span>
+                <span className="text-[#0a0a0a]">How's my brand doing?</span>
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#5B2D91]">
+                  <ComlyLogo size={11} />
+                  <span>comly.get_visibility_score</span>
+                </div>
+                <div className="mt-2 text-[#0a0a0a] leading-relaxed">
+                  Score: <span className="font-bold text-[#5B2D91]">72/100 (B+)</span>. You appear in 7 of 10 prompts. Confluence is still ahead at #1.
+                </div>
+              </div>
+              <div className="pt-3 border-t border-[#f0f0f0]">
+                <span className="text-[12px] font-semibold text-emerald-600">~5 seconds, never left your editor</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TOOLS ────────────────────────────────────────────────────────── */}
+      <section className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-3">4 tools. All your data.</h2>
+            <p className="text-[15px] text-[#6b6b6b] max-w-md mx-auto">
+              Your Claude or Cursor agent automatically picks the right tool based on what you ask.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {TOOLS.map(({ icon, fn, headline, desc, example }) => (
+              <div key={fn} className="group bg-white border border-[#e8e8e8] rounded-2xl p-6 hover:border-[#5B2D91]/30 hover:shadow-md transition-all">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#f3eeff] flex items-center justify-center text-[#5B2D91] shrink-0">
+                    {icon}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-0.5">{fn}</p>
+                    <p className="text-[15px] font-bold text-[#0a0a0a]">{headline}</p>
+                  </div>
+                </div>
+                <p className="text-[13px] text-[#6b6b6b] leading-relaxed mb-4">{desc}</p>
+                <div className="flex items-center gap-2 bg-[#fafafa] border border-[#f0f0f0] rounded-xl px-3.5 py-2.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="" width={13} height={13} className="w-3.5 h-3.5 opacity-50 shrink-0" />
+                  <span className="text-[12px] text-[#6b6b6b] italic">{example}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SETUP ────────────────────────────────────────────────────────── */}
+      <section id="setup" className="py-24 px-6 bg-[#fafafa] border-t border-[#f0f0f0]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-3">Set up in 2 minutes</h2>
+            <p className="text-[15px] text-[#6b6b6b]">Run your audit, grab your key, paste the config. Done.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+
+            {/* Left col: steps */}
+            <div className="lg:col-span-2 space-y-6">
+              {[
+                { n: "1", title: "Run your first audit", desc: "Go to trycomly.com and audit your brand. Takes 60 seconds." },
+                { n: "2", title: "Generate an API key", desc: "In the dashboard, go to MCP Server → Generate key. Copy it." },
+                { n: "3", title: "Paste the config", desc: "Drop the JSON snippet into your client's config file and restart." },
+              ].map(({ n, title, desc }) => (
+                <div key={n} className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shrink-0 shadow">
+                    {n}
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-bold text-[#0a0a0a]">{title}</p>
+                    <p className="text-[13px] text-[#6b6b6b] mt-0.5">{desc}</p>
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-2">
+                <p className="text-[12px] text-[#aaaaaa] mb-3">Server URL</p>
+                <div className="flex items-center gap-2 bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5">
+                  <code className="text-[12px] font-mono text-[#0a0a0a] flex-1 select-all">trycomly.com/api/mcp</code>
+                  <CopyBtn text="https://trycomly.com/api/mcp" className="bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5] shrink-0" />
+                </div>
+              </div>
+            </div>
+
+            {/* Right col: config snippet */}
+            <div className="lg:col-span-3">
+              {/* Client tabs */}
+              <div className="flex items-center gap-1 p-1 bg-[#f0f0f0] rounded-xl mb-3 w-fit">
+                {(Object.entries(CONFIGS) as [string, typeof CONFIGS[string]][]).map(([id, c]) => (
+                  <button key={id} onClick={() => setActiveClient(id as "claude" | "cursor")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
-                      activeTab === id ? "bg-white shadow-sm text-[#0a0a0a] border border-[#e5e5e5]" : "text-[#6b6b6b] hover:text-[#0a0a0a]"
-                    }`}
-                  >
+                      activeClient === id ? "bg-white shadow-sm text-[#0a0a0a] border border-[#e5e5e5]" : "text-[#6b6b6b] hover:text-[#0a0a0a]"
+                    }`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt="" width={14} height={14} className="w-3.5 h-3.5" />
-                    {label}
+                    <img src={`https://www.google.com/s2/favicons?domain=${c.domain}&sz=32`} alt="" width={14} height={14} className="w-3.5 h-3.5" />
+                    {c.label}
                   </button>
                 ))}
               </div>
 
-              {/* File path hint */}
-              <p className="text-[11px] text-[#aaaaaa] font-mono mb-2">
-                {activeTab === "claude"
-                  ? "Save to  claude_desktop_config.json"
-                  : "Save to  ~/.cursor/mcp.json"}
-              </p>
+              <p className="text-[11px] font-mono text-[#aaaaaa] mb-2">Save to <span className="text-[#6b6b6b]">{cfg.file}</span></p>
 
-              {/* Code block */}
               <div className="relative">
-                <pre className="bg-[#0a0a0a] text-[#e5e5e5] text-[12px] rounded-xl p-4 overflow-x-auto leading-relaxed font-mono">
-                  {activeTab === "claude" ? CLAUDE_CONFIG : CURSOR_CONFIG}
+                <pre className="bg-[#0a0a0a] text-[#e5e5e5] text-[12px] rounded-2xl p-5 overflow-x-auto leading-relaxed font-mono whitespace-pre">
+                  {cfg.code}
                 </pre>
-                <CopyButton
-                  text={activeTab === "claude" ? CLAUDE_CONFIG : CURSOR_CONFIG}
-                  className="absolute top-3 right-3 bg-white/10 text-white hover:bg-white/20"
-                />
+                <CopyBtn text={cfg.code} className="absolute top-3.5 right-3.5 bg-white/10 text-white hover:bg-white/20" />
               </div>
+
+              <p className="text-[12px] text-[#aaaaaa] mt-3">
+                Restart your client after saving. You'll see <code className="font-mono text-[#5B2D91]">comly</code> in the tools list.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* What you can build */}
-      <section className="py-16 px-6 bg-[#fafafa] border-t border-[#f0f0f0]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-[28px] sm:text-[36px] font-black text-[#0a0a0a] mb-3">What you can build</h2>
-            <p className="text-[15px] text-[#6b6b6b]">Same data as your dashboard, queryable from wherever you already work.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {USE_CASES.map(({ icon, title, desc }) => (
-              <div key={title} className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[#f3eeff] flex items-center justify-center text-[#5B2D91] mb-4">
-                  {icon}
-                </div>
-                <p className="text-[14px] font-bold text-[#0a0a0a] mb-2">{title}</p>
-                <p className="text-[12px] text-[#6b6b6b] leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Tools list */}
-      <section className="py-16 px-6 border-t border-[#f0f0f0]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-[28px] sm:text-[36px] font-black text-[#0a0a0a] mb-3">4 tools, zero setup</h2>
-            <p className="text-[15px] text-[#6b6b6b]">Ask natural questions — your AI client picks the right tool automatically.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {[
-              { name: "get_visibility_score",    desc: "Your current score, grade, and plain-English summary",                             example: "What's my AI visibility score?" },
-              { name: "get_prompt_results",      desc: "Every tested prompt — mentioned or not, position, competitors in response",        example: "Which prompts am I missing from?" },
-              { name: "get_competitor_rankings", desc: "Which competitors AI mentions most in your category, ranked by mention count",     example: "Who are my top AI competitors?" },
-              { name: "find_threads",            desc: "Reddit and Quora threads where potential customers ask about your category",       example: "Where should I engage on Reddit?" },
-            ].map(({ name, desc, example }) => (
-              <div key={name} className="bg-[#fafafa] border border-[#e5e5e5] rounded-2xl p-4">
-                <p className="text-[12px] font-mono font-bold text-[#5B2D91] mb-1">{name}()</p>
-                <p className="text-[12px] text-[#6b6b6b] mb-3 leading-relaxed">{desc}</p>
-                <div className="flex items-center gap-2 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="" width={12} height={12} className="w-3 h-3 opacity-60" />
-                  <span className="text-[11px] text-[#6b6b6b] italic">{example}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-6 border-t border-[#f0f0f0]">
-        <div className="max-w-xl mx-auto text-center">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}>
-            <ComlyLogo size={28} />
-          </div>
-          <h2 className="text-[28px] sm:text-[36px] font-black text-[#0a0a0a] mb-4">
-            Start querying your<br />AI visibility data
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
+      <section className="py-24 px-6 border-t border-[#f0f0f0]">
+        <div className="max-w-lg mx-auto text-center">
+          <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-4">
+            Ready to ask Claude about your brand?
           </h2>
           <p className="text-[15px] text-[#6b6b6b] mb-8 leading-relaxed">
-            Run your first audit, generate an API key, and connect to Claude Desktop in under 2 minutes.
+            Run a free audit, get your API key, and connect in under 2 minutes.
           </p>
-          <Link
-            href="/audit"
-            className="inline-flex items-center gap-2 bg-[#5B2D91] text-white text-[15px] font-bold px-8 py-4 rounded-full hover:bg-[#4a2478] transition-colors shadow-lg"
-          >
-            Get started free <ArrowRight className="w-4 h-4" />
+          <Link href="/audit"
+            className="inline-flex items-center gap-2 bg-[#5B2D91] text-white text-[15px] font-bold px-8 py-4 rounded-full hover:bg-[#4a2478] transition-colors shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
+            Get started <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className="border-t border-[#f0f0f0] py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <ComlyLogo size={20} />
             <span className="text-[13px] font-semibold text-[#0a0a0a]">Comly</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-5 text-[12px] text-[#6b6b6b]">
             <Link href="/" className="hover:text-[#0a0a0a] transition-colors">Home</Link>
             <Link href="/privacy" className="hover:text-[#0a0a0a] transition-colors">Privacy</Link>
@@ -503,7 +510,6 @@ export default function McpLandingPage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
