@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, Copy, Check, Terminal, TrendingUp, ListChecks, Users2, MessageSquare } from "lucide-react";
 import { useScroll } from "@/components/ui/use-scroll";
@@ -16,6 +16,35 @@ function ComlyLogo({ size = 28 }: { size?: number }) {
       <path d="M50 4 C54 4 57 6 59.5 10 L93 68 C97 74 97 80 93.5 85 C90 90 84 93 77 93 L23 93 C16 93 10 90 6.5 85 C3 80 3 74 7 68 L40.5 10 C43 6 46 4 50 4Z" fill="#1a1a2e" />
       <path d="M28 72 C32 62 44 56 58 60 C66 62.5 70 67 68 70 C66 73 60 72 52 69 C44 66 36 68 32 74 C30 77 28 75 28 72Z" fill="#7c3aed" />
     </svg>
+  );
+}
+
+// ── Floating client logo ──────────────────────────────────────────────────────
+
+function FloatingLogo({ src, alt, style, depth = 0, rotate = 0, mouseOffset = { x: 0, y: 0 } }: {
+  src: string; alt: string; style: React.CSSProperties;
+  depth?: number; rotate?: number; mouseOffset?: { x: number; y: number };
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  useEffect(() => { if (imgRef.current?.complete) setLoaded(true); }, []);
+  return (
+    <div
+      className="absolute hidden md:block z-20"
+      style={{
+        ...style,
+        transform: `translate(${mouseOffset.x * depth}px, ${mouseOffset.y * depth}px) rotate(${rotate}deg)`,
+        transition: "transform 0.12s ease-out",
+      }}
+    >
+      <div className="relative w-10 h-10">
+        {!loaded && <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse" />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img ref={imgRef} src={src} alt={alt} width={40} height={40}
+          className={`w-10 h-10 rounded-xl shadow-lg transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setLoaded(true)} onError={() => setLoaded(true)} />
+      </div>
+    </div>
   );
 }
 
@@ -276,23 +305,32 @@ const TOOLS = [
 export default function McpPage() {
   const [activeClient, setActiveClient] = useState<"claude" | "cursor">("claude");
   const cfg = CONFIGS[activeClient];
+  const [heroMouse, setHeroMouse] = useState({ x: 0, y: 0 });
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="pt-16 pb-4 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section
+        className="relative pt-16 pb-4 px-6 overflow-hidden"
+        onMouseMove={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          setHeroMouse({ x: (e.clientX - r.left) / r.width - 0.5, y: (e.clientY - r.top) / r.height - 0.5 });
+        }}
+        onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}
+      >
+        {/* Floating client logos */}
+        {[
+          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",                alt: "Claude",   style: { top: "12%", left:  "18%" }, depth: 26, rotate:  8  },
+          { src: "https://www.google.com/s2/favicons?domain=cursor.sh&sz=64",                alt: "Cursor",   style: { top: "5%",  left:  "26%" }, depth: 16, rotate: -10 },
+          { src: "https://www.google.com/s2/favicons?domain=code.visualstudio.com&sz=64",   alt: "VS Code",  style: { top: "12%", right: "18%" }, depth: 26, rotate: -8  },
+          { src: "https://www.google.com/s2/favicons?domain=n8n.io&sz=64",                   alt: "n8n",      style: { top: "5%",  right: "26%" }, depth: 16, rotate:  10 },
+        ].map(({ src, alt, style, depth, rotate }) => (
+          <FloatingLogo key={alt} src={src} alt={alt} style={style} depth={depth} rotate={rotate} mouseOffset={heroMouse} />
+        ))}
 
-          {/* Badge */}
-          <div className="flex justify-center mb-8">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f3eeff] border border-[#e4d4ff] text-[12px] font-semibold text-[#5B2D91]">
-              <Terminal className="w-3.5 h-3.5" />
-              MCP SERVER · NOW LIVE
-            </span>
-          </div>
-
+        <div className="relative z-10 max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h1 className="text-[44px] sm:text-[60px] font-black text-[#0a0a0a] leading-[1.06] tracking-tight mb-5">
               Your Comly data,<br />right where you think.
