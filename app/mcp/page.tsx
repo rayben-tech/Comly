@@ -455,33 +455,150 @@ export default function McpPage() {
       {/* ── TOOLS ────────────────────────────────────────────────────────── */}
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-3">4 tools. All your data.</h2>
             <p className="text-[15px] text-[#6b6b6b] max-w-md mx-auto">
-              Your Claude or Cursor agent automatically picks the right tool based on what you ask.
+              No SDK, no glue code. Your AI client picks the right tool based on what you ask.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {TOOLS.map(({ icon, fn, headline, desc, example }) => (
-              <div key={fn} className="group bg-white border border-[#e8e8e8] rounded-2xl p-6 hover:border-[#5B2D91]/30 hover:shadow-md transition-all">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#f3eeff] flex items-center justify-center text-[#5B2D91] shrink-0">
-                    {icon}
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-0.5">{fn}</p>
-                    <p className="text-[15px] font-bold text-[#0a0a0a]">{headline}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            {/* Tool 1 — get_visibility_score */}
+            <div className="relative pt-5">
+              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">1</div>
+              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
+                {/* Visual */}
+                <div className="px-5 pt-8 pb-4">
+                  <div className="bg-white rounded-xl border border-[#e8e8e8] p-4 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#aaaaaa] mb-2">AI Visibility Score</p>
+                    <div className="flex items-end gap-2 mb-3">
+                      <span className="text-[40px] font-black text-[#0a0a0a] leading-none">72</span>
+                      <span className="text-[16px] text-[#aaaaaa] mb-1">/100</span>
+                      <span className="ml-auto text-[12px] font-bold text-[#5B2D91] bg-[#f3eeff] px-2 py-0.5 rounded-full mb-1">B+</span>
+                    </div>
+                    <div className="h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#5B2D91] rounded-full" style={{ width: "72%" }} />
+                    </div>
+                    <p className="text-[11px] text-[#aaaaaa] mt-2">Mentioned in 7 of 10 prompts</p>
                   </div>
                 </div>
-                <p className="text-[13px] text-[#6b6b6b] leading-relaxed mb-4">{desc}</p>
-                <div className="flex items-center gap-2 bg-[#fafafa] border border-[#f0f0f0] rounded-xl px-3.5 py-2.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="" width={13} height={13} className="w-3.5 h-3.5 opacity-50 shrink-0" />
-                  <span className="text-[12px] text-[#6b6b6b] italic">{example}</span>
+                {/* Text */}
+                <div className="px-5 pb-5">
+                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">get_visibility_score()</p>
+                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Your score at a glance</p>
+                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Current score, letter grade, how many prompts you appeared in, and a plain-English verdict.</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Tool 2 — get_prompt_results */}
+            <div className="relative pt-5">
+              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">2</div>
+              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
+                {/* Visual */}
+                <div className="px-5 pt-8 pb-4">
+                  <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
+                    <div className="px-4 py-2.5 border-b border-[#f0f0f0] flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-[#0a0a0a]">Prompt Results</p>
+                      <span className="text-[9px] font-semibold text-[#ef4444] bg-red-50 px-1.5 py-0.5 rounded-full">3 gaps</span>
+                    </div>
+                    {[
+                      { text: "Best project management tool?", ok: true  },
+                      { text: "Top SaaS tools for remote teams?", ok: true  },
+                      { text: "Best AI writing tool for content?", ok: false },
+                      { text: "Top productivity apps in 2025?",  ok: false },
+                    ].map((row, i) => (
+                      <div key={i} className="flex items-center gap-3 px-4 py-2 border-b border-[#f7f7f7] last:border-0">
+                        <span className={`text-[11px] font-bold ${row.ok ? "text-emerald-500" : "text-[#ef4444]"}`}>{row.ok ? "✓" : "✗"}</span>
+                        <span className="text-[11px] text-[#6b6b6b] truncate">{row.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Text */}
+                <div className="px-5 pb-5">
+                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">get_prompt_results()</p>
+                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Every prompt, every model</p>
+                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Full list of tested prompts — whether you appeared, at what position, and which competitors showed up instead.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tool 3 — get_competitor_rankings */}
+            <div className="relative pt-5">
+              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">3</div>
+              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
+                {/* Visual */}
+                <div className="px-5 pt-8 pb-4">
+                  <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
+                    <div className="px-4 py-2.5 border-b border-[#f0f0f0]">
+                      <p className="text-[10px] font-bold text-[#0a0a0a]">Competitor Ranking</p>
+                    </div>
+                    {[
+                      { name: "Confluence", pct: 85, you: false },
+                      { name: "Your brand", pct: 68, you: true  },
+                      { name: "Coda",       pct: 54, you: false },
+                      { name: "Obsidian",   pct: 41, you: false },
+                    ].map((c, i) => (
+                      <div key={i} className={`flex items-center gap-3 px-4 py-2.5 border-b border-[#f7f7f7] last:border-0 ${c.you ? "bg-[#f3eeff]" : ""}`}>
+                        <span className="text-[10px] text-[#aaaaaa] w-3">{i + 1}</span>
+                        <span className={`text-[12px] flex-1 font-medium ${c.you ? "text-[#5B2D91] font-bold" : "text-[#0a0a0a]"}`}>
+                          {c.name}{c.you && <span className="ml-1.5 text-[9px] bg-[#5B2D91] text-white px-1.5 py-0.5 rounded-full font-normal">You</span>}
+                        </span>
+                        <div className="w-16 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${c.pct}%`, background: c.you ? "#5B2D91" : "#d1d5db" }} />
+                        </div>
+                        <span className="text-[10px] text-[#aaaaaa] w-8 text-right">{c.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Text */}
+                <div className="px-5 pb-5">
+                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">get_competitor_rankings()</p>
+                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Who's beating you</p>
+                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Competitors ranked by how often AI models mention them, with average position across all audit prompts.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tool 4 — find_threads */}
+            <div className="relative pt-5">
+              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">4</div>
+              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
+                {/* Visual */}
+                <div className="px-5 pt-8 pb-4">
+                  <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
+                    <div className="px-4 py-2.5 border-b border-[#f0f0f0] flex items-center gap-2">
+                      <p className="text-[10px] font-bold text-[#0a0a0a]">Engagement Threads</p>
+                      <span className="ml-auto text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">8 found</span>
+                    </div>
+                    {[
+                      { platform: "reddit", sub: "r/SaaS",      title: "Best AI-powered tools for marketing teams?" },
+                      { platform: "quora",  sub: "Quora",        title: "Which tools help with AI visibility tracking?" },
+                      { platform: "reddit", sub: "r/Entrepreneur",title: "How do you get your brand into ChatGPT answers?" },
+                    ].map((t, i) => (
+                      <div key={i} className="flex items-start gap-2.5 px-4 py-2.5 border-b border-[#f7f7f7] last:border-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`https://www.google.com/s2/favicons?domain=${t.platform === "reddit" ? "reddit.com" : "quora.com"}&sz=32`} alt="" width={12} height={12} className="w-3 h-3 mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-semibold text-[#aaaaaa]">{t.sub}</p>
+                          <p className="text-[11px] text-[#0a0a0a] leading-snug line-clamp-1">{t.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Text */}
+                <div className="px-5 pb-5">
+                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">find_threads()</p>
+                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Where your buyers are talking</p>
+                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Reddit and Quora threads where people ask questions your brand should be answering, scoped to your niche.</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
