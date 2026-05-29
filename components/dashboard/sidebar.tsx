@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Globe,
@@ -204,6 +204,83 @@ function IconBtn({
   );
 }
 
+function FeedbackForm({ brandName, accessToken }: { brandName: string; accessToken?: string }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  async function submit() {
+    if (!text.trim() || status === "sending") return;
+    setStatus("sending");
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ message: text.trim(), brand_name: brandName }),
+      });
+      setStatus("done");
+      setText("");
+      setTimeout(() => { setStatus("idle"); setOpen(false); }, 2500);
+    } catch {
+      setStatus("idle");
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => { setOpen(true); setTimeout(() => textareaRef.current?.focus(), 50); }}
+        className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5e5e5] hover:border-[#5B2D91]/30 hover:bg-[#faf7ff] transition-colors group w-full"
+      >
+        <MessageSquare className="w-3.5 h-3.5 text-[#9ca3af] group-hover:text-[#5B2D91] shrink-0 transition-colors" />
+        <span className="text-[12px] font-medium text-[#6b7280] group-hover:text-[#5B2D91] transition-colors">Share feedback</span>
+      </button>
+    );
+  }
+
+  if (status === "done") {
+    return (
+      <div className="mt-3 px-3 py-2.5 rounded-lg bg-emerald-50 border border-emerald-100 text-[12px] text-emerald-700 font-medium text-center">
+        Thanks for your feedback! 🙏
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-[#5B2D91]/20 bg-[#faf7ff] overflow-hidden">
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(); }}
+        placeholder="What's on your mind?"
+        rows={3}
+        className="w-full px-3 pt-2.5 pb-1 text-[12px] text-[#0a0a0a] placeholder-[#c0c0c0] bg-transparent resize-none focus:outline-none leading-relaxed"
+      />
+      <div className="flex items-center justify-between px-2 pb-2 gap-2">
+        <button
+          onClick={() => { setOpen(false); setText(""); }}
+          className="text-[11px] text-[#9ca3af] hover:text-[#666] transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={submit}
+          disabled={!text.trim() || status === "sending"}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold text-white disabled:opacity-40 transition-opacity"
+          style={{ background: "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
+        >
+          {status === "sending" ? "Sending…" : "Send"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode, demoUnlockedPages = [], onEditProfile }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const isFixesActive = activePage.startsWith("fixes:");
@@ -328,15 +405,15 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               </IconBtn>
             </div>
 
-            {/* Feedback */}
+            {/* Feedback — expands sidebar to show form */}
             <div className="py-2 flex items-center justify-center border-t border-[#f0f0f0]">
-              <a
-                href="mailto:feedback@trycomly.com"
+              <button
                 title="Share feedback"
+                onClick={onOpen}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-[#9ca3af] hover:text-[#5B2D91] hover:bg-[#f3eeff] transition-colors"
               >
                 <MessageSquare className="w-4 h-4" />
-              </a>
+              </button>
             </div>
 
             {/* Footer — logo only */}
@@ -546,13 +623,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                   <span className="text-[11px] text-[#6b7280]">Re-audited daily at 2:00 AM UTC</span>
                 )}
               </div>
-              <a
-                href="mailto:feedback@trycomly.com"
-                className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5e5e5] hover:border-[#5B2D91]/30 hover:bg-[#faf7ff] transition-colors group"
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-[#9ca3af] group-hover:text-[#5B2D91] shrink-0 transition-colors" />
-                <span className="text-[12px] font-medium text-[#6b7280] group-hover:text-[#5B2D91] transition-colors">Share feedback</span>
-              </a>
+              <FeedbackForm brandName={profile.brand_name} />
             </div>
           </motion.div>
         )}
