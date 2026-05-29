@@ -315,11 +315,8 @@ export default function McpPage() {
         </div>
       </section>
 
-      {/* fade white → purple */}
-      <div className="h-[40vh] bg-gradient-to-b from-white via-[#d4b8f0] to-[#a87be0]" />
-
       {/* ── PURPLE SECTION ───────────────────────────────────────────────── */}
-      <section id="mcp-purple" className="bg-[#a87be0] py-24 px-6">
+      <section id="mcp-purple" className="py-24 px-6" style={{ background: "linear-gradient(to bottom, #ffffff 0%, #c9a3e8 18%, #a87be0 32%, #a87be0 68%, #c9a3e8 82%, #ffffff 100%)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-[11px] font-bold uppercase tracking-widest text-white/50 mb-4">Why it matters</p>
@@ -378,9 +375,6 @@ export default function McpPage() {
           </div>
         </div>
       </section>
-
-      {/* fade purple → white */}
-      <div className="h-[40vh] bg-gradient-to-b from-[#a87be0] via-[#d4b8f0] to-white" />
 
       {/* ── TOOLS ────────────────────────────────────────────────────────── */}
       <section className="py-24 px-6">
