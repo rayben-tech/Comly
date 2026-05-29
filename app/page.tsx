@@ -2616,7 +2616,7 @@ export default function LandingPage() {
                     disabled={checkoutLoading}
                     className="w-full rounded-full bg-[#5B2D91] hover:bg-[#4a2478] py-4 font-bold text-white text-[16px] transition-all active:scale-[0.98] shadow-lg shadow-[#5B2D91]/30 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {checkoutLoading ? "Redirecting…" : isPaid ? "View dashboard →" : "Get Started for Free →"}
+                    {checkoutLoading ? "Redirecting…" : isPaid ? "View dashboard →" : "Get Started →"}
                   </button>
                   <p className="text-center text-[13px] text-[#6b6b6b]">
                     <strong className="text-[#0a0a0a] font-semibold">Cancel anytime.</strong> No questions asked!
