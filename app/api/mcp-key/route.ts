@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 
 function randomKey(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -10,24 +8,20 @@ function randomKey(): string {
   return key;
 }
 
-async function getUserId(): Promise<string | null> {
-  try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll() } }
-    );
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id ?? null;
-  } catch {
-    return null;
-  }
+async function getUserId(req: NextRequest): Promise<string | null> {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "").trim();
+  if (!token) return null;
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data: { user } } = await supabase.auth.getUser(token);
+  return user?.id ?? null;
 }
 
 // GET — return existing key
-export async function GET() {
-  const userId = await getUserId();
+export async function GET(req: NextRequest) {
+  const userId = await getUserId(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = createClient(
@@ -37,7 +31,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from("mcp_keys")
-    .select("key, created_at")
+    .select("key")
     .eq("user_id", userId)
     .single();
 
@@ -46,27 +40,24 @@ export async function GET() {
 
 // POST — generate (or regenerate) key
 export async function POST(req: NextRequest) {
-  const userId = await getUserId();
+  const userId = await getUserId(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body    = await req.json().catch(() => ({}));
-  const regen   = body.regenerate === true;
+  const body  = await req.json().catch(() => ({}));
+  const regen = body.regenerate === true;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Check for existing key
   const { data: existing } = await supabase
     .from("mcp_keys")
     .select("key")
     .eq("user_id", userId)
     .single();
 
-  if (existing && !regen) {
-    return NextResponse.json({ key: existing.key });
-  }
+  if (existing && !regen) return NextResponse.json({ key: existing.key });
 
   const newKey = randomKey();
 

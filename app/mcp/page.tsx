@@ -7,6 +7,7 @@ import { useScroll } from "@/components/ui/use-scroll";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 // ── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -57,10 +58,10 @@ function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const section = document.getElementById("mcp-purple");
+      const section = document.getElementById("setup");
       if (!section) return;
-      const y = window.scrollY + 60;
-      setOverPurple(y >= section.offsetTop && y < section.offsetTop + section.offsetHeight);
+      const rect = section.getBoundingClientRect();
+      setOverPurple(rect.top <= 56 && rect.bottom > 56);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
@@ -174,6 +175,26 @@ function CopyBtn({ text, className = "" }: { text: string; className?: string })
       {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
       {copied ? "Copied" : "Copy"}
     </button>
+  );
+}
+
+// ── FAQ item ─────────────────────────────────────────────────────────────────
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="py-5">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-start justify-between gap-4 text-left group">
+        <span className="text-[16px] font-semibold text-[#0a0a0a] leading-snug group-hover:text-[#5B2D91] transition-colors">{q}</span>
+        <span className={`text-[#aaaaaa] text-[20px] leading-none shrink-0 mt-0.5 transition-transform duration-300 ${open ? "rotate-45" : ""}`}>+</span>
+      </button>
+      {/* Grid-row trick — animates height smoothly without JS measurement */}
+      <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows 300ms ease" }}>
+        <div className="overflow-hidden">
+          <p className="pt-3 text-[14px] text-[#6b6b6b] leading-relaxed">{a}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -343,6 +364,7 @@ export default function McpPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SmoothScroll />
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
@@ -391,211 +413,152 @@ export default function McpPage() {
         </div>
       </section>
 
-      {/* ── PURPLE SECTION ───────────────────────────────────────────────── */}
-      <section id="mcp-purple" className="py-24 px-6" style={{ background: "linear-gradient(to bottom, #ffffff 0%, #c9a3e8 18%, #a87be0 32%, #a87be0 68%, #c9a3e8 82%, #ffffff 100%)" }}>
+      {/* ── WHAT YOU CAN BUILD ───────────────────────────────────────────── */}
+      <section className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-white/50 mb-4">Why it matters</p>
-            <h2 className="text-[38px] sm:text-[48px] font-black text-white leading-tight tracking-tight">
-              Stop switching tabs.<br />Just ask.
+          <div className="text-center mb-14">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#aaaaaa] mb-4">Use cases</p>
+            <h2 className="text-[38px] sm:text-[48px] font-black text-[#0a0a0a] leading-tight tracking-tight">
+              What you can build
             </h2>
-            <p className="mt-4 text-[16px] text-white/70 max-w-xl mx-auto leading-relaxed">
-              Every time you want visibility data, you leave what you're doing. With the MCP server, your workflow stays uninterrupted.
+            <p className="mt-4 text-[16px] text-[#6b6b6b] max-w-lg mx-auto leading-relaxed">
+              Real workflows built with Comly MCP. Each takes minutes to set up and saves hours.
             </p>
           </div>
 
-          {/* Before / After cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
-            {/* Before */}
-            <div className="bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-5">Without MCP</p>
-              <div className="space-y-3">
-                {[
-                  "Open browser, go to trycomly.com",
-                  "Log in, wait for dashboard to load",
-                  "Navigate to the right section",
-                  "Copy the number you needed",
-                  "Switch back to what you were doing",
-                ].map((step, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-bold text-white/40">{i + 1}</span>
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+            {/* Card 1 — Team Slack bot */}
+            <div className="group bg-white rounded-2xl border border-[#e8e8e8] overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
+              {/* Visual area — Slack mockup fills the zone */}
+              <div className="bg-[#1a1a2e] px-5 pt-5 pb-0 overflow-hidden" style={{ minHeight: 210 }}>
+                {/* Channel header */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                  <span className="text-[11px] font-bold text-white/80">#ai-visibility</span>
+                </div>
+                {/* Messages */}
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 text-white text-[10px] font-bold">A</div>
+                    <div className="bg-white/10 rounded-xl rounded-tl-sm px-3 py-2 max-w-[85%]">
+                      <p className="text-[10px] font-semibold text-white/50 mb-0.5">Alex · 9:14 AM</p>
+                      <p className="text-[11px] text-white/90 leading-snug">@comly how is <span className="text-[#c4b5fd] font-semibold">Acme Inc</span> doing this week?</p>
                     </div>
-                    <span className="text-[13px] text-white/60">{step}</span>
                   </div>
-                ))}
-              </div>
-              <div className="mt-5 pt-4 border-t border-white/10">
-                <span className="text-[12px] font-semibold text-white/40">~3 minutes of context switching</span>
-              </div>
-            </div>
-
-            {/* After */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91]/60 mb-5">With Comly MCP</p>
-              <div className="bg-[#f7f7f7] rounded-xl p-4 font-mono text-[12px] mb-4">
-                <span className="text-[#aaaaaa]">You: </span>
-                <span className="text-[#0a0a0a]">How's my brand doing?</span>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#5B2D91]">
-                  <ComlyLogo size={11} />
-                  <span>comly.get_visibility_score</span>
-                </div>
-                <div className="mt-2 text-[#0a0a0a] leading-relaxed">
-                  Score: <span className="font-bold text-[#5B2D91]">72/100 (B+)</span>. You appear in 7 of 10 prompts. Confluence is still ahead at #1.
-                </div>
-              </div>
-              <div className="pt-3 border-t border-[#f0f0f0]">
-                <span className="text-[12px] font-semibold text-emerald-600">~5 seconds, never left your editor</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TOOLS ────────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-3">4 tools. All your data.</h2>
-            <p className="text-[15px] text-[#6b6b6b] max-w-md mx-auto">
-              No SDK, no glue code. Your AI client picks the right tool based on what you ask.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-            {/* Tool 1 — get_visibility_score */}
-            <div className="relative pt-5">
-              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">1</div>
-              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
-                {/* Visual */}
-                <div className="px-5 pt-8 pb-4">
-                  <div className="bg-white rounded-xl border border-[#e8e8e8] p-4 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#aaaaaa] mb-2">AI Visibility Score</p>
-                    <div className="flex items-end gap-2 mb-3">
-                      <span className="text-[40px] font-black text-[#0a0a0a] leading-none">72</span>
-                      <span className="text-[16px] text-[#aaaaaa] mb-1">/100</span>
-                      <span className="ml-auto text-[12px] font-bold text-[#5B2D91] bg-[#f3eeff] px-2 py-0.5 rounded-full mb-1">B+</span>
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#5B2D91] flex items-center justify-center shrink-0 shadow-md">
+                      <ComlyLogo size={14} />
                     </div>
-                    <div className="h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
+                    <div className="bg-[#5B2D91]/30 border border-[#5B2D91]/40 rounded-xl rounded-tl-sm px-3 py-2 max-w-[90%]">
+                      <p className="text-[10px] font-semibold text-[#c4b5fd] mb-1">Comly · 9:14 AM</p>
+                      <p className="text-[11px] text-white/90 leading-snug"><span className="text-white font-bold">72/100</span> — up 14 pts this week. 7/10 prompts hit. Confluence still leads at #1.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Text area */}
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-center gap-2 mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="https://www.google.com/s2/favicons?domain=n8n.io&sz=32" alt="n8n" width={20} height={20} className="w-5 h-5 rounded-md" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="https://www.google.com/s2/favicons?domain=slack.com&sz=32" alt="Slack" width={20} height={20} className="w-5 h-5 rounded-md" />
+                </div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-[15px] font-bold text-[#0a0a0a] leading-snug">Team Slack bot</p>
+                  <span className="text-[#cccccc] group-hover:text-[#5B2D91] transition-colors mt-0.5 shrink-0">→</span>
+                </div>
+                <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Wire Comly into n8n + Slack so anyone on your team can ask about brand visibility directly in a channel — live answers, no dashboard.</p>
+              </div>
+            </div>
+
+            {/* Card 2 — Reddit/Quora engagement queue */}
+            <div className="group bg-white rounded-2xl border border-[#e8e8e8] overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
+              {/* Visual area */}
+              <div className="bg-[#f5f0ff] overflow-hidden" style={{ minHeight: 210 }}>
+                {/* Header */}
+                <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#5B2D91]/60">Engage today</span>
+                  <span className="text-[10px] font-semibold text-white bg-[#5B2D91] px-2 py-0.5 rounded-full">3 threads</span>
+                </div>
+                {/* Thread rows */}
+                <div className="mx-4 bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
+                  {[
+                    { domain: "reddit.com", color: "#ff4500", sub: "r/SaaS",        title: "Best tool for AI search visibility?" },
+                    { domain: "reddit.com", color: "#ff4500", sub: "r/Entrepreneur", title: "How do you track AI brand mentions?" },
+                    { domain: "quora.com",  color: "#b92b27", sub: "Quora",          title: "How to appear in ChatGPT answers?" },
+                  ].map((t, i) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-[#f5f5f5] last:border-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`https://www.google.com/s2/favicons?domain=${t.domain}&sz=32`} alt="" width={16} height={16} className="w-4 h-4 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] font-bold uppercase tracking-wide mb-0.5" style={{ color: t.color }}>{t.sub}</p>
+                        <p className="text-[11px] font-medium text-[#0a0a0a] line-clamp-1">{t.title}</p>
+                      </div>
+                      <span className="text-[#d0d0d0] text-[11px] shrink-0">→</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Text area */}
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-center gap-2 mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="Claude" width={20} height={20} className="w-5 h-5 rounded-md" />
+                </div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-[15px] font-bold text-[#0a0a0a] leading-snug">Reddit & Quora engagement queue</p>
+                  <span className="text-[#cccccc] group-hover:text-[#5B2D91] transition-colors mt-0.5 shrink-0">→</span>
+                </div>
+                <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Ask Claude "What threads should I engage with today?" — it surfaces live discussions where your buyers are asking questions you should be answering.</p>
+              </div>
+            </div>
+
+            {/* Card 3 — Agency client prep */}
+            <div className="group bg-white rounded-2xl border border-[#e8e8e8] overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
+              {/* Visual area */}
+              <div className="bg-[#f5f0ff] overflow-hidden" style={{ minHeight: 210 }}>
+                <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#5B2D91]/60">Client brief</span>
+                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Call in 5 min</span>
+                </div>
+                <div className="mx-4 bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
+                  {/* Score row */}
+                  <div className="px-4 py-3 border-b border-[#f5f5f5]">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-medium text-[#6b6b6b]">Acme Inc — AI Visibility</span>
+                      <span className="text-[13px] font-black text-[#5B2D91]">72<span className="text-[10px] font-normal text-[#aaaaaa]">/100</span></span>
+                    </div>
+                    <div className="h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
                       <div className="h-full bg-[#5B2D91] rounded-full" style={{ width: "72%" }} />
                     </div>
-                    <p className="text-[11px] text-[#aaaaaa] mt-2">Mentioned in 7 of 10 prompts</p>
                   </div>
-                </div>
-                {/* Text */}
-                <div className="px-5 pb-5">
-                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">get_visibility_score()</p>
-                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Your score at a glance</p>
-                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Current score, letter grade, how many prompts you appeared in, and a plain-English verdict.</p>
+                  {/* Stats */}
+                  {[
+                    { label: "vs top competitor",  value: "−18 pts",          color: "#ef4444" },
+                    { label: "New prompt gaps",    value: "3 this week",      color: "#f59e0b" },
+                    { label: "Prompts answered",   value: "7 / 10",           color: "#10b981" },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="flex items-center justify-between px-4 py-2.5 border-b border-[#f5f5f5] last:border-0">
+                      <span className="text-[10px] text-[#6b6b6b]">{label}</span>
+                      <span className="text-[11px] font-bold" style={{ color }}>{value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* Tool 2 — get_prompt_results */}
-            <div className="relative pt-5">
-              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">2</div>
-              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
-                {/* Visual */}
-                <div className="px-5 pt-8 pb-4">
-                  <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
-                    <div className="px-4 py-2.5 border-b border-[#f0f0f0] flex items-center justify-between">
-                      <p className="text-[10px] font-bold text-[#0a0a0a]">Prompt Results</p>
-                      <span className="text-[9px] font-semibold text-[#ef4444] bg-red-50 px-1.5 py-0.5 rounded-full">3 gaps</span>
-                    </div>
-                    {[
-                      { text: "Best project management tool?", ok: true  },
-                      { text: "Top SaaS tools for remote teams?", ok: true  },
-                      { text: "Best AI writing tool for content?", ok: false },
-                      { text: "Top productivity apps in 2025?",  ok: false },
-                    ].map((row, i) => (
-                      <div key={i} className="flex items-center gap-3 px-4 py-2 border-b border-[#f7f7f7] last:border-0">
-                        <span className={`text-[11px] font-bold ${row.ok ? "text-emerald-500" : "text-[#ef4444]"}`}>{row.ok ? "✓" : "✗"}</span>
-                        <span className="text-[11px] text-[#6b6b6b] truncate">{row.text}</span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Text area */}
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-center gap-2 mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="Claude" width={20} height={20} className="w-5 h-5 rounded-md" />
                 </div>
-                {/* Text */}
-                <div className="px-5 pb-5">
-                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">get_prompt_results()</p>
-                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Every prompt, every model</p>
-                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Full list of tested prompts — whether you appeared, at what position, and which competitors showed up instead.</p>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-[15px] font-bold text-[#0a0a0a] leading-snug">Agency client call prep</p>
+                  <span className="text-[#cccccc] group-hover:text-[#5B2D91] transition-colors mt-0.5 shrink-0">→</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Tool 3 — get_competitor_rankings */}
-            <div className="relative pt-5">
-              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">3</div>
-              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
-                {/* Visual */}
-                <div className="px-5 pt-8 pb-4">
-                  <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
-                    <div className="px-4 py-2.5 border-b border-[#f0f0f0]">
-                      <p className="text-[10px] font-bold text-[#0a0a0a]">Competitor Ranking</p>
-                    </div>
-                    {[
-                      { name: "Confluence", pct: 85, you: false },
-                      { name: "Your brand", pct: 68, you: true  },
-                      { name: "Coda",       pct: 54, you: false },
-                      { name: "Obsidian",   pct: 41, you: false },
-                    ].map((c, i) => (
-                      <div key={i} className={`flex items-center gap-3 px-4 py-2.5 border-b border-[#f7f7f7] last:border-0 ${c.you ? "bg-[#f3eeff]" : ""}`}>
-                        <span className="text-[10px] text-[#aaaaaa] w-3">{i + 1}</span>
-                        <span className={`text-[12px] flex-1 font-medium ${c.you ? "text-[#5B2D91] font-bold" : "text-[#0a0a0a]"}`}>
-                          {c.name}{c.you && <span className="ml-1.5 text-[9px] bg-[#5B2D91] text-white px-1.5 py-0.5 rounded-full font-normal">You</span>}
-                        </span>
-                        <div className="w-16 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${c.pct}%`, background: c.you ? "#5B2D91" : "#d1d5db" }} />
-                        </div>
-                        <span className="text-[10px] text-[#aaaaaa] w-8 text-right">{c.pct}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Text */}
-                <div className="px-5 pb-5">
-                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">get_competitor_rankings()</p>
-                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Who's beating you</p>
-                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Competitors ranked by how often AI models mention them, with average position across all audit prompts.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Tool 4 — find_threads */}
-            <div className="relative pt-5">
-              <div className="absolute -top-0 left-5 w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shadow-md z-10">4</div>
-              <div className="bg-[#f5f0ff] rounded-2xl overflow-hidden">
-                {/* Visual */}
-                <div className="px-5 pt-8 pb-4">
-                  <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden shadow-sm">
-                    <div className="px-4 py-2.5 border-b border-[#f0f0f0] flex items-center gap-2">
-                      <p className="text-[10px] font-bold text-[#0a0a0a]">Engagement Threads</p>
-                      <span className="ml-auto text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">8 found</span>
-                    </div>
-                    {[
-                      { platform: "reddit", sub: "r/SaaS",      title: "Best AI-powered tools for marketing teams?" },
-                      { platform: "quora",  sub: "Quora",        title: "Which tools help with AI visibility tracking?" },
-                      { platform: "reddit", sub: "r/Entrepreneur",title: "How do you get your brand into ChatGPT answers?" },
-                    ].map((t, i) => (
-                      <div key={i} className="flex items-start gap-2.5 px-4 py-2.5 border-b border-[#f7f7f7] last:border-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`https://www.google.com/s2/favicons?domain=${t.platform === "reddit" ? "reddit.com" : "quora.com"}&sz=32`} alt="" width={12} height={12} className="w-3 h-3 mt-0.5 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-[9px] font-semibold text-[#aaaaaa]">{t.sub}</p>
-                          <p className="text-[11px] text-[#0a0a0a] leading-snug line-clamp-1">{t.title}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Text */}
-                <div className="px-5 pb-5">
-                  <p className="text-[11px] font-mono font-bold text-[#5B2D91] mb-1">find_threads()</p>
-                  <p className="text-[15px] font-bold text-[#0a0a0a] mb-1.5">Where your buyers are talking</p>
-                  <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Reddit and Quora threads where people ask questions your brand should be answering, scoped to your niche.</p>
-                </div>
+                <p className="text-[13px] text-[#6b6b6b] leading-relaxed">Before every client call, ask Claude "How visible is [client] vs their top competitor?" — instant AI visibility talking points without opening a single tab.</p>
               </div>
             </div>
 
@@ -604,11 +567,11 @@ export default function McpPage() {
       </section>
 
       {/* ── SETUP ────────────────────────────────────────────────────────── */}
-      <section id="setup" className="py-24 px-6 bg-[#fafafa] border-t border-[#f0f0f0]">
+      <section id="setup" className="py-24 px-6 bg-[#a87be0]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-3">Set up in 2 minutes</h2>
-            <p className="text-[15px] text-[#6b6b6b]">Run your audit, grab your key, paste the config. Done.</p>
+            <h2 className="text-[32px] sm:text-[40px] font-black text-white mb-3">Set up in 2 minutes</h2>
+            <p className="text-[15px] text-white/70">Run your audit, grab your key, paste the config. Done.</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
@@ -621,18 +584,18 @@ export default function McpPage() {
                 { n: "3", title: "Paste the config", desc: "Drop the JSON snippet into your client's config file and restart." },
               ].map(({ n, title, desc }) => (
                 <div key={n} className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-[#5B2D91] flex items-center justify-center text-white text-[13px] font-black shrink-0 shadow">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-[13px] font-black shrink-0 shadow">
                     {n}
                   </div>
                   <div>
-                    <p className="text-[14px] font-bold text-[#0a0a0a]">{title}</p>
-                    <p className="text-[13px] text-[#6b6b6b] mt-0.5">{desc}</p>
+                    <p className="text-[14px] font-bold text-white">{title}</p>
+                    <p className="text-[13px] text-white/70 mt-0.5">{desc}</p>
                   </div>
                 </div>
               ))}
 
               <div className="pt-2">
-                <p className="text-[12px] text-[#aaaaaa] mb-3">Server URL</p>
+                <p className="text-[12px] text-white/60 mb-3">Server URL</p>
                 <div className="flex items-center gap-2 bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5">
                   <code className="text-[12px] font-mono text-[#0a0a0a] flex-1 select-all">trycomly.com/api/mcp</code>
                   <CopyBtn text="https://trycomly.com/api/mcp" className="bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5] shrink-0" />
@@ -643,11 +606,11 @@ export default function McpPage() {
             {/* Right col: config snippet */}
             <div className="lg:col-span-3">
               {/* Client tabs */}
-              <div className="flex items-center gap-1 p-1 bg-[#f0f0f0] rounded-xl mb-3 w-fit">
+              <div className="flex items-center gap-1 p-1 bg-white/20 rounded-xl mb-3 w-fit">
                 {(Object.entries(CONFIGS) as [string, typeof CONFIGS[string]][]).map(([id, c]) => (
                   <button key={id} onClick={() => setActiveClient(id as "claude" | "cursor")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
-                      activeClient === id ? "bg-white shadow-sm text-[#0a0a0a] border border-[#e5e5e5]" : "text-[#6b6b6b] hover:text-[#0a0a0a]"
+                      activeClient === id ? "bg-white shadow-sm text-[#0a0a0a] border border-white/30" : "text-white/70 hover:text-white"
                     }`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`https://www.google.com/s2/favicons?domain=${c.domain}&sz=32`} alt="" width={14} height={14} className="w-3.5 h-3.5" />
@@ -656,7 +619,7 @@ export default function McpPage() {
                 ))}
               </div>
 
-              <p className="text-[11px] font-mono text-[#aaaaaa] mb-2">Save to <span className="text-[#6b6b6b]">{cfg.file}</span></p>
+              <p className="text-[11px] font-mono text-white/50 mb-2">Save to <span className="text-white/70">{cfg.file}</span></p>
 
               <div className="relative">
                 <pre className="bg-[#0a0a0a] text-[#e5e5e5] text-[12px] rounded-2xl p-5 overflow-x-auto leading-relaxed font-mono whitespace-pre">
@@ -665,25 +628,68 @@ export default function McpPage() {
                 <CopyBtn text={cfg.code} className="absolute top-3.5 right-3.5 bg-white/10 text-white hover:bg-white/20" />
               </div>
 
-              <p className="text-[12px] text-[#aaaaaa] mt-3">
-                Restart your client after saving. You'll see <code className="font-mono text-[#5B2D91]">comly</code> in the tools list.
+              <p className="text-[12px] text-white/70 mt-3">
+                Restart your client after saving. You'll see <code className="font-mono font-bold text-white">comly</code> in the tools list.
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#aaaaaa] mb-4">FAQ</p>
+            <h2 className="text-[38px] sm:text-[48px] font-black text-[#0a0a0a] leading-tight tracking-tight">
+              Common questions
+            </h2>
+          </div>
+
+          <div className="divide-y divide-[#f0f0f0]">
+            {[
+              {
+                q: "Do I need to run an audit before using the MCP server?",
+                a: "Yes — the MCP server reads from your latest audit. Run one audit at trycomly.com first, then generate your API key. The whole thing takes about 2 minutes.",
+              },
+              {
+                q: "Which AI clients support MCP?",
+                a: "Claude Desktop, Cursor, Windsurf, VS Code (with the Copilot MCP extension), n8n, and any other client that supports the Model Context Protocol. The list is growing fast.",
+              },
+              {
+                q: "Is my brand data sent to the AI client?",
+                a: "Your data stays on Comly's servers. The MCP server only returns what the AI client explicitly requests — a score, a list of prompts, or a set of threads. Nothing is pushed automatically.",
+              },
+              {
+                q: "How often is the data updated?",
+                a: "The MCP server always returns data from your most recent audit. Re-run an audit anytime to refresh your score, prompt results, and competitor rankings.",
+              },
+              {
+                q: "Can I use one API key for multiple clients?",
+                a: "Yes. Your API key works across any number of MCP clients simultaneously — Claude Desktop, Cursor, n8n, all at once.",
+              },
+              {
+                q: "Is the MCP server included in my plan?",
+                a: "Yes. MCP access is included with every Comly account. No extra cost, no separate subscription.",
+              },
+            ].map(({ q, a }) => (
+              <FaqItem key={q} q={q} a={a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-[#f0f0f0]">
+      <section className="py-24 px-6 bg-[#a87be0]">
         <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-[32px] sm:text-[40px] font-black text-[#0a0a0a] mb-4">
+          <h2 className="text-[32px] sm:text-[40px] font-black text-white mb-4">
             Ready to ask Claude about your brand?
           </h2>
-          <p className="text-[15px] text-[#6b6b6b] mb-8 leading-relaxed">
+          <p className="text-[15px] text-white/70 mb-8 leading-relaxed">
             Run a free audit, get your API key, and connect in under 2 minutes.
           </p>
           <Link href="/audit"
-            className="inline-flex items-center gap-2 bg-[#5B2D91] text-white text-[15px] font-bold px-8 py-4 rounded-full hover:bg-[#4a2478] transition-colors shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
+            className="inline-flex items-center gap-2 bg-white text-[#5B2D91] text-[15px] font-bold px-8 py-4 rounded-full hover:bg-white/90 transition-colors shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
             Get started <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
