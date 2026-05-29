@@ -1949,7 +1949,7 @@ export default function LandingPage() {
           fetch("/api/subscription/check", { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.json()).catch(() => ({})),
         ]);
         setHasAudit(!!existing);
-        setIsPaid(Boolean(subRes.isPaid || subRes.isUnlimited));
+        setIsPaid(Boolean(subRes.isPaid || subRes.isUnlimited || subRes.isTrialing));
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSessionUser(toUser(session)));

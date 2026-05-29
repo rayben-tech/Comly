@@ -80,8 +80,8 @@ function SubscribePage() {
       const subRes = await fetch("/api/subscription/check", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      const { isPaid } = await subRes.json();
-      if (isPaid) {
+      const { isPaid, isTrialing } = await subRes.json();
+      if (isPaid || isTrialing) {
         router.replace(pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit");
       }
     });

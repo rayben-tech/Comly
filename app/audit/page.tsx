@@ -234,6 +234,11 @@ function AuditFlow() {
 
       const existing = await getUserAudit(session.user.id);
       if (existing && !unlimited) {
+        // Block expired trial users from viewing their old results
+        if (!subCheck.isPaid && subCheck.trialStatus === "expired") {
+          router.replace("/subscribe");
+          return;
+        }
         if (subCheck.isTrialing) setTrialDaysLeft(subCheck.trialDaysLeft ?? null);
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
@@ -431,6 +436,14 @@ function AuditFlow() {
     const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
     if (auditSession?.access_token) authHeaders["Authorization"] = `Bearer ${auditSession.access_token}`;
 
+    // Ensure trial is started for any authenticated non-unlimited user (idempotent)
+    if (auditSession?.access_token && !isUnlimited) {
+      await fetch("/api/trial/start", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${auditSession.access_token}` },
+      }).catch(() => {});
+    }
+
     try {
       const batchSize = Math.ceil(allPrompts.length / 3);
       const batches = [
@@ -502,28 +515,38 @@ function AuditFlow() {
     if (!skipPaywallCheck && !isUnlimited) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { isPaid } = await fetch("/api/subscription/check", {
+        const { isPaid, isTrialing, trialStatus } = await fetch("/api/subscription/check", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-        }).then((r) => r.json()).catch(() => ({ isPaid: false })) as { isPaid: boolean };
+        }).then((r) => r.json()).catch(() => ({ isPaid: false, isTrialing: false, trialStatus: "none" })) as { isPaid: boolean; isTrialing: boolean; trialStatus: string };
 
-        if (!isPaid) {
-          const allPrompts = customPrompts.length > 0 ? customPrompts : generateAuditPrompts(profile);
-          try {
-            localStorage.setItem(PENDING_AUDIT_KEY, JSON.stringify({
-              profile,
-              prompts: allPrompts,
-              url: normalizedUrl,
-              expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-            } as PendingAudit));
-          } catch {}
-          // Show fake firing animation, then teaser results — no real API calls
-          setLoadingPhase("firing");
-          setStep("auditing");
-          setTimeout(() => {
-            setLoadingPhase(null);
-            setStep("fake-results");
-          }, 20000);
-          return;
+        if (!isPaid && !isTrialing) {
+          if (trialStatus === "expired") {
+            // Trial expired — show paywall
+            const allPrompts = customPrompts.length > 0 ? customPrompts : generateAuditPrompts(profile);
+            try {
+              localStorage.setItem(PENDING_AUDIT_KEY, JSON.stringify({
+                profile,
+                prompts: allPrompts,
+                url: normalizedUrl,
+                expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+              } as PendingAudit));
+            } catch {}
+            setLoadingPhase("firing");
+            setStep("auditing");
+            setTimeout(() => {
+              setLoadingPhase(null);
+              setStep("fake-results");
+            }, 20000);
+            return;
+          }
+          // trialStatus === "none": start trial automatically, then fall through
+          if (trialStatus === "none") {
+            await fetch("/api/trial/start", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${session.access_token}` },
+            }).catch(() => {});
+            setTrialDaysLeft(3);
+          }
         }
       }
     }
