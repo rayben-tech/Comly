@@ -316,7 +316,7 @@ export default function McpPage() {
       </section>
 
       {/* fade white → purple */}
-      <div className="h-24 bg-gradient-to-b from-white to-[#a87be0]" />
+      <div className="h-[40vh] bg-gradient-to-b from-white via-[#d4b8f0] to-[#a87be0]" />
 
       {/* ── PURPLE SECTION ───────────────────────────────────────────────── */}
       <section id="mcp-purple" className="bg-[#a87be0] py-24 px-6">
@@ -380,7 +380,7 @@ export default function McpPage() {
       </section>
 
       {/* fade purple → white */}
-      <div className="h-24 bg-gradient-to-b from-[#a87be0] to-white" />
+      <div className="h-[40vh] bg-gradient-to-b from-[#a87be0] via-[#d4b8f0] to-white" />
 
       {/* ── TOOLS ────────────────────────────────────────────────────────── */}
       <section className="py-24 px-6">
