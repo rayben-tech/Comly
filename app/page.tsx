@@ -609,6 +609,7 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
     { label: "How it works", href: "#how-it-works" },
     { label: "FAQ",          href: "#faq" },
     { label: "Pricing",      href: "#pricing" },
+    { label: "MCP",          href: "/mcp" },
   ];
 
   useEffect(() => {
