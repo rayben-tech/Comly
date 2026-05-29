@@ -354,14 +354,14 @@ export default function McpPage() {
         }}
         onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}
       >
-        {/* Floating client logos — scattered around the hero */}
+        {/* Floating client logos — close around the headline */}
         {[
-          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",              alt: "Claude",    style: { top: "8%",  left:  "6%"  }, depth: 28, rotate:  8  },
-          { src: "https://www.google.com/s2/favicons?domain=cursor.sh&sz=64",              alt: "Cursor",    style: { top: "28%", left:  "3%"  }, depth: 18, rotate: -12 },
-          { src: "https://www.google.com/s2/favicons?domain=n8n.io&sz=64",                 alt: "n8n",       style: { bottom:"22%",left:  "8%"  }, depth: 14, rotate:  6  },
-          { src: "https://www.google.com/s2/favicons?domain=code.visualstudio.com&sz=64", alt: "VS Code",   style: { top: "8%",  right: "6%"  }, depth: 28, rotate: -8  },
-          { src: "https://www.google.com/s2/favicons?domain=codeium.com&sz=64",            alt: "Windsurf",  style: { top: "28%", right: "3%"  }, depth: 18, rotate:  11 },
-          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",            alt: "ChatGPT",   style: { bottom:"22%",right: "8%"  }, depth: 14, rotate: -6  },
+          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",              alt: "Claude",   style: { top: "4%",  left:  "19%" }, depth: 28, rotate:  8  },
+          { src: "https://www.google.com/s2/favicons?domain=cursor.sh&sz=64",              alt: "Cursor",   style: { top: "20%", left:  "16%" }, depth: 18, rotate: -12 },
+          { src: "https://www.google.com/s2/favicons?domain=n8n.io&sz=64",                 alt: "n8n",      style: { top: "36%", left:  "20%" }, depth: 14, rotate:  6  },
+          { src: "https://www.google.com/s2/favicons?domain=code.visualstudio.com&sz=64", alt: "VS Code",  style: { top: "4%",  right: "19%" }, depth: 28, rotate: -8  },
+          { src: "https://www.google.com/s2/favicons?domain=codeium.com&sz=64",            alt: "Windsurf", style: { top: "20%", right: "16%" }, depth: 18, rotate:  11 },
+          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",            alt: "ChatGPT",  style: { top: "36%", right: "20%" }, depth: 14, rotate: -6  },
         ].map(({ src, alt, style, depth, rotate }) => (
           <FloatingLogo key={alt} src={src} alt={alt} style={style} depth={depth} rotate={rotate} mouseOffset={heroMouse} />
         ))}
