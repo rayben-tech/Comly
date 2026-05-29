@@ -2602,7 +2602,7 @@ export default function LandingPage() {
                     <span className="text-[12px] font-medium text-[#6b6b6b] bg-[#f3eeff] border border-[#e0d4f5] px-3 py-1 rounded-full">Growth on auto-pilot</span>
                   </div>
                   <div className="flex items-end gap-3">
-                    <span className="text-[80px] font-black text-[#0a0a0a] leading-none tracking-tight">$99</span>
+                    <span className="text-[80px] font-black text-[#0a0a0a] leading-none tracking-tight">$49</span>
                     <div className="pb-4 flex items-end gap-2">
                       <span className="text-[22px] text-[#bbbbbb] line-through font-medium">$149</span>
                       <span className="text-[18px] text-[#aaaaaa]">/mo</span>

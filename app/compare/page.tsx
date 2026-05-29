@@ -156,7 +156,7 @@ export default function ComparePage() {
             Try Comly free
             <ArrowRight className="w-4 h-4" />
           </Link>
-          <p className="relative text-white/25 text-[12px] mt-3">$99/mo · Cancel anytime</p>
+          <p className="relative text-white/25 text-[12px] mt-3">$49/mo · Cancel anytime</p>
         </div>
       </section>
 

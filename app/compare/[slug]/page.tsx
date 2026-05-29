@@ -47,10 +47,10 @@ const COMPETITORS: Record<string, CompetitorData> = {
     publishDate: "2025-01-15",
     headline: "Comly vs Profound: AI Visibility Tracking & Pricing Compared",
     subheadline:
-      "Profound charges enterprise pricing for core AI tracking that Comly does at $99/mo — plus Comly includes 5 content generation tools that actively improve your score.",
+      "Profound charges enterprise pricing for core AI tracking that Comly does at $49/mo — plus Comly includes 5 content generation tools that actively improve your score.",
     intro:
       "Comly and Profound both track your brand's visibility in AI-generated answers across major language models. The core difference comes down to who they're built for: Profound targets enterprise teams with custom pricing, demo-gated access, and white-glove onboarding. Comly is built for founders and marketing teams who want results in 5 minutes, not 5 weeks. This comparison covers every meaningful feature difference — and helps you decide which one fits your situation.",
-    pricing: { comlyPrice: "$99/mo", competitorPrice: "$500+/mo" },
+    pricing: { comlyPrice: "$49/mo", competitorPrice: "$500+/mo" },
     featureGroups: [
       {
         category: "AI Visibility Tracking",
@@ -141,7 +141,7 @@ const COMPETITORS: Record<string, CompetitorData> = {
       "Otterly tracks AI mentions. Comly tracks AI mentions and ships the tools to generate more of them — llms.txt, comparison pages, listicles, and Reddit engagement built in.",
     intro:
       "Otterly.ai and Comly both monitor how often your brand gets mentioned in AI-generated responses. Where they diverge is in what happens after you have that data. Otterly is a monitoring tool: it shows you your score and tracks changes over time. Comly is monitoring plus a content toolkit — it gives you the llms.txt generator, comparison pages, listicle templates, and Reddit engagement tools to actively grow your score. This comparison covers the exact feature differences between both.",
-    pricing: { comlyPrice: "$99/mo", competitorPrice: "$29–$199/mo" },
+    pricing: { comlyPrice: "$49/mo", competitorPrice: "$29–$199/mo" },
     featureGroups: [
       {
         category: "AI Visibility Tracking",
@@ -228,7 +228,7 @@ const COMPETITORS: Record<string, CompetitorData> = {
       "Peec AI measures your share of voice in AI search. Comly measures it and gives you the content tools to grow it — llms.txt, comparison pages, listicles, and Reddit threads built in.",
     intro:
       "Peec AI and Comly both track how often your brand appears in AI-generated search results across major language models. The key difference: Peec is a measurement platform — it tells you your share of voice, tracks changes, and lets you compare against competitors. Comly does the same measurement and then adds a full content generation toolkit designed to help you grow that share of voice. This comparison covers exactly what's in each product and who each one is built for.",
-    pricing: { comlyPrice: "$99/mo", competitorPrice: "$49–$299/mo" },
+    pricing: { comlyPrice: "$49/mo", competitorPrice: "$49–$299/mo" },
     featureGroups: [
       {
         category: "AI Visibility Tracking",
@@ -315,7 +315,7 @@ const COMPETITORS: Record<string, CompetitorData> = {
       "Semrush tracks Google. Comly tracks ChatGPT, Claude, Perplexity, and Gemini. These are genuinely different problems — and most teams need to solve both.",
     intro:
       "This comparison has a simple answer at its core: Semrush tracks Google search rankings, including Google's AI Overviews. Comly tracks what ChatGPT, Claude, Perplexity, and Gemini say about your brand. These are different AI systems with different training data, different citation logic, and different audiences. If your customers are using AI chatbots to research products in your category — and most of them are — Semrush tells you nothing about what those customers are seeing. This comparison covers exactly what each tool does, where they don't overlap, and when you'd use both.",
-    pricing: { comlyPrice: "$99/mo", competitorPrice: "$140–$500+/mo" },
+    pricing: { comlyPrice: "$49/mo", competitorPrice: "$140–$500+/mo" },
     featureGroups: [
       {
         category: "AI Chatbot Visibility",
@@ -658,7 +658,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ slu
           >
             Try Comly free →
           </Link>
-          <p className="relative text-white/25 text-[11px] mt-3">$99/mo · Cancel anytime</p>
+          <p className="relative text-white/25 text-[11px] mt-3">$49/mo · Cancel anytime</p>
         </div>
 
         {/* ── More comparisons ───────────────────────────────────────── */}

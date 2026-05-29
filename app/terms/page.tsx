@@ -107,7 +107,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-[#0a0a0a] mb-4">5. Subscription &amp; Payment</h2>
             <p className="mb-4">
-              Access to Comly is currently available under an <strong>Early Access plan at $99/month</strong>.
+              Access to Comly is currently available under an <strong>Early Access plan at $49/month</strong>.
               There is no free plan or free trial. You must have an active paid subscription to access the
               Service and run audits.
             </p>

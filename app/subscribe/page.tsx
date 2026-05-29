@@ -16,7 +16,7 @@ const FAQS = [
   },
   {
     q: "Do I need a credit card to try it?",
-    a: "The plan starts at $99/month. Enter your card details at checkout — you can cancel before your next billing date.",
+    a: "The plan starts at $49/month. Enter your card details at checkout — you can cancel before your next billing date.",
   },
 ];
 
@@ -199,7 +199,7 @@ function SubscribePage() {
                 <div className="flex items-start gap-2">
                   <span className="text-[16px] text-white/30 line-through mt-3 leading-none">$149</span>
                   <div className="flex items-end gap-1">
-                    <span className="text-[68px] font-black text-white leading-none tracking-tight">$99</span>
+                    <span className="text-[68px] font-black text-white leading-none tracking-tight">$49</span>
                     <span className="text-[15px] text-white/40 pb-2">/mo</span>
                   </div>
                 </div>
