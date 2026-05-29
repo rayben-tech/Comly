@@ -296,7 +296,7 @@ const CONFIGS: Record<string, { label: string; domain: string; file: string; cod
     code: `{
   "mcpServers": {
     "comly": {
-      "url": "https://trycomly.com/api/mcp",
+      "url": "https://www.trycomly.com/api/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
       }
@@ -311,7 +311,7 @@ const CONFIGS: Record<string, { label: string; domain: string; file: string; cod
   "mcp": {
     "servers": {
       "comly": {
-        "url": "https://trycomly.com/api/mcp",
+        "url": "https://www.trycomly.com/api/mcp",
         "headers": {
           "Authorization": "Bearer YOUR_API_KEY"
         }
@@ -597,8 +597,8 @@ export default function McpPage() {
               <div className="pt-2">
                 <p className="text-[12px] text-white/60 mb-3">Server URL</p>
                 <div className="flex items-center gap-2 bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5">
-                  <code className="text-[12px] font-mono text-[#0a0a0a] flex-1 select-all">trycomly.com/api/mcp</code>
-                  <CopyBtn text="https://trycomly.com/api/mcp" className="bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5] shrink-0" />
+                  <code className="text-[12px] font-mono text-[#0a0a0a] flex-1 select-all">www.trycomly.com/api/mcp</code>
+                  <CopyBtn text="https://www.trycomly.com/api/mcp" className="bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5] shrink-0" />
                 </div>
               </div>
             </div>

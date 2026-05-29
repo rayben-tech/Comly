@@ -15,7 +15,7 @@ const CLIENTS = [
       mcpServers: {
         comly: {
           command: "npx",
-          args: ["-y", "mcp-remote", "https://trycomly.com/api/mcp", "--header", `Authorization: Bearer ${key}`]
+          args: ["-y", "mcp-remote", "https://www.trycomly.com/api/mcp", "--header", `Authorization: Bearer ${key}`]
         }
       }
     }, null, 2),
@@ -27,7 +27,7 @@ const CLIENTS = [
     file: "~/.cursor/mcp.json",
     path: { mac: "~/.cursor/mcp.json", win: "%USERPROFILE%\\.cursor\\mcp.json" },
     config: (key: string) => JSON.stringify({
-      mcp: { servers: { comly: { url: "https://trycomly.com/api/mcp", headers: { Authorization: `Bearer ${key}` } } } }
+      mcp: { servers: { comly: { url: "https://www.trycomly.com/api/mcp", headers: { Authorization: `Bearer ${key}` } } } }
     }, null, 2),
   },
   {
@@ -37,7 +37,7 @@ const CLIENTS = [
     file: "~/.codeium/windsurf/mcp_config.json",
     path: { mac: "~/.codeium/windsurf/mcp_config.json", win: "%USERPROFILE%\\.codeium\\windsurf\\mcp_config.json" },
     config: (key: string) => JSON.stringify({
-      mcpServers: { comly: { serverUrl: "https://trycomly.com/api/mcp", headers: { Authorization: `Bearer ${key}` } } }
+      mcpServers: { comly: { serverUrl: "https://www.trycomly.com/api/mcp", headers: { Authorization: `Bearer ${key}` } } }
     }, null, 2),
   },
 ];
@@ -176,7 +176,7 @@ export function McpPage() {
           {/* Code block */}
           <div className="relative">
             <pre className={`text-[11px] rounded-xl p-4 overflow-x-auto leading-relaxed font-mono transition-opacity ${apiKey ? "bg-[#0a0a0a] text-[#e5e5e5]" : "bg-[#f5f5f5] text-[#aaaaaa]"}`}>
-              {apiKey ? configSnippet : JSON.stringify({ mcpServers: { comly: { url: "https://trycomly.com/api/mcp", headers: { Authorization: "Bearer YOUR_API_KEY" } } } }, null, 2)}
+              {apiKey ? configSnippet : JSON.stringify({ mcpServers: { comly: { url: "https://www.trycomly.com/api/mcp", headers: { Authorization: "Bearer YOUR_API_KEY" } } } }, null, 2)}
             </pre>
             {apiKey && (
               <button onClick={() => copy(configSnippet, "config")}
