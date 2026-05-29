@@ -162,6 +162,9 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
           const t = d.threads ?? [];
           setThreads(t);
           saveThreads(`comly_reddit_threads_${slug}`, t);
+          if (!demoMode && t.length) {
+            fetch("/api/cache-threads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ platform: "reddit", threads: t }) }).catch(() => {});
+          }
           setLoading(false);
         })
         .catch(() => { setError(true); setLoading(false); });
@@ -203,6 +206,9 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
       const t = d.threads ?? [];
       setThreads(t);
       saveThreads(`comly_reddit_threads_${slug}`, t);
+      if (t.length) {
+        fetch("/api/cache-threads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ platform: "reddit", threads: t }) }).catch(() => {});
+      }
       const now = Date.now();
       setLastRefreshed(now);
       localStorage.setItem(`comly_reddit_refreshed_${slug}`, String(now));

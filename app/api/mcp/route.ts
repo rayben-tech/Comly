@@ -20,6 +20,20 @@ interface AuditRow {
   score: number;
   profile: BrandProfile;
   results: AuditResults;
+  threads_cache?: {
+    reddit?: Thread[];
+    quora?: Thread[];
+    cached_at?: string;
+  };
+}
+
+interface Thread {
+  id?: string;
+  title: string;
+  url: string;
+  subreddit?: string;
+  upvotes?: number;
+  comments?: number;
 }
 
 // ── MCP helpers ──────────────────────────────────────────────────────────────
@@ -35,6 +49,21 @@ function err(id: unknown, code: number, message: string) {
 // ── tools ────────────────────────────────────────────────────────────────────
 
 const TOOLS = [
+  {
+    name: "find_threads",
+    description: "Find relevant Reddit and Quora threads where potential customers are asking about problems your brand solves. Returns threads with titles and URLs ready to engage with.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        platform: {
+          type: "string",
+          enum: ["all", "reddit", "quora"],
+          description: "Which platform to search. Defaults to 'all'.",
+        },
+      },
+      required: [],
+    },
+  },
   {
     name: "get_visibility_score",
     description: "Get your brand's current AI visibility score — how often you appear when people ask ChatGPT, Claude, Gemini or Perplexity about your category. Returns score (0–100), mention count, and a plain-English summary.",
@@ -62,7 +91,74 @@ const TOOLS = [
   },
 ];
 
+// ── thread helpers ───────────────────────────────────────────────────────────
+
+function isFresh(cachedAt?: string): boolean {
+  if (!cachedAt) return false;
+  return Date.now() - new Date(cachedAt).getTime() < 24 * 60 * 60 * 1000;
+}
+
+async function fetchThreadsLive(
+  profile: BrandProfile,
+  baseUrl: string,
+  userId: string,
+  supabase: ReturnType<typeof createClient>
+): Promise<{ reddit: Thread[]; quora: Thread[] }> {
+  const [redditRes, quoraRes] = await Promise.allSettled([
+    fetch(`${baseUrl}/api/engagement-threads`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    }).then((r) => r.json()),
+    fetch(`${baseUrl}/api/quora-threads`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    }).then((r) => r.json()),
+  ]);
+
+  const reddit = redditRes.status === "fulfilled" ? (redditRes.value.threads ?? []) : [];
+  const quora  = quoraRes.status  === "fulfilled" ? (quoraRes.value.threads  ?? []) : [];
+
+  // Save to cache
+  await supabase.from("audits").update({
+    threads_cache: { reddit, quora, cached_at: new Date().toISOString() },
+  }).eq("user_id", userId);
+
+  return { reddit, quora };
+}
+
 // ── tool handlers ────────────────────────────────────────────────────────────
+
+function handleFindThreads(
+  reddit: Thread[],
+  quora: Thread[],
+  platform: string,
+  fromCache: boolean
+) {
+  const redditOut = reddit.map((t) => ({
+    platform: "Reddit",
+    subreddit: t.subreddit ?? "reddit",
+    title: t.title,
+    url: t.url,
+  }));
+  const quoraOut = quora.map((t) => ({
+    platform: "Quora",
+    title: t.title,
+    url: t.url,
+  }));
+
+  const combined =
+    platform === "reddit" ? redditOut :
+    platform === "quora"  ? quoraOut  :
+    [...redditOut, ...quoraOut];
+
+  return {
+    total: combined.length,
+    source: fromCache ? "cached" : "live",
+    threads: combined,
+  };
+}
 
 function handleGetScore(audit: AuditRow) {
   const { score, results, profile } = audit;
@@ -187,7 +283,7 @@ export async function POST(req: NextRequest) {
     // Load user's latest audit
     const { data: audit } = await supabase
       .from("audits")
-      .select("brand_name, url, score, profile, results")
+      .select("brand_name, url, score, profile, results, threads_cache")
       .eq("user_id", keyRow.user_id)
       .single();
 
@@ -200,7 +296,33 @@ export async function POST(req: NextRequest) {
 
     let result: unknown;
 
-    if (toolName === "get_visibility_score") {
+    if (toolName === "find_threads") {
+      const platform = toolArgs.platform ?? "all";
+      const cache    = (audit as AuditRow).threads_cache;
+      const fromCache = isFresh(cache?.cached_at);
+
+      let reddit: Thread[] = [];
+      let quora:  Thread[] = [];
+
+      if (fromCache) {
+        reddit = cache?.reddit ?? [];
+        quora  = cache?.quora  ?? [];
+      } else {
+        const host    = req.headers.get("host") ?? "trycomly.com";
+        const proto   = host.startsWith("localhost") ? "http" : "https";
+        const baseUrl = `${proto}://${host}`;
+        const live = await fetchThreadsLive(
+          (audit as AuditRow).profile,
+          baseUrl,
+          keyRow.user_id,
+          supabase
+        );
+        reddit = live.reddit;
+        quora  = live.quora;
+      }
+
+      result = handleFindThreads(reddit, quora, platform, fromCache);
+    } else if (toolName === "get_visibility_score") {
       result = handleGetScore(audit as AuditRow);
     } else if (toolName === "get_prompt_results") {
       result = handleGetPrompts(audit as AuditRow, toolArgs.filter ?? "all");
