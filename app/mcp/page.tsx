@@ -282,7 +282,7 @@ export default function McpPage() {
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="pt-16 pb-20 px-6">
+      <section className="pt-16 pb-4 px-6">
         <div className="max-w-5xl mx-auto">
 
           {/* Badge */}
@@ -314,6 +314,9 @@ export default function McpPage() {
           <TerminalMockup />
         </div>
       </section>
+
+      {/* fade white → purple */}
+      <div className="h-24 bg-gradient-to-b from-white to-[#a87be0]" />
 
       {/* ── PURPLE SECTION ───────────────────────────────────────────────── */}
       <section id="mcp-purple" className="bg-[#a87be0] py-24 px-6">
@@ -375,6 +378,9 @@ export default function McpPage() {
           </div>
         </div>
       </section>
+
+      {/* fade purple → white */}
+      <div className="h-24 bg-gradient-to-b from-[#a87be0] to-white" />
 
       {/* ── TOOLS ────────────────────────────────────────────────────────── */}
       <section className="py-24 px-6">
