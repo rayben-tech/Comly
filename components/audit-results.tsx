@@ -40,13 +40,14 @@ interface AuditResultsProps {
   onReset: () => void;
   onRerun: () => void;
   userId?: string;
+  trialDaysLeft?: number;
 }
 
 type Page = "overview" | "prompts" | "sources" | "brand" | "mcp" | "visitors" | "competitor-playbook" | "engagement-threads" | "quora-threads" | `fixes:${string}`;
 
 
 
-export function AuditResults({ result, profile: initialProfile, onReset, onRerun, userId }: AuditResultsProps) {
+export function AuditResults({ result, profile: initialProfile, onReset, onRerun, userId, trialDaysLeft }: AuditResultsProps) {
   const [activePage, setActivePage] = useState<Page>("overview");
   const [profile, setProfile] = useState<BrandProfile>(initialProfile);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -77,6 +78,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           collapsed={!sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onOpen={() => setSidebarOpen(true)}
+          trialDaysLeft={trialDaysLeft}
         />
       </motion.div>
 

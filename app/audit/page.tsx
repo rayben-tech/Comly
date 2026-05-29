@@ -145,6 +145,7 @@ function AuditFlow() {
   const [reviewPrompts, setReviewPrompts] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [isUnlimited, setIsUnlimited] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [resumeReady, setResumeReady] = useState(false);
   const firingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingResumeRef = useRef<PendingAudit | null>(null);
@@ -233,6 +234,7 @@ function AuditFlow() {
 
       const existing = await getUserAudit(session.user.id);
       if (existing && !unlimited) {
+        if (subCheck.isTrialing) setTrialDaysLeft(subCheck.trialDaysLeft ?? null);
         setProfile(existing.profile as BrandProfile);
         setAuditResult(existing.results as AuditResult);
         setIsRedirecting(true);
@@ -279,13 +281,38 @@ function AuditFlow() {
           }
         } catch {}
 
-        // Block new audits when a valid pending audit already exists — send straight to subscribe
+        // Gate: check trial / subscription before allowing through
         try {
           const raw = localStorage.getItem(PENDING_AUDIT_KEY);
           if (raw) {
-            const { expiresAt } = JSON.parse(raw) as { expiresAt: number };
-            if (Date.now() < expiresAt) {
-              router.replace("/subscribe");
+            const parsed = JSON.parse(raw) as PendingAudit;
+            if (Date.now() < parsed.expiresAt) {
+              const trialStatus = subCheck.trialStatus as string ?? "none";
+
+              // Trial expired — must pay
+              if (trialStatus === "expired") {
+                router.replace("/subscribe");
+                return;
+              }
+
+              // Start trial if this is their first audit
+              if (trialStatus === "none") {
+                await fetch("/api/trial/start", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${session.access_token}` },
+                });
+                setTrialDaysLeft(3);
+              } else {
+                setTrialDaysLeft(subCheck.trialDaysLeft ?? 3);
+              }
+
+              // Trial active — resume the pending audit
+              localStorage.removeItem(PENDING_AUDIT_KEY);
+              setProfile(parsed.profile);
+              setNormalizedUrl(parsed.url);
+              setUrl(parsed.url);
+              pendingResumeRef.current = parsed;
+              setResumeReady(true);
               return;
             }
             localStorage.removeItem(PENDING_AUDIT_KEY);
@@ -576,7 +603,7 @@ function AuditFlow() {
 
       {screenKey === "results" && (
         <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-          <AuditResults result={auditResult!} profile={profile!} onReset={handleReset} onRerun={handleRerun} userId={userId ?? undefined} />
+          <AuditResults result={auditResult!} profile={profile!} onReset={handleReset} onRerun={handleRerun} userId={userId ?? undefined} trialDaysLeft={trialDaysLeft ?? undefined} />
         </motion.div>
       )}
 

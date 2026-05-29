@@ -29,12 +29,33 @@ export async function GET(req: NextRequest) {
 
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("plan, status")
+    .select("plan, status, trial_expires_at")
     .eq("email", user.email)
     .single();
 
+  const isPaid = sub?.plan === "pro" && sub?.status === "active";
+
+  let isTrialing = false;
+  let trialDaysLeft = 0;
+  let trialStatus: "none" | "active" | "expired" = "none";
+
+  if (sub?.trial_expires_at) {
+    const expiresAt = new Date(sub.trial_expires_at).getTime();
+    const now = Date.now();
+    if (!isPaid && expiresAt > now) {
+      isTrialing = true;
+      trialStatus = "active";
+      trialDaysLeft = Math.max(0, Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24)));
+    } else {
+      trialStatus = isPaid ? "none" : "expired";
+    }
+  }
+
   return NextResponse.json({
-    isPaid: sub?.plan === "pro" && sub?.status === "active",
+    isPaid,
     isUnlimited: false,
+    isTrialing,
+    trialDaysLeft,
+    trialStatus,
   });
 }

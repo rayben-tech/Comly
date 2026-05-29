@@ -26,6 +26,7 @@ interface SidebarProps {
   demoMode?: boolean;
   demoUnlockedPages?: string[];
   onEditProfile?: () => void;
+  trialDaysLeft?: number;
 }
 
 function LockedNavItem({
@@ -281,7 +282,7 @@ function FeedbackForm({ brandName, accessToken }: { brandName: string; accessTok
   );
 }
 
-export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode, demoUnlockedPages = [], onEditProfile }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, profile, className, onClose, onOpen, collapsed, demoMode, demoUnlockedPages = [], onEditProfile, trialDaysLeft }: SidebarProps) {
   const domain = domainFromUrl(profile.url || "");
   const isFixesActive = activePage.startsWith("fixes:");
 
@@ -610,7 +611,13 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                 </svg>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">Comly</p>
-                  <p className="text-[11px] text-[#9ca3af] truncate">Pro plan</p>
+                  {trialDaysLeft !== undefined ? (
+                    <p className="text-[11px] font-semibold truncate" style={{ color: trialDaysLeft <= 1 ? "#ef4444" : "#f59e0b" }}>
+                      {trialDaysLeft === 0 ? "Trial ends today" : `${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left in trial`}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-[#9ca3af] truncate">Pro plan</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1.5 mt-2 px-2">

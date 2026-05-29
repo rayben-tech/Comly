@@ -48,16 +48,21 @@ export async function GET(req: NextRequest) {
       const { data: { user }, error: userErr } = await supabase.auth.admin.getUserById(row.user_id);
       if (userErr || !user?.email) { skipped++; continue; }
 
-      // Check if user is paid or unlimited
+      // Check if user is paid, on trial, or unlimited
       const unlimited = isUnlimitedUser(user.email);
       if (!unlimited) {
         const { data: sub } = await supabase
           .from("subscriptions")
-          .select("status")
+          .select("status, trial_expires_at")
           .eq("email", user.email)
           .single();
 
-        if (sub?.status !== "active") { skipped++; continue; }
+        const isPaid = sub?.status === "active";
+        const isTrialing = sub?.trial_expires_at
+          ? new Date(sub.trial_expires_at).getTime() > Date.now()
+          : false;
+
+        if (!isPaid && !isTrialing) { skipped++; continue; }
       }
 
       // Ensure we have a valid profile
