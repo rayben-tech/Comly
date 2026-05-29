@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Copy, Check, RefreshCw } from "lucide-react";
+import { Copy, Check, RefreshCw, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const CLIENTS = [
@@ -9,13 +9,11 @@ const CLIENTS = [
     id: "claude",
     label: "Claude Desktop",
     domain: "claude.ai",
-    file: "claude_desktop_config.json",
-    path: { mac: "~/Library/Application Support/Claude/claude_desktop_config.json", win: "%APPDATA%\\Claude\\claude_desktop_config.json" },
     config: (key: string) => JSON.stringify({
       mcpServers: {
         comly: {
           command: "npx",
-          args: ["-y", "mcp-remote", "https://www.trycomly.com/api/mcp", "--header", `Authorization: Bearer ${key}`]
+          args: ["-y", "comly-mcp", key]
         }
       }
     }, null, 2),
@@ -24,8 +22,6 @@ const CLIENTS = [
     id: "cursor",
     label: "Cursor",
     domain: "cursor.sh",
-    file: "~/.cursor/mcp.json",
-    path: { mac: "~/.cursor/mcp.json", win: "%USERPROFILE%\\.cursor\\mcp.json" },
     config: (key: string) => JSON.stringify({
       mcp: { servers: { comly: { url: "https://www.trycomly.com/api/mcp", headers: { Authorization: `Bearer ${key}` } } } }
     }, null, 2),
@@ -34,8 +30,6 @@ const CLIENTS = [
     id: "windsurf",
     label: "Windsurf",
     domain: "codeium.com",
-    file: "~/.codeium/windsurf/mcp_config.json",
-    path: { mac: "~/.codeium/windsurf/mcp_config.json", win: "%USERPROFILE%\\.codeium\\windsurf\\mcp_config.json" },
     config: (key: string) => JSON.stringify({
       mcpServers: { comly: { serverUrl: "https://www.trycomly.com/api/mcp", headers: { Authorization: `Bearer ${key}` } } }
     }, null, 2),
@@ -49,12 +43,31 @@ const EXAMPLE_PROMPTS = [
   "What Reddit threads should I engage with today?",
 ];
 
+const CLAUDE_STEPS = {
+  win: [
+    { n: "1", text: <>Press <kbd className="bg-[#f0f0f0] border border-[#d0d0d0] rounded px-1.5 py-0.5 text-[11px] font-mono">Windows + R</kbd> on your keyboard</> },
+    { n: "2", text: <>Paste this path and press Enter: <code className="bg-[#f0f0f0] text-[#5B2D91] rounded px-1.5 py-0.5 text-[11px] font-mono select-all">%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude</code></> },
+    { n: "3", text: <>Double-click <strong>claude_desktop_config.json</strong> to open it in Notepad</> },
+    { n: "4", text: <>Press <kbd className="bg-[#f0f0f0] border border-[#d0d0d0] rounded px-1.5 py-0.5 text-[11px] font-mono">Ctrl+A</kbd> to select everything, then delete it</> },
+    { n: "5", text: <>Paste the config you copied above, then press <kbd className="bg-[#f0f0f0] border border-[#d0d0d0] rounded px-1.5 py-0.5 text-[11px] font-mono">Ctrl+S</kbd> to save</> },
+    { n: "6", text: <>Right-click the Claude icon in the bottom-right corner of your screen → <strong>Quit</strong>, then reopen Claude Desktop</> },
+  ],
+  mac: [
+    { n: "1", text: <>Open <strong>Finder</strong> and press <kbd className="bg-[#f0f0f0] border border-[#d0d0d0] rounded px-1.5 py-0.5 text-[11px] font-mono">⌘ + Shift + G</kbd></> },
+    { n: "2", text: <>Paste this path and press Enter: <code className="bg-[#f0f0f0] text-[#5B2D91] rounded px-1.5 py-0.5 text-[11px] font-mono select-all">~/Library/Application Support/Claude</code></> },
+    { n: "3", text: <>Open <strong>claude_desktop_config.json</strong> with any text editor</> },
+    { n: "4", text: <>Select all the text and replace it with the config you copied above, then save</> },
+    { n: "5", text: <>Quit Claude Desktop from the menu bar and reopen it</> },
+  ],
+};
+
 export function McpPage() {
   const [apiKey,     setApiKey]     = useState<string | null>(null);
   const [loading,    setLoading]    = useState(true);
   const [generating, setGenerating] = useState(false);
   const [copied,     setCopied]     = useState<string | null>(null);
   const [client,     setClient]     = useState("claude");
+  const [os,         setOs]         = useState<"win" | "mac">("win");
 
   async function authHeaders() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -65,6 +78,8 @@ export function McpPage() {
   }
 
   useEffect(() => {
+    const isMac = navigator.platform.toUpperCase().includes("MAC");
+    setOs(isMac ? "mac" : "win");
     (async () => {
       const headers = await authHeaders();
       fetch("/api/mcp-key", { headers })
@@ -150,7 +165,7 @@ export function McpPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-3">
           <div className={`w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center shrink-0 transition-colors ${apiKey ? "bg-[#5B2D91] text-white" : "bg-[#f0f0f0] text-[#aaaaaa]"}`}>2</div>
-          <p className={`text-[14px] font-semibold transition-colors ${apiKey ? "text-[#0a0a0a]" : "text-[#aaaaaa]"}`}>Add to your client</p>
+          <p className={`text-[14px] font-semibold transition-colors ${apiKey ? "text-[#0a0a0a]" : "text-[#aaaaaa]"}`}>Copy your config</p>
         </div>
 
         <div className="ml-9 space-y-3">
@@ -168,35 +183,77 @@ export function McpPage() {
             ))}
           </div>
 
-          {/* Config file path */}
-          <p className="text-[11px] text-[#aaaaaa] font-mono">
-            Save to <span className="text-[#6b6b6b]">{activeClient.path.mac}</span>
-          </p>
+          {/* Node.js requirement for Claude Desktop */}
+          {client === "claude" && (
+            <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3">
+              <span className="text-amber-500 text-[13px] shrink-0 mt-0.5">⚠️</span>
+              <p className="text-[12px] text-amber-800 leading-snug">
+                <strong>Node.js required.</strong> If you don&apos;t have it yet,{" "}
+                <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer"
+                  className="underline font-semibold inline-flex items-center gap-0.5">
+                  download it free at nodejs.org <ExternalLink className="w-3 h-3" />
+                </a>{" "}
+                — just install it like any other app, then come back here.
+              </p>
+            </div>
+          )}
 
           {/* Code block */}
           <div className="relative">
             <pre className={`text-[11px] rounded-xl p-4 overflow-x-auto leading-relaxed font-mono transition-opacity ${apiKey ? "bg-[#0a0a0a] text-[#e5e5e5]" : "bg-[#f5f5f5] text-[#aaaaaa]"}`}>
-              {apiKey ? configSnippet : JSON.stringify({ mcpServers: { comly: { url: "https://www.trycomly.com/api/mcp", headers: { Authorization: "Bearer YOUR_API_KEY" } } } }, null, 2)}
+              {apiKey ? configSnippet : JSON.stringify({ mcpServers: { comly: { command: "npx", args: ["-y", "comly-mcp", "YOUR_API_KEY"] } } }, null, 2)}
             </pre>
             {apiKey && (
               <button onClick={() => copy(configSnippet, "config")}
                 className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-[11px] font-semibold hover:bg-white/20 transition-colors">
                 {copied === "config" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                {copied === "config" ? "Copied" : "Copy"}
+                {copied === "config" ? "Copied!" : "Copy"}
               </button>
             )}
           </div>
-
-          <p className="text-[12px] text-[#6b6b6b]">
-            Restart {activeClient.label} after saving — you'll see <code className="font-mono font-semibold text-[#0a0a0a]">comly</code> in the tools list.
-          </p>
         </div>
       </div>
 
-      {/* Step 3 — Try it */}
+      {/* Step 3 — How to add it */}
       <div className="space-y-3">
         <div className="flex items-center gap-3">
           <div className={`w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center shrink-0 transition-colors ${apiKey ? "bg-[#5B2D91] text-white" : "bg-[#f0f0f0] text-[#aaaaaa]"}`}>3</div>
+          <p className={`text-[14px] font-semibold transition-colors ${apiKey ? "text-[#0a0a0a]" : "text-[#aaaaaa]"}`}>Add it to {activeClient.label}</p>
+        </div>
+
+        <div className="ml-9 space-y-2">
+          {client === "claude" ? (
+            <>
+              {/* OS toggle */}
+              <div className="flex items-center gap-1 p-1 bg-[#f5f5f5] rounded-lg w-fit mb-3">
+                {(["win", "mac"] as const).map((o) => (
+                  <button key={o} onClick={() => setOs(o)}
+                    className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${os === o ? "bg-white shadow-sm text-[#0a0a0a] border border-[#e8e8e8]" : "text-[#6b6b6b] hover:text-[#0a0a0a]"}`}>
+                    {o === "win" ? "🪟 Windows" : "🍎 Mac"}
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-2.5">
+                {CLAUDE_STEPS[os].map((step) => (
+                  <div key={step.n} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-[#f0f0f0] text-[#6b6b6b] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{step.n}</div>
+                    <p className="text-[12px] text-[#444] leading-relaxed">{step.text}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-[12px] text-[#6b6b6b]">
+              Paste the config into your <code className="font-mono font-semibold text-[#0a0a0a]">{client === "cursor" ? "~/.cursor/mcp.json" : "~/.codeium/windsurf/mcp_config.json"}</code> file, then restart {activeClient.label}.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Step 4 — Try it */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center shrink-0 transition-colors ${apiKey ? "bg-[#5B2D91] text-white" : "bg-[#f0f0f0] text-[#aaaaaa]"}`}>4</div>
           <p className={`text-[14px] font-semibold transition-colors ${apiKey ? "text-[#0a0a0a]" : "text-[#aaaaaa]"}`}>Start asking</p>
         </div>
 
