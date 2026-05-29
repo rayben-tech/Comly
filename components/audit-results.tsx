@@ -19,6 +19,7 @@ import { EngagementThreadsPage } from "@/components/dashboard/engagement-threads
 import { QuoraThreadsPage } from "@/components/dashboard/quora-threads";
 import { CompetitorPlaybookPanel } from "@/components/dashboard/competitor-playbook-panel";
 import { VisitorsPage } from "@/components/dashboard/visitors-page";
+import { McpPage } from "@/components/dashboard/mcp-page";
 import { EmailCapture } from "@/components/email-capture";
 import { Sparkles, Users, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ interface AuditResultsProps {
   userId?: string;
 }
 
-type Page = "overview" | "prompts" | "sources" | "brand" | "visitors" | "competitor-playbook" | "engagement-threads" | "quora-threads" | `fixes:${string}`;
+type Page = "overview" | "prompts" | "sources" | "brand" | "mcp" | "visitors" | "competitor-playbook" | "engagement-threads" | "quora-threads" | `fixes:${string}`;
 
 
 
@@ -144,6 +145,10 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
 
           {activePage === "brand" && (
             <BrandPage profile={profile} onSave={setProfile} />
+          )}
+
+          {activePage === "mcp" && (
+            <McpPage />
           )}
 
           {activePage === "visitors" && (

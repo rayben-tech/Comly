@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Globe,
-  ListChecks, ChevronDown, ChevronRight, Tag, Users, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen, Clock,
+  ListChecks, ChevronDown, ChevronRight, Tag, Users, Swords, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen, Clock, Plug,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 import { cn } from "@/lib/utils";
@@ -497,9 +497,12 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                 </div>
               </div>
 
-              {/* Brand — separated */}
-              <div className="pt-1 border-t border-[#f0f0f0]">
+              {/* Brand + MCP — separated */}
+              <div className="pt-1 border-t border-[#f0f0f0] space-y-0.5">
                 <NavItem active={activePage === "brand"} icon={Tag} label="Brand" onClick={() => onNavigate("brand")} />
+                {!demoMode && (
+                  <NavItem active={activePage === "mcp"} icon={Plug} label="MCP Server" onClick={() => onNavigate("mcp")} />
+                )}
               </div>
 
             </div>
