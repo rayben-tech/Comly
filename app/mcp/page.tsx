@@ -177,54 +177,88 @@ function CopyBtn({ text, className = "" }: { text: string; className?: string })
   );
 }
 
-// ── Terminal mockup ───────────────────────────────────────────────────────────
+// ── Chat mockup ───────────────────────────────────────────────────────────────
 
-function TerminalMockup() {
+function ChatMockup() {
   return (
     <div className="w-full max-w-lg mx-auto">
-      <div className="bg-[#0f0f10] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-        {/* Window bar */}
-        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5">
+      <div className="bg-[#1c1c1e] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+        {/* Window chrome */}
+        <div className="flex items-center gap-1.5 px-4 py-3 bg-[#2a2a2c] border-b border-white/5">
           <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
           <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
           <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-          <span className="ml-3 text-[11px] text-white/30 font-mono">claude — comly mcp</span>
+          <div className="flex items-center gap-1.5 ml-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="Claude" width={13} height={13} className="w-3.5 h-3.5 rounded-sm" />
+            <span className="text-[11px] text-white/40 font-medium">Claude · comly-mcp</span>
+          </div>
         </div>
 
-        <div className="p-5 space-y-4 font-mono text-[12px]">
-          {/* User prompt */}
-          <div>
-            <span className="text-white/30">{">"} </span>
-            <span className="text-white">Which prompts is my brand missing from?</span>
+        <div className="p-5 space-y-4">
+          {/* User turn 1 */}
+          <div className="flex justify-end">
+            <div className="bg-[#2a2a2c] text-white/90 text-[13px] rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%]">
+              How's my brand doing on AI this week?
+            </div>
           </div>
 
           {/* Tool call */}
-          <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-[#5B2D91]/20 border border-[#5B2D91]/30">
-            <ComlyLogo size={14} />
-            <span className="text-[#a78bfa] text-[11px]">comly.get_prompt_results</span>
-            <span className="text-white/30 text-[10px]">filter: "not_mentioned"</span>
+          <div className="flex items-center gap-2 text-[11px] text-white/30 font-mono pl-1">
+            <ComlyLogo size={12} />
+            <span className="text-[#a78bfa]">comly.get_visibility_score</span>
           </div>
 
-          {/* Result */}
-          <div className="space-y-1.5">
-            <div className="text-white/40 text-[10px] uppercase tracking-wider">5 gaps found</div>
-            {[
-              "Best AI writing tool for long-form content?",
-              "Top productivity apps for remote teams in 2025?",
-              "What tools do content marketers recommend?",
-            ].map((prompt, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-[#ef4444] text-[10px]">✗</span>
-                <span className="text-white/70 text-[11px]">{prompt}</span>
-              </div>
-            ))}
-            <div className="text-white/30 text-[10px]">+ 2 more</div>
+          {/* Claude reply 1 */}
+          <div className="flex gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="" width={20} height={20} className="w-5 h-5 rounded-full shrink-0 mt-0.5" />
+            <div className="text-[13px] text-white/80 leading-relaxed">
+              Your score is <span className="text-white font-semibold">72/100 (B+)</span> — up from 58 last week. You appeared in <span className="text-white font-semibold">7 of 10 prompts</span>. Confluence leads at #1 but you moved past Coda to <span className="text-[#a78bfa] font-semibold">#2</span>.
+            </div>
           </div>
 
-          {/* Cursor blink */}
-          <div className="flex items-center gap-1">
-            <span className="text-white/30">{">"} </span>
-            <span className="w-2 h-4 bg-[#7c3aed] rounded-sm animate-pulse" />
+          {/* Divider */}
+          <div className="border-t border-white/5" />
+
+          {/* User turn 2 */}
+          <div className="flex justify-end">
+            <div className="bg-[#2a2a2c] text-white/90 text-[13px] rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%]">
+              Which prompts am I missing from?
+            </div>
+          </div>
+
+          {/* Tool call 2 */}
+          <div className="flex items-center gap-2 text-[11px] text-white/30 font-mono pl-1">
+            <ComlyLogo size={12} />
+            <span className="text-[#a78bfa]">comly.get_prompt_results</span>
+            <span className="text-white/20">filter: not_mentioned</span>
+          </div>
+
+          {/* Claude reply 2 */}
+          <div className="flex gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" alt="" width={20} height={20} className="w-5 h-5 rounded-full shrink-0 mt-0.5" />
+            <div className="text-[13px] text-white/80 leading-relaxed space-y-1.5">
+              <p>You're absent from <span className="text-white font-semibold">3 prompts</span> worth targeting:</p>
+              {[
+                "Best AI writing tool for long-form content?",
+                "Top productivity apps for remote teams?",
+                "What tools do content marketers use?",
+              ].map((p, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-[#ef4444] shrink-0 mt-0.5">✗</span>
+                  <span className="text-white/60 text-[12px]">{p}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Input bar */}
+          <div className="flex items-center gap-2 mt-2">
+            <div className="flex-1 bg-[#2a2a2c] border border-white/10 rounded-xl px-3 py-2 text-[12px] text-white/20">
+              Reply to Claude…
+            </div>
           </div>
         </div>
       </div>
@@ -320,36 +354,40 @@ export default function McpPage() {
         }}
         onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}
       >
-        {/* Floating client logos */}
+        {/* Floating client logos — scattered around the hero */}
         {[
-          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",                alt: "Claude",   style: { top: "12%", left:  "18%" }, depth: 26, rotate:  8  },
-          { src: "https://www.google.com/s2/favicons?domain=cursor.sh&sz=64",                alt: "Cursor",   style: { top: "5%",  left:  "26%" }, depth: 16, rotate: -10 },
-          { src: "https://www.google.com/s2/favicons?domain=code.visualstudio.com&sz=64",   alt: "VS Code",  style: { top: "12%", right: "18%" }, depth: 26, rotate: -8  },
-          { src: "https://www.google.com/s2/favicons?domain=n8n.io&sz=64",                   alt: "n8n",      style: { top: "5%",  right: "26%" }, depth: 16, rotate:  10 },
+          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",              alt: "Claude",    style: { top: "8%",  left:  "6%"  }, depth: 28, rotate:  8  },
+          { src: "https://www.google.com/s2/favicons?domain=cursor.sh&sz=64",              alt: "Cursor",    style: { top: "28%", left:  "3%"  }, depth: 18, rotate: -12 },
+          { src: "https://www.google.com/s2/favicons?domain=n8n.io&sz=64",                 alt: "n8n",       style: { bottom:"22%",left:  "8%"  }, depth: 14, rotate:  6  },
+          { src: "https://www.google.com/s2/favicons?domain=code.visualstudio.com&sz=64", alt: "VS Code",   style: { top: "8%",  right: "6%"  }, depth: 28, rotate: -8  },
+          { src: "https://www.google.com/s2/favicons?domain=codeium.com&sz=64",            alt: "Windsurf",  style: { top: "28%", right: "3%"  }, depth: 18, rotate:  11 },
+          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",            alt: "ChatGPT",   style: { bottom:"22%",right: "8%"  }, depth: 14, rotate: -6  },
         ].map(({ src, alt, style, depth, rotate }) => (
           <FloatingLogo key={alt} src={src} alt={alt} style={style} depth={depth} rotate={rotate} mouseOffset={heroMouse} />
         ))}
 
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h1 className="text-[44px] sm:text-[60px] font-black text-[#0a0a0a] leading-[1.06] tracking-tight mb-5">
-              Your Comly data,<br />right where you think.
-            </h1>
-            <p className="text-[17px] text-[#6b6b6b] max-w-lg mx-auto leading-relaxed">
-              Connect Comly to Claude, Cursor, or any MCP client.
-              Ask about your AI visibility in plain English — get live answers without opening the dashboard.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-              <Link href="/audit" className="flex items-center gap-2 bg-[#5B2D91] text-white text-[14px] font-semibold px-6 py-3 rounded-full hover:bg-[#4a2478] transition-colors shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
-                Get your API key <ArrowRight className="w-4 h-4" />
-              </Link>
-              <a href="#setup" className="text-[14px] font-semibold text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors px-4 py-3">
-                View setup guide ↓
-              </a>
-            </div>
+        <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center text-center">
+          {/* Headline */}
+          <h1 className="text-[44px] sm:text-[62px] font-black text-[#0a0a0a] leading-[1.06] tracking-tight mb-5">
+            Your Comly data,<br />right where you think.
+          </h1>
+          <p className="text-[17px] text-[#6b6b6b] max-w-lg leading-relaxed mb-8">
+            Connect Comly to Claude, Cursor, or any MCP client.
+            Ask about your AI visibility in plain English — live answers without opening the dashboard.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-3 mb-16">
+            <Link href="/audit" className="flex items-center gap-2 bg-[#5B2D91] text-white text-[14px] font-semibold px-6 py-3 rounded-full hover:bg-[#4a2478] transition-colors shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+              Get your API key <ArrowRight className="w-4 h-4" />
+            </Link>
+            <a href="#setup" className="text-[14px] font-semibold text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors px-4 py-3">
+              View setup guide ↓
+            </a>
           </div>
 
-          <TerminalMockup />
+          {/* Chat mockup */}
+          <div className="w-full">
+            <ChatMockup />
+          </div>
         </div>
       </section>
 
