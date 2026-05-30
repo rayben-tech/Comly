@@ -2105,7 +2105,7 @@ export default function LandingPage() {
               </button>
             </div>
             {urlStatus === "idle" && (
-              <p className="text-xs text-[#aaaaaa]">Results in 60 seconds</p>
+              <p className="text-xs text-[#aaaaaa]">Results in 60 seconds · No credit card required</p>
             )}
             {urlStatus === "checking" && (
               <div className="flex items-center justify-center gap-1.5">
@@ -2116,7 +2116,7 @@ export default function LandingPage() {
             {urlStatus === "ok" && (
               <div className="flex items-center justify-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <p className="text-xs text-emerald-500">Website accessible · Results in 60 seconds</p>
+                <p className="text-xs text-emerald-500">Website accessible · Results in 60 seconds · No credit card required</p>
               </div>
             )}
             {urlStatus === "error" && (

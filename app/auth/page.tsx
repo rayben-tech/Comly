@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 function ComlyLogo({ size = 32 }: { size?: number }) {
   return (
@@ -36,71 +36,22 @@ function AuthFlow() {
   const searchParams = useSearchParams();
   const pendingUrl = searchParams.get("url") || "";
 
-  const [tab, setTab] = useState<"login" | "signup">("signup");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        routeAfterAuth(session.access_token, session.user.email ?? "", session.user.user_metadata?.full_name ?? "", pendingUrl);
+        const dest = pendingUrl ? `/audit?url=${encodeURIComponent(pendingUrl)}` : "/audit";
+        router.replace(dest);
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function routeAfterAuth(_accessToken: string, _userEmail: string, _userName: string, url: string) {
-    setLoading(true);
-    const dest = url ? `/audit?url=${encodeURIComponent(url)}` : "/audit";
-    router.replace(dest);
-  }
-
-  async function handleEmailAuth(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-    try {
-      if (tab === "signup") {
-        const verifyRes = await fetch("/api/verify-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        const { valid, error: verifyError } = await verifyRes.json();
-        if (!valid) {
-          setError(verifyError || "Please enter a valid email address.");
-          setLoading(false);
-          return;
-        }
-
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        if (data.session) {
-          await routeAfterAuth(data.session.access_token, data.session.user.email ?? "", data.session.user.user_metadata?.full_name ?? "", pendingUrl);
-        } else {
-          setSuccess("Check your email for a confirmation link, then come back to log in.");
-          setLoading(false);
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        await routeAfterAuth(data.session!.access_token, data.session!.user.email ?? "", data.session!.user.user_metadata?.full_name ?? "", pendingUrl);
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-      setLoading(false);
-    }
-  }
-
   async function handleGoogle() {
     setError("");
-    setGoogleLoading(true);
+    setLoading(true);
     if (pendingUrl) localStorage.setItem("comly_pending_url", pendingUrl);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -108,7 +59,7 @@ function AuthFlow() {
     });
     if (error) {
       setError(error.message);
-      setGoogleLoading(false);
+      setLoading(false);
     }
   }
 
@@ -119,7 +70,6 @@ function AuthFlow() {
     <div className="min-h-screen flex">
       {/* Left panel */}
       <div className="hidden lg:flex w-[48%] relative bg-[#07070f] flex-col justify-end p-12 overflow-hidden">
-        {/* Glow columns */}
         <div className="absolute inset-0 overflow-hidden">
           {columnPositions.map((left, i) => (
             <div
@@ -140,7 +90,6 @@ function AuthFlow() {
               }}
             />
           ))}
-          {/* Base floor glow */}
           <div
             className="absolute bottom-0 left-0 right-0"
             style={{
@@ -149,8 +98,6 @@ function AuthFlow() {
             }}
           />
         </div>
-
-        {/* Content */}
         <div className="relative z-10">
           <a href="/" className="flex items-center gap-2.5 mb-10">
             <ComlyLogo size={34} />
@@ -174,28 +121,20 @@ function AuthFlow() {
             <span className="text-[15px] font-bold text-[#0a0a0a] tracking-tight">Comly</span>
           </a>
 
-          {/* Heading */}
-          <div className="mb-6">
+          <div className="mb-8">
             <div className="hidden lg:block mb-4">
               <ComlyLogo size={40} />
             </div>
-            <h1 className="text-[24px] font-bold text-[#0a0a0a] mb-1">
-              {tab === "signup" ? "Get Started" : "Welcome back"}
-            </h1>
-            <p className="text-[13.5px] text-[#6b6b6b]">
-              {tab === "signup"
-                ? "Create your account to continue"
-                : "Log in to continue your audit"}
-            </p>
+            <h1 className="text-[24px] font-bold text-[#0a0a0a] mb-1">Get Started</h1>
+            <p className="text-[13.5px] text-[#6b6b6b]">Sign in to continue your audit</p>
           </div>
 
-          {/* Google button */}
           <button
             onClick={handleGoogle}
-            disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-[#e0e0e0] bg-white hover:bg-[#fafafa] text-[13.5px] font-medium text-[#0a0a0a] transition-colors disabled:opacity-60 mb-4 shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl border border-[#e0e0e0] bg-white hover:bg-[#fafafa] text-[14px] font-medium text-[#0a0a0a] transition-colors disabled:opacity-60 shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
           >
-            {googleLoading ? (
+            {loading ? (
               <div className="w-4 h-4 border-2 border-[#5B2D91] border-t-transparent rounded-full animate-spin" />
             ) : (
               <GoogleIcon />
@@ -203,82 +142,14 @@ function AuthFlow() {
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-[#e0e0e0]" />
-            <span className="text-[11.5px] text-[#aaaaaa] font-medium">or</span>
-            <div className="flex-1 h-px bg-[#e0e0e0]" />
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleEmailAuth} className="flex flex-col gap-3">
-            <input
-              type="email"
-              placeholder="Your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#e0e0e0] bg-white text-[13.5px] text-[#0a0a0a] placeholder-[#b0b0b0] focus:outline-none focus:border-[#5B2D91] focus:ring-2 focus:ring-[#5B2D91]/10 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            />
-
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder={tab === "signup" ? "Create new password" : "Password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-[#e0e0e0] bg-white text-[13.5px] text-[#0a0a0a] placeholder-[#b0b0b0] focus:outline-none focus:border-[#5B2D91] focus:ring-2 focus:ring-[#5B2D91]/10 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#b0b0b0] hover:text-[#6b6b6b] transition-colors"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+          {error && (
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-50 border border-red-100 mt-4">
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+              <span className="text-[12.5px] text-red-600">{error}</span>
             </div>
+          )}
 
-            {error && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-50 border border-red-100">
-                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <span className="text-[12.5px] text-red-600">{error}</span>
-              </div>
-            )}
-            {success && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span className="text-[12.5px] text-emerald-700">{success}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-[13.5px] font-semibold transition-colors disabled:opacity-60 mt-0.5"
-              style={{ background: loading ? "#7c3aed" : "linear-gradient(135deg, #5B2D91, #7c3aed)" }}
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                tab === "signup" ? "Create a new account" : "Log in"
-              )}
-            </button>
-          </form>
-
-          {/* Switch tab */}
-          <p className="text-center text-[13px] text-[#6b6b6b] mt-5">
-            {tab === "signup" ? "Already have an account? " : "Don't have an account? "}
-            <button
-              onClick={() => { setTab(tab === "signup" ? "login" : "signup"); setError(""); setSuccess(""); }}
-              className="font-semibold text-[#5B2D91] hover:underline"
-            >
-              {tab === "signup" ? "Login" : "Sign up"}
-            </button>
-          </p>
-
-          <p className="text-center text-[11.5px] text-[#b0b0b0] mt-4">
+          <p className="text-center text-[11.5px] text-[#b0b0b0] mt-6">
             By continuing, you agree to our{" "}
             <a href="#" className="text-[#5B2D91] hover:underline">Terms</a>
             {" "}and{" "}
