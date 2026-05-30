@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuditResult, BrandProfile, PromptResult, CompetitorRanking } from "@/types";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -21,6 +21,7 @@ import { CompetitorPlaybookPanel } from "@/components/dashboard/competitor-playb
 import { VisitorsPage } from "@/components/dashboard/visitors-page";
 import { McpPage } from "@/components/dashboard/mcp-page";
 import { EmailCapture } from "@/components/email-capture";
+import { SpotlightTour, TourStep } from "@/components/tour/spotlight-tour";
 import { Sparkles, Users, Swords, LayoutDashboard, MessageSquare, Globe, ListChecks, Tag, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FaviconImg } from "@/components/ui/favicon-img";
@@ -52,6 +53,97 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
   const [profile, setProfile] = useState<BrandProfile>(initialProfile);
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    // Only show on desktop (sidebar must be visible for tour steps 4-5)
+    if (window.innerWidth < 1024) return;
+    if (!localStorage.getItem("comly_tour_done")) {
+      setSidebarOpen(true); // ensure sidebar is expanded so nav items are targetable
+      const t = setTimeout(() => setShowTour(true), 900);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const TOUR_STEPS: TourStep[] = [
+    {
+      target: "tour-score",
+      emoji: "📊",
+      title: "Your AI Visibility Score",
+      body: "Your score out of 100. It shows how often ChatGPT, Claude, Gemini, and Perplexity recommend your brand when users ask relevant questions. Higher = more free AI traffic.",
+      position: "bottom",
+    },
+    {
+      target: "tour-competitors",
+      emoji: "🏆",
+      title: "Competitor Rankings",
+      body: "See exactly where you rank vs your competitors in real AI answers. Your goal is to reach #1 — before your competitors find this tool.",
+      position: "top",
+    },
+    {
+      target: "tour-prompts-nav",
+      emoji: "💬",
+      title: "Prompt Results",
+      body: "The exact questions we asked AI about your industry — and how it responded. Each unanswered prompt is a missed customer. This tells you which ones to fix first.",
+      position: "right",
+      onBefore: () => setActivePage("prompts"),
+    },
+    {
+      target: "tour-sources-nav",
+      emoji: "🌐",
+      title: "Top Sources",
+      body: "The pages AI cites when talking about your brand. More high-authority pages citing you = higher score. This shows you exactly where to invest your content efforts.",
+      position: "right",
+      onBefore: () => setActivePage("sources"),
+    },
+    {
+      target: "tour-reddit-header",
+      emoji: "🔴",
+      title: "Reddit — Your AI growth engine",
+      body: "When you reply to Reddit threads, AI models learn to associate your brand with those topics. It's the highest-leverage free action you can take — and we find the threads for you.",
+      position: "bottom",
+      onBefore: () => setActivePage("engagement-threads"),
+    },
+    {
+      target: "tour-reddit-thread",
+      emoji: "⭐",
+      title: "The Opportunity Score",
+      body: "Each thread is scored 0–99. HIGH = recent thread, few replies, high relevance. Those are your best shots at getting cited by AI. Start there every time.",
+      position: "right",
+    },
+    {
+      target: "tour-content",
+      emoji: "📝",
+      title: "Content Generator",
+      body: "Three tools that generate listicles, llms.txt files, and comparison pages — the exact content AI models crawl and cite. Publish them and, with time, AI starts reading and recommending you more.",
+      position: "right",
+      onBefore: () => { window.dispatchEvent(new CustomEvent("comly:tour:open-content")); },
+    },
+    {
+      target: "tour-listicles-nav",
+      emoji: "📋",
+      title: "Listicles Generator",
+      body: "'Top 10 tools for X' pages are the #1 content type AI cites in recommendations. We write them for your brand in 30 seconds — fully optimized.",
+      position: "right",
+      onBefore: () => { window.dispatchEvent(new CustomEvent("comly:tour:open-content")); setActivePage("fixes:listicles"); },
+    },
+    {
+      target: "tour-llms-txt-nav",
+      emoji: "🤖",
+      title: "llms.txt Generator",
+      body: "A special file that tells AI exactly what your brand does, who it's for, and what makes it stand out. Think of it as meta tags — but for ChatGPT and Claude.",
+      position: "right",
+      onBefore: () => { window.dispatchEvent(new CustomEvent("comly:tour:open-content")); setActivePage("fixes:llms-txt"); },
+    },
+    {
+      target: "tour-comparison-nav",
+      emoji: "⚔️",
+      title: "Comparison Pages",
+      body: "'Brand A vs Brand B' pages are searched by buyers who are ready to choose. We generate them targeting your top competitors so AI recommends you when users compare.",
+      position: "right",
+      onBefore: () => { window.dispatchEvent(new CustomEvent("comly:tour:open-content")); setActivePage("fixes:comparison"); },
+    },
+  ];
   const { score, total_mentions, prompt_results = [], competitor_rankings = [] } = result;
   const domain = profile.url
     ? (() => { try { const u = profile.url.startsWith("http") ? profile.url : "https://" + profile.url; return new URL(u).hostname; } catch { return profile.url; } })()
@@ -277,6 +369,19 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
           </button>
         </nav>
       </div>
+
+      {/* Spotlight onboarding tour — shown once per browser, desktop only */}
+      {showTour && (
+        <SpotlightTour
+          steps={TOUR_STEPS}
+          onComplete={() => {
+            setShowTour(false);
+            localStorage.setItem("comly_tour_done", "1");
+            window.dispatchEvent(new CustomEvent("comly:tour:close-content"));
+            setActivePage("overview");
+          }}
+        />
+      )}
     </motion.div>
   );
 }

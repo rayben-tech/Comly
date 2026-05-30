@@ -200,7 +200,7 @@ export function OverviewPanel({
   const [timeRangeOpen, setTimeRangeOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [demoModelFilter, setDemoModelFilter] = useState<"all" | "ChatGPT" | "Gemini" | "Claude" | "Perplexity">("all");
-  const [demoBrandFilter, setDemoBrandFilter] = useState<"all" | "Confluence" | "Asana" | "ClickUp">("all");
+  const [demoBrandFilter, setDemoBrandFilter] = useState<string>("all");
   const [modelDropOpen, setModelDropOpen] = useState(false);
   const [brandDropOpen, setBrandDropOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -356,9 +356,16 @@ export function OverviewPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeEntry, score, totalMentions]);
 
+  // Derive real competitor names for preview mode (before tableRows needs them)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const previewCompNamesResolved = useMemo(() => {
+    const comps = (profile.competitors ?? []).slice(0, 3).filter(Boolean);
+    return comps.length > 0 ? comps : DEMO_COMP_NAMES;
+  }, [profile.competitors?.join(",")]);
+
   const tableRows = (() => {
     if (previewMode && !demoMode && activeCompRankings.length === 0) {
-      const names = DEMO_COMP_NAMES;
+      const names = previewCompNamesResolved;
       const fakeScores = [8, 5, 6, 3];
       return [
         { name: brandName, domain, mentions: 7, isYou: true as const },
@@ -501,12 +508,6 @@ export function OverviewPanel({
   }, [activeDemoData, chartMetric]);
 
   // Preview mode: remap demo data keys to the brand's real competitor names
-  const previewCompNamesResolved = useMemo(() => {
-    const comps = (profile.competitors ?? []).slice(0, 3).filter(Boolean);
-    return comps.length > 0 ? comps : DEMO_COMP_NAMES;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile.competitors?.join(",")]);
-
   const previewChartData = useMemo(() => {
     const keys = ["Confluence", "Asana", "ClickUp"];
     return (activeDemoDataForMetric as Record<string, number | string | null>[]).map(row => {
@@ -518,13 +519,12 @@ export function OverviewPanel({
 
   const previewDemoCompNames = demoBrandFilter === "all"
     ? previewCompNamesResolved
-    : (() => {
-        const idx = ["Confluence", "Asana", "ClickUp"].indexOf(demoBrandFilter);
-        return idx >= 0 && idx < previewCompNamesResolved.length ? [previewCompNamesResolved[idx]] : previewCompNamesResolved;
-      })();
+    : previewCompNamesResolved.includes(demoBrandFilter)
+      ? [demoBrandFilter]
+      : previewCompNamesResolved;
 
-  const finalChartData = (demoMode || previewMode) ? activeDemoDataForMetric : chartData;
-  const finalTopCompNames = (demoMode || previewMode) ? activeDemoCompNames : topCompNames;
+  const finalChartData = demoMode ? activeDemoDataForMetric : previewMode ? previewChartData : chartData;
+  const finalTopCompNames = demoMode ? activeDemoCompNames : previewMode ? previewDemoCompNames : topCompNames;
   const finalHasCompetitorData = demoMode || previewMode || hasCompetitorData;
   const effectiveTopCompNames = chartView === "brand" ? [] : finalTopCompNames;
 
@@ -640,14 +640,14 @@ export function OverviewPanel({
                 transition={{ duration: 0.14, ease: "easeOut" }}
                 className="absolute z-30 top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-xl shadow-lg overflow-hidden min-w-[150px]"
               >
-                {(["all", "Confluence", "Asana", "ClickUp"] as const).map(b => (
+                {(["all", ...(demoMode ? DEMO_COMP_NAMES : previewCompNamesResolved)]).map(b => (
                   <button
                     key={b}
                     onClick={() => { setDemoBrandFilter(b); setBrandDropOpen(false); }}
                     className={`w-full text-left px-4 py-2.5 text-[12px] flex items-center gap-2 transition-colors active:bg-[#f3eeff] active:text-[#5B2D91] ${demoBrandFilter === b ? "font-semibold text-[#5B2D91] bg-[#faf7ff]" : "text-[#6b7280] hover:bg-[#f7f7f5]"}`}
                   >
                     {b !== "all" && (
-                      <img src={`https://www.google.com/s2/favicons?domain=${b.toLowerCase()}.com&sz=32`} className="w-3.5 h-3.5 rounded-sm shrink-0" alt="" />
+                      <img src={`https://www.google.com/s2/favicons?domain=${b.toLowerCase().replace(/\s+/g, "")}.com&sz=32`} className="w-3.5 h-3.5 rounded-sm shrink-0" alt="" />
                     )}
                     {b === "all" ? "All competitors" : b}
                   </button>
@@ -677,7 +677,7 @@ export function OverviewPanel({
                   : "Track your visibility across AI answers"}
               </p>
             </div>
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-5" data-tour="tour-score">
               <div>
                 <div className="text-[28px] font-bold text-[#0a0a0a] leading-none">{animScore}%</div>
                 <div className="mt-1">
@@ -707,7 +707,7 @@ export function OverviewPanel({
             <div className="flex flex-col items-center gap-2">
               <ChartLockedPlaceholder />
               <button
-                onClick={() => setPreviewMode(true)}
+                onClick={() => { setPreviewMode(true); setDemoBrandFilter("all"); }}
                 className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5B2D91] hover:underline"
               >
                 <Zap className="w-3.5 h-3.5" /> Preview sample data
@@ -761,7 +761,7 @@ export function OverviewPanel({
                   <span className="text-[10px] text-[#9ca3af] italic flex items-center gap-1">
                     <Zap className="w-3 h-3 text-[#5B2D91]" /> Showing sample data
                   </span>
-                  <button onClick={() => setPreviewMode(false)} className="text-[10px] text-[#5B2D91] font-semibold hover:underline">
+                  <button onClick={() => { setPreviewMode(false); setDemoBrandFilter("all"); }} className="text-[10px] text-[#5B2D91] font-semibold hover:underline">
                     Exit preview ×
                   </button>
                 </div>
@@ -832,7 +832,7 @@ export function OverviewPanel({
           <div className="-mx-4 border-t border-[#f0f0f0]" />
 
           {/* Competitor Rankings */}
-          <div>
+          <div data-tour="tour-competitors">
             <p className="text-[12px] font-bold text-[#0a0a0a]">Competitor Rankings</p>
             <p className="text-[10px] text-[#9ca3af] mt-0.5">Based on AI citations</p>
           </div>
@@ -1195,6 +1195,7 @@ export function OverviewPanel({
 
       {/* ── Prompt Performance ── */}
       <motion.div
+        data-tour="tour-prompts"
         custom={5} initial="hidden" animate="visible" variants={cardVariants}
         className="mx-6 mb-6 bg-white rounded-xl overflow-hidden"
         style={{ border: "0.5px solid #e5e5e5", boxShadow: "0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)" }}

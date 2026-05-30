@@ -370,7 +370,7 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
       <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden">
 
         {/* Header */}
-        <div className="px-6 pt-6 pb-5 border-b border-[#f0f0f0]">
+        <div data-tour="tour-reddit-header" className="px-6 pt-6 pb-5 border-b border-[#f0f0f0]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#ff45001a" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -463,7 +463,7 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
               )}
             </div>
           ) : (
-            displayed.map((t) => {
+            displayed.map((t, idx) => {
               const relevance  = getRelevanceTag(t.title);
               const keyword    = extractKeyword(t.title);
               const isSaved    = saved.has(t.id);
@@ -475,7 +475,7 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
                                         { text: "#9ca3af", bg: "#f9fafb", border: "#e5e7eb" };
 
               return (
-                <div key={t.id} className="group bg-white border border-[#eeeeee] rounded-2xl p-4 flex items-start gap-3 hover:border-[#d8d8d8] hover:shadow-sm transition-all">
+                <div key={t.id} data-tour={idx === 0 ? "tour-reddit-thread" : undefined} className="group bg-white border border-[#eeeeee] rounded-2xl p-4 flex items-start gap-3 hover:border-[#d8d8d8] hover:shadow-sm transition-all">
 
                   {/* Score badge */}
                   <div className="shrink-0 w-[46px] flex flex-col items-center justify-center rounded-xl py-2.5 px-1 border"

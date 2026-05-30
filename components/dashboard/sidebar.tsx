@@ -310,6 +310,17 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
     : "20h 12m";
   const [brandContentOpen, setBrandContentOpen] = useState(isFixesActive);
 
+  useEffect(() => {
+    const open  = () => setBrandContentOpen(true);
+    const close = () => setBrandContentOpen(false);
+    window.addEventListener("comly:tour:open-content",  open  as EventListener);
+    window.addEventListener("comly:tour:close-content", close as EventListener);
+    return () => {
+      window.removeEventListener("comly:tour:open-content",  open  as EventListener);
+      window.removeEventListener("comly:tour:close-content", close as EventListener);
+    };
+  }, []);
+
   return (
     <aside className={cn(
       "w-full shrink-0 bg-white flex flex-col sticky top-0 overflow-hidden border-r border-[#e5e5e5]",
@@ -480,8 +491,12 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               <div>
                 <SectionLabel>AI Visibility</SectionLabel>
                 <div className="space-y-0.5">
-                  <NavItem active={activePage === "prompts"} icon={MessageSquare} label="Prompts" onClick={() => onNavigate("prompts")} />
-                  <NavItem active={activePage === "sources"} icon={Globe} label="Sources" onClick={() => onNavigate("sources")} />
+                  <div data-tour="tour-prompts-nav">
+                    <NavItem active={activePage === "prompts"} icon={MessageSquare} label="Prompts" onClick={() => onNavigate("prompts")} />
+                  </div>
+                  <div data-tour="tour-sources-nav">
+                    <NavItem active={activePage === "sources"} icon={Globe} label="Sources" onClick={() => onNavigate("sources")} />
+                  </div>
                 </div>
               </div>
 
@@ -489,7 +504,9 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
               <div>
                 <SectionLabel>Optimize</SectionLabel>
                 <div className="space-y-0.5 mb-0.5">
-                  <NavItem active={activePage === "engagement-threads"} imgSrc="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" label="Reddit" onClick={() => onNavigate("engagement-threads")} />
+                  <div data-tour="tour-threads">
+                    <NavItem active={activePage === "engagement-threads"} imgSrc="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" label="Reddit" onClick={() => onNavigate("engagement-threads")} />
+                  </div>
                   <NavItem active={activePage === "quora-threads"} imgSrc="https://www.google.com/s2/favicons?domain=quora.com&sz=32" label="Quora" onClick={() => onNavigate("quora-threads")} />
                 </div>
                 {demoMode ? (
@@ -527,6 +544,7 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                 ) : (
                   <>
                     <button
+                      data-tour="tour-content"
                       onClick={() => setBrandContentOpen((v) => !v)}
                       className={cn(
                         "relative w-full flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-left text-[13px] font-medium transition-all",
@@ -551,15 +569,16 @@ export function Sidebar({ activePage, onNavigate, profile, className, onClose, o
                         >
                           <div className="mt-0.5 space-y-0.5 pb-1">
                             {BRAND_CONTENT_ITEMS.map((item) => (
-                              <NavItem
-                                key={item.id}
-                                active={activePage === `fixes:${item.id}`}
-                                icon={ListChecks}
-                                label={item.label}
-                                badge={item.badge}
-                                indent
-                                onClick={() => { onNavigate(`fixes:${item.id}`); setBrandContentOpen(true); }}
-                              />
+                              <div key={item.id} data-tour={`tour-${item.id}-nav`}>
+                                <NavItem
+                                  active={activePage === `fixes:${item.id}`}
+                                  icon={ListChecks}
+                                  label={item.label}
+                                  badge={item.badge}
+                                  indent
+                                  onClick={() => { onNavigate(`fixes:${item.id}`); setBrandContentOpen(true); }}
+                                />
+                              </div>
                             ))}
                           </div>
                         </motion.div>
