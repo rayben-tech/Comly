@@ -9,6 +9,9 @@ interface Thread {
   subreddit: string;
   title: string;
   url: string;
+  upvotes?: number;
+  comments?: number;
+  age?: string;
 }
 
 // ─── Reddit direct API (primary) ─────────────────────────────────────────────
@@ -45,6 +48,13 @@ async function searchRedditDirect(query: string): Promise<Thread[]> {
   const now = Date.now() / 1000;
   const fourteenDaysAgo = now - 14 * 24 * 60 * 60;
 
+  function ageLabel(created_utc: number): string {
+    const hours = (now - created_utc) / 3600;
+    if (hours < 1)  return `${Math.round(hours * 60)}m`;
+    if (hours < 24) return `${Math.round(hours)}h`;
+    return `${Math.round(hours / 24)}d`;
+  }
+
   return posts
     .filter((p) =>
       p.created_utc > fourteenDaysAgo &&
@@ -57,9 +67,12 @@ async function searchRedditDirect(query: string): Promise<Thread[]> {
       subreddit: `r/${p.subreddit}`,
       title: p.title,
       url: `https://www.reddit.com${p.permalink}`,
+      upvotes: p.score,
+      comments: p.num_comments,
+      age: ageLabel(p.created_utc),
       _score: opportunityScore(p.created_utc, p.num_comments, now),
     }))
-    .sort((a, b) => (b as { _score: number })._score - (a as { _score: number })._score)
+    .sort((a, b) => b._score - a._score)
     .map(({ _score: _s, ...t }) => t) as Thread[];
 }
 
