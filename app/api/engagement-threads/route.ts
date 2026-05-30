@@ -4,41 +4,86 @@ import { openai } from "@/lib/openai";
 
 export const maxDuration = 45;
 
+interface Thread {
+  id: string;
+  subreddit: string;
+  title: string;
+  url: string;
+}
+
+// ─── Reddit direct API (primary) ─────────────────────────────────────────────
+
+interface RedditPost {
+  id: string;
+  subreddit: string;
+  title: string;
+  permalink: string;
+  num_comments: number;
+  score: number;
+  created_utc: number;
+  is_self: boolean;
+}
+
+function opportunityScore(created_utc: number, num_comments: number, now: number): number {
+  const ageHours = (now - created_utc) / 3600;
+  const recency = Math.max(0, 1 - ageHours / (14 * 24)); // 1 = today, 0 = 14d ago
+  const commentScore = 1 / (num_comments + 1);            // fewer comments = higher
+  return recency * commentScore * 100;
+}
+
+async function searchRedditDirect(query: string): Promise<Thread[]> {
+  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&t=month&limit=25&type=link`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Comly/1.0 (AI visibility tool; contact: hello@trycomly.com)" },
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!res.ok) throw new Error(`Reddit API ${res.status}`);
+
+  const data = await res.json();
+  const posts: RedditPost[] = (data?.data?.children ?? []).map((c: { data: RedditPost }) => c.data);
+  const now = Date.now() / 1000;
+  const fourteenDaysAgo = now - 14 * 24 * 60 * 60;
+
+  return posts
+    .filter((p) =>
+      p.created_utc > fourteenDaysAgo &&
+      p.num_comments >= 3 &&
+      p.num_comments <= 60 &&
+      p.score >= 1
+    )
+    .map((p) => ({
+      id: p.id,
+      subreddit: `r/${p.subreddit}`,
+      title: p.title,
+      url: `https://www.reddit.com${p.permalink}`,
+      _score: opportunityScore(p.created_utc, p.num_comments, now),
+    }))
+    .sort((a, b) => (b as { _score: number })._score - (a as { _score: number })._score)
+    .map(({ _score: _s, ...t }) => t) as Thread[];
+}
+
+// ─── Serper fallback (no filtering) ──────────────────────────────────────────
+
 interface SerperResult {
   title?: string;
   link?: string;
-  snippet?: string;
 }
 
-async function searchRedditViaSerper(
-  query: string,
-  apiKey: string
-): Promise<Array<{ id: string; subreddit: string; title: string; url: string }>> {
+async function searchRedditViaSerper(query: string, apiKey: string): Promise<Thread[]> {
   const res = await fetch("https://google.serper.dev/search", {
     method: "POST",
-    headers: {
-      "X-API-KEY": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      q: `site:reddit.com ${query}`,
-      num: 10,
-    }),
+    headers: { "X-API-KEY": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ q: `site:reddit.com ${query}`, num: 10 }),
   });
 
-  if (!res.ok) {
-    console.error(`[reddit] Serper HTTP ${res.status} for: ${query}`);
-    return [];
-  }
+  if (!res.ok) return [];
 
   const data = await res.json();
   const items: SerperResult[] = data.organic ?? [];
 
   return items
-    .filter((item) => {
-      const url = item.link ?? "";
-      return url.includes("reddit.com/r/") && item.title;
-    })
+    .filter((item) => (item.link ?? "").includes("reddit.com/r/") && item.title)
     .map((item) => {
       const url = item.link!;
       const match = url.match(/reddit\.com\/(r\/[^/?#]+)/);
@@ -53,6 +98,8 @@ async function searchRedditViaSerper(
       };
     });
 }
+
+// ─── Query generation ─────────────────────────────────────────────────────────
 
 async function getQueries(profile: BrandProfile): Promise<string[]> {
   const prompt = `You are helping find Reddit threads where potential users of a product are discussing problems it solves.
@@ -87,42 +134,62 @@ Return ONLY valid JSON.`;
   return Array.isArray(parsed.queries) ? parsed.queries.slice(0, 8) : [];
 }
 
+// ─── Main handler ─────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
   try {
     const { profile }: { profile: BrandProfile } = await req.json();
-
-    const apiKey = process.env.SERPER_API_KEY;
-    if (!apiKey) {
-      console.warn("[reddit] SERPER_API_KEY not set");
-      return NextResponse.json({ threads: [] });
-    }
-
     const queries = await getQueries(profile);
-    console.log("[reddit] queries:", queries);
     if (queries.length === 0) return NextResponse.json({ threads: [] });
 
-    // Run all searches in parallel
-    const results = await Promise.allSettled(
-      queries.map((q) => searchRedditViaSerper(q, apiKey))
-    );
+    console.log("[reddit] queries:", queries);
 
-    const allResults: Array<{ id: string; subreddit: string; title: string; url: string }> = [];
-    for (const result of results) {
-      if (result.status === "fulfilled") {
-        console.log(`[reddit] query returned ${result.value.length} results`);
-        allResults.push(...result.value);
+    // ── Primary: Reddit direct API ──
+    let usedFallback = false;
+    let threads: Thread[] = [];
+
+    try {
+      const results = await Promise.allSettled(queries.map(searchRedditDirect));
+      const all: Thread[] = [];
+      for (const r of results) {
+        if (r.status === "fulfilled") all.push(...r.value);
+      }
+
+      // Deduplicate by URL
+      const seen = new Set<string>();
+      for (const t of all) {
+        if (!seen.has(t.url)) { seen.add(t.url); threads.push(t); }
+      }
+
+      console.log(`[reddit] direct API: ${threads.length} threads after filtering`);
+    } catch (e) {
+      console.warn("[reddit] direct API failed, will use Serper fallback:", e);
+    }
+
+    // ── Fallback: Serper (if Reddit returned nothing) ──
+    if (threads.length === 0) {
+      usedFallback = true;
+      const apiKey = process.env.SERPER_API_KEY;
+
+      if (apiKey) {
+        const results = await Promise.allSettled(queries.map((q) => searchRedditViaSerper(q, apiKey)));
+        const all: Thread[] = [];
+        for (const r of results) {
+          if (r.status === "fulfilled") all.push(...r.value);
+        }
+
+        const seen = new Set<string>();
+        for (const t of all) {
+          if (!seen.has(t.url)) { seen.add(t.url); threads.push(t); }
+        }
+
+        console.log(`[reddit] Serper fallback: ${threads.length} threads`);
+      } else {
+        console.warn("[reddit] SERPER_API_KEY not set, no fallback available");
       }
     }
 
-    const seen = new Set<string>();
-    const threads = [];
-    for (const result of allResults) {
-      if (seen.has(result.url)) continue;
-      seen.add(result.url);
-      threads.push(result);
-    }
-
-    console.log(`[reddit] total unique threads: ${threads.length}`);
+    console.log(`[reddit] returning ${Math.min(threads.length, 25)} threads (fallback=${usedFallback})`);
     return NextResponse.json({ threads: threads.slice(0, 25) });
   } catch (e) {
     console.error("[reddit] top-level error:", e);
