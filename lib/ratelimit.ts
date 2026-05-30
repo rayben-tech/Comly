@@ -18,9 +18,9 @@ export const generalRatelimit = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(30, "1 h"), analytics: false })
   : null;
 
-// 1 audit per 23 hours per authenticated user
+// 1 audit per 23 hours per authenticated user (3 requests = 1 audit, sent as parallel batches)
 export const userAuditRatelimit = redis
-  ? new Ratelimit({ redis, limiter: Ratelimit.fixedWindow(1, "23 h"), analytics: false })
+  ? new Ratelimit({ redis, limiter: Ratelimit.fixedWindow(3, "23 h"), analytics: false })
   : null;
 
 export function getIp(req: Request): string {
