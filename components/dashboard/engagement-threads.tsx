@@ -74,6 +74,22 @@ function getRelevanceTag(title: string): { label: string; color: string; bg: str
   return   { label: "Discussion",    color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb" };
 }
 
+function getThreadScore(title: string, comments?: number): { score: number; label: "HIGH" | "MED" | "LOW" } {
+  const tag = getRelevanceTag(title);
+  const base = RELEVANCE_ORDER[tag.label] ?? 1;
+  // base 1-5 → map to 40-90
+  let score = 30 + base * 12;
+  // fewer comments = higher opportunity
+  if (comments != null) {
+    if (comments <= 15)  score += 8;
+    else if (comments <= 40) score += 3;
+    else if (comments > 80)  score -= 8;
+  }
+  score = Math.min(99, Math.max(20, score));
+  const label = score >= 75 ? "HIGH" : score >= 55 ? "MED" : "LOW";
+  return { score, label };
+}
+
 const FILTERS: { id: FilterTab; label: string }[] = [
   { id: "new",     label: "New"     },
   { id: "saved",   label: "Saved"   },
@@ -448,24 +464,44 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
             </div>
           ) : (
             displayed.map((t) => {
-              const relevance = getRelevanceTag(t.title);
-              const keyword   = extractKeyword(t.title);
-              const isSaved   = saved.has(t.id);
-              const isReplied = repliedTo.has(t.id);
+              const relevance  = getRelevanceTag(t.title);
+              const keyword    = extractKeyword(t.title);
+              const isSaved    = saved.has(t.id);
+              const isReplied  = repliedTo.has(t.id);
+              const { score, label: scoreLabel } = getThreadScore(t.title, t.comments);
+              const scoreColor =
+                scoreLabel === "HIGH" ? { text: "#10b981", bg: "#f0fdf4", border: "#a7f3d0" } :
+                scoreLabel === "MED"  ? { text: "#f59e0b", bg: "#fffbeb", border: "#fde68a" } :
+                                        { text: "#9ca3af", bg: "#f9fafb", border: "#e5e7eb" };
 
               return (
-                <div key={t.id} className="bg-white border border-[#eeeeee] rounded-xl p-4 flex items-start gap-3 hover:border-[#e0e0e0] transition-colors">
+                <div key={t.id} className="group bg-white border border-[#eeeeee] rounded-2xl p-4 flex items-start gap-3 hover:border-[#d8d8d8] hover:shadow-sm transition-all">
+
+                  {/* Score badge */}
+                  <div className="shrink-0 w-[46px] flex flex-col items-center justify-center rounded-xl py-2.5 px-1 border"
+                    style={{ background: scoreColor.bg, borderColor: scoreColor.border }}>
+                    <span className="text-[20px] font-black leading-none" style={{ color: scoreColor.text }}>{score}</span>
+                    <span className="text-[8px] font-bold uppercase tracking-widest mt-0.5" style={{ color: scoreColor.text }}>{scoreLabel}</span>
+                  </div>
+
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-1.5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" alt="" width={12} height={12} className="w-3 h-3 opacity-70" />
+                      <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" alt="" width={12} height={12} className="w-3 h-3 opacity-60" />
                       <span className="text-[11px] font-bold" style={{ color: "#ff4500" }}>{t.subreddit}</span>
-                      <span className="text-[10px] text-[#cccccc]">·</span>
-                      {t.age && <span className="text-[10px] text-[#aaaaaa]">{t.age} ago</span>}
+                      {t.age && (
+                        <>
+                          <span className="text-[10px] text-[#cccccc]">·</span>
+                          <span className="text-[10px] text-[#aaaaaa]">{t.age} ago</span>
+                        </>
+                      )}
                     </div>
-                    <p className="text-[13px] font-semibold text-[#0a0a0a] leading-snug mb-2">{t.title}</p>
+
+                    <p className="text-[13.5px] font-semibold text-[#0a0a0a] leading-snug mb-2.5">{t.title}</p>
+
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ color: relevance.color, background: relevance.bg, border: `1px solid ${relevance.border}` }}>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: relevance.color, background: relevance.bg, border: `1px solid ${relevance.border}` }}>
                         {relevance.label}
                       </span>
                       {t.upvotes != null && (
@@ -479,19 +515,20 @@ export function EngagementThreadsPage({ profile, demoMode, demoThreads }: Props)
                         </span>
                       )}
                       {keyword && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: "#fff1f2", color: "#f43f5e", border: "1px solid #fecdd3" }}>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "#fdf2ff", color: "#a855f7", border: "1px solid #e9d5ff" }}>
                           {keyword}
                         </span>
                       )}
                       {isReplied && (
-                        <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200">
-                          <CornerUpLeft className="w-2.5 h-2.5" /> Replied
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                          <Check className="w-2.5 h-2.5" /> Replied
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="shrink-0 flex items-center gap-0.5">
+                  {/* Actions — always visible on mobile, fade in on hover for desktop */}
+                  <div className="shrink-0 flex items-center gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => toggleReplied(t.id)}
                       title={isReplied ? "Unmark as replied" : "Mark as replied"}
