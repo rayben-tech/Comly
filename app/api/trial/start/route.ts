@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,21 @@ export async function POST(req: NextRequest) {
   if (error) {
     console.error("Trial start error:", error);
     return NextResponse.json({ error: "Failed to start trial" }, { status: 500 });
+  }
+
+  // Fetch their latest audit to get score for welcome email
+  const supabaseService = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data: auditRow } = await supabaseService
+    .from("audits")
+    .select("score, brand_name")
+    .eq("user_id", user.id)
+    .single();
+
+  if (auditRow?.score !== undefined) {
+    await sendWelcomeEmail(user.email, auditRow.brand_name ?? "your brand", auditRow.score);
   }
 
   return NextResponse.json({ trialExpiresAt });

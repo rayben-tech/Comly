@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { runAudit } from "@/lib/audit-runner";
 import { BrandProfile } from "@/types";
+import { sendDailyScoreEmail } from "@/lib/email";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -69,6 +70,16 @@ export async function GET(req: NextRequest) {
       const profile = row.profile as BrandProfile | null;
       if (!profile?.brand_name) { skipped++; continue; }
 
+      // Fetch previous score before running new audit
+      const { data: prevHistory } = await supabase
+        .from("audit_history")
+        .select("score")
+        .eq("user_id", row.user_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      const prevScore = prevHistory?.score ?? null;
+
       // Run the audit
       const result = await runAudit(profile);
 
@@ -92,6 +103,9 @@ export async function GET(req: NextRequest) {
         score: result.score,
         results: result,
       });
+
+      // Send daily score email
+      await sendDailyScoreEmail(user.email, row.brand_name, result.score, prevScore);
 
       console.log(`daily-audit: ✓ ${row.brand_name} (${user.email}) score=${result.score}`);
       ran++;
