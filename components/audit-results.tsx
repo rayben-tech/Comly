@@ -78,7 +78,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
       emoji: "🏆",
       title: "Competitor Rankings",
       body: "See exactly where you rank vs your competitors in real AI answers. Your goal is to reach #1 — before your competitors find this tool.",
-      position: "top",
+      position: "right",
     },
     {
       target: "tour-prompts-nav",
