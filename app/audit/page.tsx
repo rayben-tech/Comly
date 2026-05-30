@@ -494,6 +494,20 @@ function AuditFlow() {
             profile: activeProfile,
             results: auditData,
           });
+
+          // Send welcome email after audit is saved (score is now known)
+          // sessionStorage flag prevents re-sending if user re-runs in the same tab
+          if (!isUnlimited && !sessionStorage.getItem("comly_welcome_sent")) {
+            sessionStorage.setItem("comly_welcome_sent", "1");
+            fetch("/api/trial/welcome", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ score: auditData.score, brand_name: activeProfile.brand_name }),
+            }).catch(() => {});
+          }
         }
       } catch (saveErr) {
         console.error("Supabase save failed:", saveErr);

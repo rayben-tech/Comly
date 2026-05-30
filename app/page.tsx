@@ -2040,7 +2040,7 @@ export default function LandingPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section
         id="hero"
-        className="relative min-h-screen pt-14 overflow-hidden [background:linear-gradient(to_bottom,#ffffff_0%,#f3eeff_18%,#d4b8f5_45%,#a87be0_100%)]"
+        className="relative min-h-screen pt-14 overflow-hidden [background:linear-gradient(to_bottom,#ffffff_0%,#f5eeff_18%,#dbbff5_50%,#a87be0_100%)]"
         onMouseMove={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
           setHeroMouse({

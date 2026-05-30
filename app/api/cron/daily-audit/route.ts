@@ -104,8 +104,10 @@ export async function GET(req: NextRequest) {
         results: result,
       });
 
-      // Send daily score email
-      await sendDailyScoreEmail(user.email, row.brand_name, result.score, prevScore);
+      // Send daily score email (skip for unlimited test accounts)
+      if (!unlimited) {
+        await sendDailyScoreEmail(user.email, row.brand_name, result.score, prevScore);
+      }
 
       console.log(`daily-audit: ✓ ${row.brand_name} (${user.email}) score=${result.score}`);
       ran++;
