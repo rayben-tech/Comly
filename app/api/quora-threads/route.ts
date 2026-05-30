@@ -55,7 +55,7 @@ Product: ${profile.brand_name}
 Description: ${profile.description}
 Category: ${profile.category}
 Target users: ${profile.target_users}
-Competitors: ${profile.competitors.join(", ")}
+Competitors: ${(profile.competitors ?? []).join(", ")}
 
 Return a JSON object with:
 - "queries": array of 4 short search queries (2-5 words each) that would surface real Quora questions from people who need this product. Focus on pain points and problems, not the product name.
@@ -71,8 +71,12 @@ Return ONLY valid JSON.`;
     max_tokens: 200,
   });
 
-  const parsed = JSON.parse(res.choices[0].message.content ?? "{}");
-  return Array.isArray(parsed.queries) ? parsed.queries.slice(0, 4) : [];
+  try {
+    const parsed = JSON.parse(res.choices[0].message.content ?? "{}");
+    return Array.isArray(parsed.queries) ? parsed.queries.slice(0, 4) : [];
+  } catch {
+    return [];
+  }
 }
 
 async function generateFallbackQuestions(profile: BrandProfile): Promise<Array<{ title: string; url: string }>> {

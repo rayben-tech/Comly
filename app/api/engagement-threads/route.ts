@@ -32,7 +32,7 @@ function opportunityScore(created_utc: number, num_comments: number, now: number
 }
 
 async function searchRedditDirect(query: string): Promise<Thread[]> {
-  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&t=month&limit=25&type=link`;
+  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&t=month&limit=25`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Comly/1.0 (AI visibility tool; contact: hello@trycomly.com)" },
     signal: AbortSignal.timeout(8000),
@@ -108,7 +108,7 @@ Product: ${profile.brand_name}
 Description: ${profile.description}
 Category: ${profile.category}
 Target users: ${profile.target_users}
-Competitors: ${profile.competitors.join(", ")}
+Competitors: ${(profile.competitors ?? []).join(", ")}
 
 Return a JSON object with:
 - "queries": array of 8 Reddit search queries (4-8 words each). Mix these types:
@@ -130,8 +130,12 @@ Return ONLY valid JSON.`;
     max_tokens: 300,
   });
 
-  const parsed = JSON.parse(res.choices[0].message.content ?? "{}");
-  return Array.isArray(parsed.queries) ? parsed.queries.slice(0, 8) : [];
+  try {
+    const parsed = JSON.parse(res.choices[0].message.content ?? "{}");
+    return Array.isArray(parsed.queries) ? parsed.queries.slice(0, 8) : [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
