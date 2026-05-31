@@ -9,7 +9,7 @@ import {
   Globe, ArrowRight, Check, X, Menu, ChevronDown, Plus,
   BarChart3, TrendingUp, Target, Eye, Bell, Shield,
   ExternalLink, Search, RefreshCw, Users,
-  CheckCircle2, AlertCircle, Loader2, User,
+  CheckCircle2, XCircle, AlertCircle, Loader2, User,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HowItWorksAnimated } from "@/components/ui/animated-scroll";
@@ -1618,38 +1618,175 @@ const LLM_TABS = [
   { domain: "perplexity.ai",     name: "Perplexity" },
 ];
 
-function MentionsFeedCard() {
-  const [active, setActive] = useState("chatgpt.com");
-  const rows = MENTIONS_DATA[active as keyof typeof MENTIONS_DATA];
+const DEMO_PROMPTS = [
+  {
+    idx: "01", domain: "chatgpt.com", model: "ChatGPT",
+    label: "Discovery", labelStyle: "bg-blue-50 text-blue-600 border-blue-100",
+    mentioned: true, rank: 2,
+    prompt: "What are the best AI visibility tools for marketing teams?",
+    response: "For marketing teams tracking AI mentions, Comly provides detailed visibility scores across ChatGPT, Gemini, Claude and Perplexity — making it easy to see exactly where your brand shows up.",
+    competitors: ["Semrush", "Ahrefs"],
+  },
+  {
+    idx: "02", domain: "claude.ai", model: "Claude",
+    label: "Direct Brand", labelStyle: "bg-purple-50 text-purple-600 border-purple-100",
+    mentioned: true, rank: 1,
+    prompt: "How does Comly help improve AI search visibility?",
+    response: "Comly offers a full audit across ChatGPT, Claude, Gemini and Perplexity — giving brands a visibility score and the exact steps to rank higher in AI-generated answers.",
+    competitors: ["BrandMentions", "Mention"],
+  },
+  {
+    idx: "03", domain: "gemini.google.com", model: "Gemini",
+    label: "Discovery", labelStyle: "bg-blue-50 text-blue-600 border-blue-100",
+    mentioned: true, rank: 3,
+    prompt: "Best tools to track brand mentions in AI responses?",
+    response: "Several platforms now focus on AI visibility. Comly stands out for tracking mentions in real AI responses and providing an actionable score.",
+    competitors: ["Ahrefs"],
+  },
+  {
+    idx: "04", domain: "perplexity.ai", model: "Perplexity",
+    label: "Competitor", labelStyle: "bg-orange-50 text-orange-600 border-orange-100",
+    mentioned: false, rank: null,
+    prompt: "Which tools help companies rank in AI-generated answers?",
+    response: "",
+    competitors: [],
+  },
+  {
+    idx: "05", domain: "chatgpt.com", model: "ChatGPT",
+    label: "Discovery", labelStyle: "bg-blue-50 text-blue-600 border-blue-100",
+    mentioned: true, rank: 2,
+    prompt: "How do I get my brand recommended by AI assistants?",
+    response: "Getting your brand recommended by AI starts with making sure your content is structured and specific. Tools like Comly help you audit how AI models currently perceive your brand and surface the gaps.",
+    competitors: ["Clearscope", "Surfer SEO"],
+  },
+  {
+    idx: "06", domain: "gemini.google.com", model: "Gemini",
+    label: "Open Ended", labelStyle: "bg-[#f7f7f5] text-[#6b6b6b] border-[#e5e5e5]",
+    mentioned: false, rank: null,
+    prompt: "What's the future of AI-powered marketing analytics?",
+    response: "",
+    competitors: [],
+  },
+  {
+    idx: "07", domain: "claude.ai", model: "Claude",
+    label: "Discovery", labelStyle: "bg-blue-50 text-blue-600 border-blue-100",
+    mentioned: true, rank: 1,
+    prompt: "Top marketing tools that use AI for brand visibility?",
+    response: "Among the tools focused specifically on AI visibility, Comly is one of the most purpose-built — it tracks how your brand appears across major AI models and gives you a clear score.",
+    competitors: ["Mention", "Brand24"],
+  },
+  {
+    idx: "08", domain: "perplexity.ai", model: "Perplexity",
+    label: "Direct Brand", labelStyle: "bg-purple-50 text-purple-600 border-purple-100",
+    mentioned: true, rank: 1,
+    prompt: "Is Comly worth it for small businesses?",
+    response: "For small businesses that rely on inbound discovery, Comly provides a clear picture of whether AI models are recommending them — and what to fix if they're not.",
+    competitors: [],
+  },
+];
+
+function PromptTrackingScreenshot() {
+  const [openSet, setOpenSet] = useState<Set<string>>(new Set(["02", "05"]));
+  function toggle(idx: string) {
+    setOpenSet((prev) => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+  }
+
   return (
-    <FeatureCardShell title="Your Mentions" badge={<span className="text-[11px] text-[#aaaaaa]">Live feed</span>}>
-      <div className="flex gap-1 px-3 pt-3 pb-2 border-b border-[#f5f5f5]">
-        {LLM_TABS.map(({ domain, name }) => (
-          <button key={domain} onClick={() => setActive(domain)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-              active === domain ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5] hover:text-[#374151]"
-            }`}
-          >
-            <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={12} height={12} className="rounded-sm" alt="" />
-            <span className="hidden sm:inline">{name}</span>
-          </button>
-        ))}
+    <DemoScreenShell hint="interactive — try clicking">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+        <p className="text-[12px] font-semibold text-[#0a0a0a]">Prompt Breakdown</p>
+        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-semibold">
+          <CheckCircle2 className="w-2.5 h-2.5" />
+          7 / 25 mentioned
+        </div>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.div key={active} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="divide-y divide-[#f5f5f5]">
-          {rows.map(({ snippet, pos, score }, i) => (
-            <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#fdfcff] transition-colors group cursor-default">
-              <img src={`https://www.google.com/s2/favicons?domain=${active}&sz=32`} width={18} height={18} alt="" className="rounded-md shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] text-[#374151] truncate">{snippet}</p>
-                <p className="text-[10px] text-[#aaaaaa] mt-0.5">Position <span className="font-bold text-[#0a0a0a]">#{pos}</span></p>
+
+      {/* Scrollable prompt list */}
+      <div className="overflow-y-auto max-h-[400px] px-3 pb-3 space-y-1.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}>
+        {DEMO_PROMPTS.map((p) => {
+          const isOpen = openSet.has(p.idx);
+          return (
+            <div
+              key={p.idx}
+              className={`rounded-xl border overflow-hidden transition-all cursor-pointer ${
+                isOpen ? "border-[#5B2D91]/25 bg-white" : p.mentioned ? "border-[#e5e5e5] bg-white hover:bg-[#fafafa]" : "border-[#f0f0f0] bg-white hover:bg-[#fafafa]"
+              }`}
+              style={{ boxShadow: isOpen ? "0 2px 12px rgba(91,45,145,0.08)" : "0 1px 4px rgba(0,0,0,0.04)" }}
+              onClick={() => toggle(p.idx)}
+            >
+              {/* Row header */}
+              <div className="flex items-center gap-2.5 px-3 py-2.5">
+                <div className="flex flex-col items-center gap-0.5 shrink-0">
+                  <span className="text-[9px] font-bold text-[#cccccc]">{p.idx}</span>
+                  {p.mentioned
+                    ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    : <XCircle className="w-3 h-3 text-[#d0d0d0]" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <img src={`https://www.google.com/s2/favicons?domain=${p.domain}&sz=32`} alt={p.model} width={11} height={11} className="rounded-sm shrink-0" />
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${p.labelStyle}`}>{p.label}</span>
+                    {p.mentioned
+                      ? <span className="text-[9px] font-semibold text-emerald-600">Mentioned · #{p.rank}</span>
+                      : <span className="text-[9px] text-[#aaaaaa]">Not mentioned</span>}
+                  </div>
+                  <p className={`text-[11px] font-medium leading-snug truncate ${p.mentioned ? "text-[#0a0a0a]" : "text-[#6b6b6b]"}`}>
+                    &ldquo;{p.prompt}&rdquo;
+                  </p>
+                </div>
+                <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown className={`w-3 h-3 shrink-0 ${isOpen ? "text-[#5B2D91]" : "text-[#cccccc]"}`} />
+                </motion.div>
               </div>
-              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${score >= 80 ? "bg-emerald-50 text-emerald-600" : score >= 60 ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-500"}`}>{score}</span>
+
+              {/* Expanded response */}
+              <AnimatePresence initial={false}>
+                {isOpen && p.response && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div className="border-t border-[#f0f0f0] bg-[#fafafa]">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-[#f0f0f0]">
+                        <img src={`https://www.google.com/s2/favicons?domain=${p.domain}&sz=32`} alt={p.model} width={12} height={12} className="rounded-sm" />
+                        <span className="text-[10px] font-semibold text-[#0a0a0a]">{p.model}</span>
+                      </div>
+                      <div className="px-3 py-2.5">
+                        <p className="text-[11px] text-[#3a3a3a] leading-relaxed">
+                          {p.response.split("Comly").map((part, i, arr) =>
+                            i < arr.length - 1
+                              ? <span key={i}>{part}<mark className="bg-[#5B2D91]/10 text-[#5B2D91] font-semibold rounded px-0.5 not-italic">Comly</mark></span>
+                              : <span key={i}>{part}</span>
+                          )}
+                        </p>
+                      </div>
+                      {p.competitors.length > 0 && (
+                        <div className="px-3 pb-2.5">
+                          <p className="text-[9px] font-bold text-[#aaaaaa] uppercase tracking-widest mb-1">Also mentioned</p>
+                          <div className="flex gap-1">
+                            {p.competitors.map((c) => (
+                              <span key={c} className="text-[9px] px-1.5 py-0.5 rounded-full border bg-white text-[#6b6b6b] border-[#e5e5e5] font-medium">{c}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          ))}
-        </motion.div>
-      </AnimatePresence>
-    </FeatureCardShell>
+          );
+        })}
+      </div>
+    </DemoScreenShell>
   );
 }
 
@@ -1661,41 +1798,88 @@ const COMPETITOR_DATA = [
   { rank: 4, name: "Obsidian",   domain: "obsidian.md",              pct: 50, pos: "3.4", you: false },
 ];
 
+const COMP_ROWS = [
+  { name: "Asana",     domain: "asana.com",     vis: 78, color: "#ef4444", you: false },
+  { name: "Monday",    domain: "monday.com",    vis: 63, color: "#f59e0b", you: false },
+  { name: "ClickUp",   domain: "clickup.com",   vis: 51, color: "#7c3aed", you: false },
+  { name: "Trello",    domain: "trello.com",    vis: 34, color: "#3b82f6", you: false },
+  { name: "Jira",      domain: "atlassian.com", vis: 21, color: "#10b981", you: false },
+];
+
+function DemoScreenShell({ hint, hintSide = "left", children }: { hint: string; hintSide?: "left" | "right"; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <div className={`absolute -top-6 ${hintSide === "left" ? "left-0" : "right-0"} flex items-center gap-1 pointer-events-none select-none z-10`}>
+        {hintSide === "right" && <p className="text-[11.5px] text-[#5B2D91]/50 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>{hint}</p>}
+        <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style={hintSide === "right" ? { transform: "scaleX(-1)" } : {}}>
+          <path d="M2 1 Q2 15 11 15" stroke="#5B2D91" strokeWidth="1.2" strokeOpacity="0.4" fill="none" strokeLinecap="round"/>
+          <path d="M8 12 L11 15 L8 18" stroke="#5B2D91" strokeWidth="1.2" strokeOpacity="0.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        {hintSide === "left" && <p className="text-[11.5px] text-[#5B2D91]/50 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>{hint}</p>}
+      </div>
+      <div className="rounded-2xl border border-[#e0e0e0] shadow-[0_12px_48px_rgba(0,0,0,0.13)] overflow-hidden bg-white">
+        <div className="bg-[#f5f5f5] border-b border-[#e0e0e0] px-3 py-2 flex items-center gap-2.5">
+          <div className="flex gap-1.5 shrink-0">
+            <div className="w-2 h-2 rounded-full bg-[#ff5f57]" />
+            <div className="w-2 h-2 rounded-full bg-[#febc2e]" />
+            <div className="w-2 h-2 rounded-full bg-[#28c840]" />
+          </div>
+          <div className="flex-1 bg-white border border-[#e0e0e0] rounded px-2.5 py-0.5 text-[10px] text-[#aaaaaa] truncate">app.trycomly.com/audit</div>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function CompetitorRankCard() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
-  const [hovered, setHovered] = useState<number | null>(null);
+  const maxVis = Math.max(...COMP_ROWS.map(r => r.vis));
   return (
-    <FeatureCardShell title="Competitor Ranking" badge={<span className="text-[11px] text-[#aaaaaa]">Updated weekly</span>}>
-      <div ref={ref} className="px-5 py-4 space-y-2.5">
-        {COMPETITOR_DATA.map(({ rank, name, domain, pct, pos, you }, i) => (
-          <div key={rank} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-default transition-all duration-150 ${
-              you ? "bg-[#f3eeff] border border-[#e4d4ff]" : hovered === i ? "bg-[#f7f7f5]" : "bg-[#fafafa]"
-            }`}
-          >
-            <span className={`text-[11px] font-bold w-4 shrink-0 ${you ? "text-[#5B2D91]" : "text-[#cccccc]"}`}>{rank}</span>
-            {you ? (
-              <div className="w-4 h-4 shrink-0"><ComlyLogo size={16} /></div>
-            ) : (
-              <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt={name} className="rounded-sm shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-            )}
-            <span className={`text-[13px] font-semibold flex-1 ${you ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>
-              {name}
-              {you && <span className="ml-2 text-[9px] bg-[#5B2D91] text-white px-1.5 py-0.5 rounded-full align-middle">YOU</span>}
-            </span>
-            <div className="w-24 h-1.5 bg-[#eeeeee] rounded-full overflow-hidden">
-              <motion.div className="h-full rounded-full" style={{ background: you ? "#5B2D91" : "#d1d5db" }}
-                initial={{ width: 0 }} animate={{ width: inView ? `${pct}%` : 0 }}
-                transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" }}
-              />
+    <DemoScreenShell hint="interactive — try hovering" hintSide="right">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
+        <div>
+          <p className="text-[12px] font-semibold text-[#0a0a0a]">Competitors</p>
+          <p className="text-[11px] text-[#6b6b6b] mt-0.5">Based on AI citations</p>
+        </div>
+        <span className="text-[11px] font-semibold text-[#6b6b6b] bg-[#f7f7f5] border border-[#e5e5e5] px-2.5 py-1 rounded-full">5 brands</span>
+      </div>
+      <div className="grid grid-cols-[16px_1fr_90px] gap-2 px-4 py-2 border-b border-[#f0f0f0] bg-[#fafafa]">
+        <span className="text-[9px] font-bold text-[#aaaaaa] uppercase tracking-wide">#</span>
+        <span className="text-[9px] font-bold text-[#aaaaaa] uppercase tracking-wide">Brand</span>
+        <span className="text-[9px] font-bold text-[#aaaaaa] uppercase tracking-wide text-right">Visibility</span>
+      </div>
+      <div ref={ref} className="divide-y divide-[#f7f7f5]">
+        {COMP_ROWS.map((row, i) => (
+          <div key={row.name} className={`grid grid-cols-[16px_1fr_90px] gap-2 items-center px-4 py-2.5 hover:bg-[#fafafa] transition-colors ${row.you ? "bg-[#5B2D91]/[0.02]" : ""}`}>
+            <span className={`text-[11px] font-semibold ${row.you ? "text-[#5B2D91]" : "text-[#aaaaaa]"}`}>{i + 1}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              {row.you
+                ? <div className="w-[22px] h-[22px] rounded-md shrink-0 border border-[#e4d4ff] overflow-hidden flex items-center justify-center bg-[#1a1a2e]"><ComlyLogo size={16} /></div>
+                : <img src={`https://www.google.com/s2/favicons?domain=${row.domain}&sz=32`} width={22} height={22} className="rounded-md shrink-0 border border-[#e5e5e5]" alt={row.name} />
+              }
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <a href={`https://${row.domain}`} target="_blank" rel="noopener noreferrer"
+                    className={`text-[12px] font-semibold truncate hover:underline ${row.you ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{row.name}</a>
+                  {row.you && <span className="shrink-0 text-[9px] font-bold bg-[#5B2D91]/10 text-[#5B2D91] px-1.5 py-0.5 rounded-full">You</span>}
+                </div>
+              </div>
             </div>
-            <span className={`text-[12px] font-bold w-8 text-right ${you ? "text-[#5B2D91]" : "text-[#6b6b6b]"}`}>{pct}%</span>
-            <span className="text-[11px] text-[#aaaaaa] w-8 text-right">#{pos}</span>
+            <div className="text-right">
+              <span className={`text-[12px] font-bold ${row.you ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{row.vis}%</span>
+              <div className="mt-1 h-[3px] bg-[#f0f0f0] rounded-full overflow-hidden">
+                <motion.div className="h-full rounded-full" style={{ backgroundColor: row.color }}
+                  initial={{ width: 0 }} animate={{ width: inView ? `${(row.vis / maxVis) * 100}%` : 0 }}
+                  transition={{ duration: 0.7, delay: i * 0.08, ease: "easeOut" }}
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
-    </FeatureCardShell>
+    </DemoScreenShell>
   );
 }
 
@@ -1713,42 +1897,91 @@ const THREADS = {
   ],
 };
 
+const DEMO_THREADS = {
+  reddit: [
+    { id: "t1", sub: "r/SaaS",         title: "Best AI-powered tools for marketing teams?",          votes: "3.1k", comments: 52, tag: "Recommendation", tagColor: "#f59e0b", tagBg: "#fffbeb", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
+    { id: "t2", sub: "r/Entrepreneur",  title: "ChatGPT keeps recommending my competitor — why?",    votes: "5.4k", comments: 89, tag: "Pain point",      tagColor: "#ef4444", tagBg: "#fff1f2", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
+    { id: "t3", sub: "r/startups",      title: "Which tools are AI models actually recommending?",   votes: "2.8k", comments: 41, tag: "Recommendation", tagColor: "#f59e0b", tagBg: "#fffbeb", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
+    { id: "t4", sub: "r/marketing",     title: "How do I get my SaaS mentioned in ChatGPT answers?", votes: "1.9k", comments: 28, tag: "How-to",          tagColor: "#0ea5e9", tagBg: "#f0f9ff", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
+  ],
+  quora: [
+    { id: "q1", sub: "Quora", title: "Which tools help brands rank in ChatGPT responses?",  votes: "1.8k", comments: 23, tag: "Recommendation", tagColor: "#f59e0b", tagBg: "#fffbeb", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
+    { id: "q2", sub: "Quora", title: "How do I get my product mentioned by AI models?",     votes: "3.2k", comments: 37, tag: "How-to",          tagColor: "#0ea5e9", tagBg: "#f0f9ff", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
+    { id: "q3", sub: "Quora", title: "What makes a brand show up in Perplexity answers?",   votes: "1.1k", comments: 18, tag: "Discussion",      tagColor: "#6b7280", tagBg: "#f9fafb", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
+    { id: "q4", sub: "Quora", title: "AI vs SEO — which drives more discovery in 2025?",    votes: "4.1k", comments: 64, tag: "Discussion",      tagColor: "#6b7280", tagBg: "#f9fafb", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
+  ],
+};
+
 function ThreadsCard() {
   const [platform, setPlatform] = useState<"reddit" | "quora">("reddit");
-  const threads = THREADS[platform];
-  const domain = platform === "reddit" ? "reddit.com" : "quora.com";
+  const [saved,    setSaved]    = useState<Set<string>>(new Set());
+  const [replied,  setReplied]  = useState<Set<string>>(new Set(["t2"]));
+  const threads = DEMO_THREADS[platform];
   return (
-    <FeatureCardShell title="Engagement Threads"
-      badge={<span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">12 opportunities</span>}
-    >
-      <div className="flex gap-1.5 px-4 pt-3 pb-2 border-b border-[#f5f5f5]">
-        {(["reddit","quora"] as const).map((p) => (
-          <button key={p} onClick={() => setPlatform(p)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all ${
-              platform === p ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5]"
-            }`}
-          >
-            <img src={`https://www.google.com/s2/favicons?domain=${p}.com&sz=32`} width={12} height={12} className="rounded-sm" alt="" />
-            {p.charAt(0).toUpperCase() + p.slice(1)}
-          </button>
-        ))}
+    <DemoScreenShell hint="interactive — save, reply, switch" hintSide="left">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
+        <div>
+          <p className="text-[12px] font-semibold text-[#0a0a0a]">Engagement Threads</p>
+          <p className="text-[11px] text-[#6b6b6b] mt-0.5">Threads where your audience asks</p>
+        </div>
+        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">12 new</span>
+      </div>
+      <div className="flex items-center justify-between px-4 pt-2.5 pb-2 border-b border-[#f0f0f0]">
+        <div className="flex gap-1">
+          {(["reddit","quora"] as const).map((p) => (
+            <button key={p} onClick={() => setPlatform(p)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all ${
+                platform === p ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5]"
+              }`}
+            >
+              <img src={`https://www.google.com/s2/favicons?domain=${p}.com&sz=32`} width={11} height={11} className="rounded-sm" alt="" />
+              {p.charAt(0).toUpperCase() + p.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 bg-[#f7f7f5] border border-[#e5e5e5] rounded-lg p-0.5">
+          {["New","All"].map((f,i) => (
+            <span key={f} className={`px-2 py-0.5 rounded-md text-[10px] font-medium cursor-default ${i===0 ? "bg-white text-[#0a0a0a] shadow-sm border border-[#e5e5e5]" : "text-[#6b6b6b]"}`}>{f}</span>
+          ))}
+        </div>
       </div>
       <AnimatePresence mode="wait">
-        <motion.div key={platform} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="divide-y divide-[#f5f5f5]">
-          {threads.map(({ sub, title, votes, comments }) => (
-            <div key={title} className="flex items-start gap-3 px-5 py-3.5 hover:bg-[#fdfcff] transition-colors group cursor-pointer">
-              <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt="" className="rounded-sm shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-[#5B2D91] mb-0.5">{sub}</p>
-                <p className="text-[12px] text-[#0a0a0a] leading-snug group-hover:text-[#5B2D91] transition-colors">{title}</p>
-                <p className="text-[10px] text-[#aaaaaa] mt-1">{votes} upvotes · {comments} comments</p>
+        <motion.div key={platform} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+          className="max-h-[300px] overflow-y-auto px-3 py-2 space-y-2" style={{ scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}
+        >
+          {threads.map(({ id, sub, title, votes, comments, tag, tagColor, tagBg, scoreLabel, scoreColor }) => (
+            <div key={id} className="bg-white border border-[#f0f0f0] rounded-xl px-3 py-2.5 hover:border-[#e0e0e0] transition-colors">
+              <div className="flex items-start gap-2">
+                <img src={`https://www.google.com/s2/favicons?domain=${platform}.com&sz=32`} width={13} height={13} alt="" className="rounded-sm shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                    <p className="text-[9px] font-bold text-[#5B2D91]">{sub}</p>
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border" style={{ color: tagColor, background: tagBg, borderColor: tagBg }}>{tag}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${scoreColor}`}>{scoreLabel}</span>
+                    {replied.has(id) && <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">Replied ✓</span>}
+                  </div>
+                  <p className="text-[11px] text-[#0a0a0a] leading-snug mb-1">{title}</p>
+                  <p className="text-[10px] text-[#aaaaaa]">{votes} upvotes · {comments} comments</p>
+                </div>
               </div>
-              <span className="text-[10px] font-bold text-[#5B2D91] shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Reply →</span>
+              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[#f5f5f5]">
+                <button onClick={() => setSaved(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; })}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors ${saved.has(id) ? "bg-[#f3eeff] text-[#5B2D91]" : "bg-[#f7f7f5] text-[#6b6b6b] hover:bg-[#f0f0f0]"}`}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill={saved.has(id) ? "#5B2D91" : "none"} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                  Save
+                </button>
+                <button onClick={() => setReplied(r => { const n = new Set(r); n.has(id) ? n.delete(id) : n.add(id); return n; })}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors ${replied.has(id) ? "bg-emerald-50 text-emerald-600" : "bg-[#f7f7f5] text-[#6b6b6b] hover:bg-[#f0f0f0]"}`}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+                  Reply
+                </button>
+                <span className="ml-auto text-[10px] text-[#5B2D91] font-semibold cursor-pointer hover:underline">Open →</span>
+              </div>
             </div>
           ))}
         </motion.div>
       </AnimatePresence>
-    </FeatureCardShell>
+    </DemoScreenShell>
   );
 }
 
@@ -1774,61 +2007,174 @@ const CONTENT_ITEMS = [
   },
 ];
 
+const CONTENT_TABS = [
+  {
+    id: "listicle", label: "Listicles", icon: "📋",
+    desc: "AI-optimized listicles that place your brand alongside top competitors",
+    preview: `# 10 Best AI Visibility Tools in 2025\n\n**1. Semrush** — enterprise-grade SEO\n**2. Your Brand** — best for AI-first teams ✦\n**3. Ahrefs** — backlink analysis\n**4. Moz** — domain authority\n**5. BrandMentions** — real-time alerts`,
+  },
+  {
+    id: "llms-txt", label: "llms.txt", icon: "🤖",
+    desc: "Tell every AI model exactly who you are and what you do",
+    preview: `# Your Brand\n\nAI visibility audit platform for modern brands.\n\n## What we do\n- Audit AI mentions across ChatGPT, Claude,\n  Gemini & Perplexity\n- Track competitors in real-time\n- Generate content AI can't ignore\n\n## Why cite us\nTrusted by 2,000+ marketing teams.`,
+  },
+  {
+    id: "comparison", label: "Comparison", icon: "⚖️",
+    desc: '"Your Brand vs Competitor" pages AI loves to reference',
+    preview: `# Your Brand vs Semrush\n\n| Feature        | Your Brand | Semrush |\n|----------------|------------|---------|\n| AI visibility  | ✓          | ✗       |\n| llms.txt gen   | ✓          | ✗       |\n| ChatGPT audit  | ✓          | ✗       |\n| Price          | $49/mo     | $129/mo |`,
+  },
+];
+
 function ContentGenCard() {
   const [active, setActive] = useState("listicle");
-  const item = CONTENT_ITEMS.find((c) => c.id === active)!;
+  const item = CONTENT_TABS.find((c) => c.id === active)!;
   return (
-    <FeatureCardShell title="Content Generator" badge={<span className="text-[11px] text-[#aaaaaa]">3 tools</span>}>
-      <div className="grid grid-cols-2 divide-x divide-[#f0f0f0]" style={{ minHeight: 210 }}>
-        <div className="p-3 space-y-1.5">
-          {CONTENT_ITEMS.map((c) => (
+    <DemoScreenShell hint="interactive — switch generators" hintSide="right">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
+        <div>
+          <p className="text-[12px] font-semibold text-[#0a0a0a]">Content Generator</p>
+          <p className="text-[11px] text-[#6b6b6b] mt-0.5">3 AI-optimized formats</p>
+        </div>
+        <span className="text-[11px] text-[#aaaaaa] bg-[#f7f7f5] border border-[#e5e5e5] px-2 py-0.5 rounded-full">3 tools</span>
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-[#f0f0f0]" style={{ minHeight: 220 }}>
+        <div className="p-2.5 space-y-1">
+          {CONTENT_TABS.map((c) => (
             <button key={c.id} onClick={() => setActive(c.id)}
               className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
                 active === c.id ? "bg-[#f3eeff] border border-[#e4d4ff]" : "hover:bg-[#f7f7f5]"
               }`}
             >
-              <p className={`text-[12px] font-semibold ${active === c.id ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{c.label}</p>
-              <p className="text-[10px] text-[#9ca3af] leading-snug mt-0.5 line-clamp-2">{c.desc}</p>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[11px]">{c.icon}</span>
+                <p className={`text-[11px] font-semibold ${active === c.id ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{c.label}</p>
+              </div>
+              <p className="text-[10px] text-[#9ca3af] leading-snug line-clamp-2">{c.desc}</p>
             </button>
           ))}
         </div>
         <AnimatePresence mode="wait">
-          <motion.div key={active} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
-            className="p-4 bg-[#fafafa]"
+          <motion.div key={active} initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+            className="p-3 bg-[#fafafa] overflow-y-auto" style={{ scrollbarWidth: "none" }}
           >
-            <p className="text-[10px] font-bold text-[#5B2D91] uppercase tracking-wide mb-2">Preview</p>
+            <p className="text-[9px] font-bold text-[#5B2D91] uppercase tracking-wider mb-2">Preview</p>
             <pre className="text-[10px] text-[#374151] leading-relaxed whitespace-pre-wrap font-mono">{item.preview}</pre>
           </motion.div>
         </AnimatePresence>
       </div>
-    </FeatureCardShell>
+    </DemoScreenShell>
   );
 }
 
-// Row 5 — Visitors / Competitor Playbook tabs
-const VISITOR_DATA = [
-  { domain: "chatgpt.com",       label: "ChatGPT",    visitors: 24, change: "+18%", pos: true  },
-  { domain: "perplexity.ai",     label: "Perplexity", visitors: 11, change: "+7%",  pos: true  },
-  { domain: "claude.ai",         label: "Claude",     visitors:  4, change: "0%",   pos: false },
-  { domain: "gemini.google.com", label: "Gemini",     visitors:  2, change: "+2%",  pos: true  },
+// Row 5 — Intelligence demo data
+const VISITOR_SOURCES = [
+  { domain: "chatgpt.com",       label: "ChatGPT",    count: 1203, change: "+18%", color: "#10a37f", spark: [72,78,74,83,91,88,96,94,102,109,105,114,118,116] },
+  { domain: "perplexity.ai",     label: "Perplexity", count:  684, change: "+7%",  color: "#20b2aa", spark: [38,42,40,45,51,48,55,53,59,62,58,66,70,63] },
+  { domain: "claude.ai",         label: "Claude",     count:  312, change: "+4%",  color: "#d97706", spark: [16,19,17,22,25,23,28,26,30,29,32,35,31,34] },
+  { domain: "gemini.google.com", label: "Gemini",     count:  127, change: "+2%",  color: "#4285f4", spark: [6,8,7,9,11,10,12,11,13,12,14,13,15,14] },
 ];
-const PLAYBOOK_DATA = [
-  { cat: "reddit",  domain: "reddit.com",       title: "r/SaaS — ChatGPT recommends these tools…",   action: "Join thread" },
-  { cat: "review",  domain: "g2.com",            title: "G2 — Top rated tools in your category",      action: "Get listed"  },
-  { cat: "press",   domain: "techcrunch.com",    title: "TechCrunch — Best AI-friendly tools 2025",   action: "Pitch outlet" },
-  { cat: "reddit",  domain: "reddit.com",        title: "r/Entrepreneur — AI keeps picking this tool", action: "Join thread" },
+const CHART_PTS = [72,78,74,83,91,88,96,94,102,109,105,114,118,116];
+const CHART_LABELS = ["May 18","","","","May 22","","","","May 26","","","","May 30",""];
+
+const PLAYBOOK_COMPETITORS = [
+  {
+    name: "Asana", domain: "asana.com", count: 14,
+    groups: {
+      reddit: [
+        { title: "r/productivity — Asana keeps coming up in AI recommendations", domain: "reddit.com", action: "Join thread →" },
+        { title: "r/SaaS — Why does ChatGPT always suggest Asana?", domain: "reddit.com", action: "Join thread →" },
+      ],
+      review: [
+        { title: "G2 — Asana Project Management category", domain: "g2.com", action: "Submit listing →" },
+        { title: "Capterra — Top project management tools 2025", domain: "capterra.com", action: "Submit listing →" },
+      ],
+      press: [
+        { title: "Forbes — Best project management tools for teams", domain: "forbes.com", action: "Pitch outlet →" },
+      ],
+    },
+  },
+  {
+    name: "Monday", domain: "monday.com", count: 9,
+    groups: {
+      reddit: [
+        { title: "r/projectmanagement — Monday.com vs alternatives", domain: "reddit.com", action: "Join thread →" },
+      ],
+      review: [
+        { title: "G2 — Monday.com Work OS reviews", domain: "g2.com", action: "Submit listing →" },
+        { title: "Trustpilot — Monday.com customer reviews", domain: "trustpilot.com", action: "Submit listing →" },
+      ],
+      press: [
+        { title: "TechCrunch — Work management tools AI recommends", domain: "techcrunch.com", action: "Pitch outlet →" },
+        { title: "Inc — Best productivity software for 2025", domain: "inc.com", action: "Pitch outlet →" },
+      ],
+    },
+  },
+  {
+    name: "ClickUp", domain: "clickup.com", count: 6,
+    groups: {
+      reddit: [
+        { title: "r/ClickUp — AI keeps mentioning ClickUp for teams", domain: "reddit.com", action: "Join thread →" },
+      ],
+      review: [
+        { title: "G2 — ClickUp Project Management reviews", domain: "g2.com", action: "Submit listing →" },
+      ],
+      press: [
+        { title: "Business Insider — All-in-one tools AI recommends", domain: "businessinsider.com", action: "Pitch outlet →" },
+      ],
+    },
+  },
 ];
 
-function VisitorsCard() {
-  const [tab, setTab] = useState<"visitors" | "playbook">("visitors");
+const CAT_META = {
+  reddit: { label: "Reddit",           icon: "🟠", color: "text-orange-600 bg-orange-50 border-orange-100" },
+  review: { label: "Reviews & Listings", icon: "⭐", color: "text-blue-600 bg-blue-50 border-blue-100"   },
+  press:  { label: "Press & Blogs",    icon: "📰", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+} as const;
+
+function MiniSparkLine({ data, color }: { data: number[]; color: string }) {
+  const h = 22, w = 56;
+  const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 3) - 1.5}`).join(" ");
   return (
-    <FeatureCardShell title="Intelligence"
-      badge={<span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Live</span>}
-    >
-      <div className="flex gap-1.5 px-4 pt-3 pb-2 border-b border-[#f5f5f5]">
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MiniAreaChart() {
+  const w = 100, h = 40;
+  const max = Math.max(...CHART_PTS), min = Math.min(...CHART_PTS), range = max - min || 1;
+  const x = (i: number) => (i / (CHART_PTS.length - 1)) * w;
+  const y = (v: number) => h - 2 - ((v - min) / range) * (h - 6);
+  const linePts = CHART_PTS.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const areaPts = `${x(0)},${h} ` + linePts + ` ${x(CHART_PTS.length - 1)},${h}`;
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      <polygon points={areaPts} fill="#10a37f" fillOpacity="0.12" />
+      <polyline points={linePts} fill="none" stroke="#10a37f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function VisitorsCard() {
+  const [tab,        setTab]        = useState<"visitors" | "playbook">("visitors");
+  const [activeComp, setActiveComp] = useState("Semrush");
+  const comp = PLAYBOOK_COMPETITORS.find(c => c.name === activeComp)!;
+
+  return (
+    <DemoScreenShell hint="interactive — switch views" hintSide="left">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
+        <div>
+          <p className="text-[12px] font-semibold text-[#0a0a0a]">Intelligence</p>
+          <p className="text-[11px] text-[#6b6b6b] mt-0.5">AI traffic + competitor playbook</p>
+        </div>
+        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">● Live</span>
+      </div>
+      <div className="flex gap-1 px-4 pt-2.5 pb-2 border-b border-[#f0f0f0]">
         {(["visitors","playbook"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
               tab === t ? "bg-[#f3eeff] text-[#5B2D91] border border-[#e4d4ff]" : "text-[#9ca3af] hover:bg-[#f7f7f5]"
             }`}
           >
@@ -1836,38 +2182,88 @@ function VisitorsCard() {
           </button>
         ))}
       </div>
+
       <AnimatePresence mode="wait">
         {tab === "visitors" ? (
-          <motion.div key="visitors" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
-            <div className="divide-y divide-[#f5f5f5]">
-              {VISITOR_DATA.map(({ domain, label, visitors, change, pos }) => (
-                <div key={domain} className="flex items-center gap-3 px-5 py-3 hover:bg-[#fdfcff] transition-colors cursor-default">
-                  <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={18} height={18} alt={label} className="rounded-md shrink-0" />
-                  <span className="text-[13px] font-semibold text-[#0a0a0a] flex-1">{label}</span>
-                  <span className="text-[13px] font-bold text-[#0a0a0a]">{visitors}</span>
-                  <span className={`text-[11px] font-semibold w-10 text-right ${pos ? "text-emerald-500" : "text-[#aaaaaa]"}`}>{change}</span>
+          <motion.div key="visitors" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            {/* Mini stat + chart */}
+            <div className="px-4 pt-3 pb-2">
+              <div className="flex items-end justify-between mb-1">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#aaaaaa]">Total AI Visitors</p>
+                  <p className="text-[22px] font-black text-[#0a0a0a] leading-none">2,847</p>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 mb-1">+12% this week</span>
+              </div>
+              <div className="h-10 w-full rounded-lg overflow-hidden">
+                <MiniAreaChart />
+              </div>
+              <div className="flex justify-between mt-0.5">
+                <span className="text-[9px] text-[#cccccc]">May 18</span>
+                <span className="text-[9px] text-[#cccccc]">May 30</span>
+              </div>
+            </div>
+            {/* Source rows */}
+            <div className="border-t border-[#f0f0f0]">
+              {VISITOR_SOURCES.map(({ domain, label, count, change, color, spark }) => (
+                <div key={domain} className="flex items-center gap-2.5 px-4 py-2.5 border-b border-[#f7f7f5] last:border-0 hover:bg-[#fafafa] transition-colors">
+                  <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt={label} className="rounded-md shrink-0 border border-[#e5e5e5]" />
+                  <span className="text-[11px] font-semibold text-[#0a0a0a] w-20 shrink-0">{label}</span>
+                  <MiniSparkLine data={spark} color={color} />
+                  <span className="text-[11px] font-bold text-[#0a0a0a] ml-auto">{count.toLocaleString()}</span>
+                  <span className="text-[10px] font-semibold text-emerald-500 w-9 text-right shrink-0">{change}</span>
                 </div>
               ))}
             </div>
-            <div className="px-5 py-2.5 bg-[#fafafa] border-t border-[#f0f0f0]">
-              <p className="text-[11px] text-[#6b6b6b]"><span className="font-semibold text-[#0a0a0a]">GPTBot</span> crawled 3 pages today · 2h ago</p>
+            <div className="px-4 py-2 bg-[#fafafa] border-t border-[#f0f0f0]">
+              <p className="text-[10px] text-[#6b6b6b]"><span className="font-semibold text-[#0a0a0a]">GPTBot</span> crawled 3 pages today · 2h ago</p>
             </div>
           </motion.div>
         ) : (
-          <motion.div key="playbook" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
-            <div className="divide-y divide-[#f5f5f5]">
-              {PLAYBOOK_DATA.map(({ domain, title, action }) => (
-                <div key={title} className="flex items-center gap-3 px-5 py-3 hover:bg-[#fdfcff] transition-colors group cursor-pointer">
-                  <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} width={16} height={16} alt="" className="rounded-sm shrink-0" />
-                  <p className="text-[12px] text-[#374151] flex-1 leading-snug group-hover:text-[#5B2D91] transition-colors">{title}</p>
-                  <span className="text-[10px] font-bold text-[#5B2D91] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">{action} →</span>
+          <motion.div key="playbook" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            {/* Competitor selector */}
+            <div className="grid grid-cols-3 gap-2 px-3 py-3 border-b border-[#f0f0f0]">
+              {PLAYBOOK_COMPETITORS.map((c) => (
+                <button key={c.name} onClick={() => setActiveComp(c.name)}
+                  className={`flex items-center gap-2 px-2.5 py-2 rounded-xl border text-left transition-all ${
+                    activeComp === c.name ? "border-[#5B2D91] bg-[#faf7ff]" : "border-[#f0f0f0] bg-white hover:border-[#d4b8ff]"
+                  }`}
+                >
+                  <img src={`https://www.google.com/s2/favicons?domain=${c.domain}&sz=32`} width={16} height={16} className="rounded-md shrink-0" alt={c.name} />
+                  <div className="min-w-0">
+                    <p className={`text-[10px] font-semibold truncate ${activeComp === c.name ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{c.name}</p>
+                    <p className="text-[9px] text-[#aaaaaa]">{c.count} mentions</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {/* Grouped mentions */}
+            <div className="max-h-[260px] overflow-y-auto px-3 py-3 space-y-3" style={{ scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}>
+              {(Object.entries(comp.groups) as [keyof typeof CAT_META, typeof comp.groups[keyof typeof comp.groups]][]).map(([cat, items]) => (
+                <div key={cat}>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-[11px]">{CAT_META[cat].icon}</span>
+                    <p className="text-[9px] font-bold text-[#6b6b6b] uppercase tracking-wide">{CAT_META[cat].label}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {items.map((r) => (
+                      <div key={r.title} className="flex items-start gap-2 px-2.5 py-2 rounded-xl border border-[#f0f0f0] hover:border-[#5B2D91]/20 hover:bg-[#faf7ff] transition-colors group cursor-pointer">
+                        <img src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=32`} width={13} height={13} className="rounded-sm shrink-0 mt-0.5" alt="" />
+                        <p className="text-[10px] text-[#374151] flex-1 leading-snug group-hover:text-[#5B2D91] transition-colors">{r.title}</p>
+                        <span className="text-[9px] font-semibold text-[#cccccc] group-hover:text-[#5B2D91] transition-colors shrink-0 whitespace-nowrap">{r.action}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
+            </div>
+            <div className="px-4 py-2 border-t border-[#f0f0f0]">
+              <p className="text-[10px] text-[#aaaaaa]">Cached · refreshes in 7 days</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </FeatureCardShell>
+    </DemoScreenShell>
   );
 }
 
@@ -2465,18 +2861,6 @@ export default function LandingPage() {
           <FadeIn className="relative text-center mb-20">
             <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">Everything you need to dominate AI search</h2>
             <p className="mt-3 text-lg text-[#6b6b6b]">One dashboard. Zero guesswork.</p>
-            {/* Curvy arrow — points down toward first feature row */}
-            <div
-              className="absolute -right-4 bottom-0 hidden lg:flex flex-col items-center gap-1 pointer-events-none select-none"
-              style={{ transform: "rotate(-8deg)" }}
-            >
-              <p className="text-[13px] text-white/80 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-                all built-in
-              </p>
-              <svg width="60" height="22" viewBox="0 0 80 28" fill="none" style={{ transform: "rotate(95deg)", transformOrigin: "center" }}>
-                <path d="M69.5207 23.3815C67.2462 22.6122 64.7595 22.3168 62.3869 21.9909C61.3489 21.8484 60.2942 20.9815 59.7862 20.0888C59.4769 19.5452 59.1073 18.1675 60.0304 17.9321C62.9667 17.1833 65.9997 17.4567 68.885 18.3658C68.86 18.3322 68.8359 18.298 68.8109 18.2644C68.4919 17.836 68.163 17.415 67.825 17.0014C67.2611 16.3114 66.6658 15.652 66.0606 14.9981C66.0319 14.9673 65.8891 14.8202 65.8324 14.7607C65.747 14.6769 65.6617 14.5929 65.5756 14.5098C65.1902 14.1381 64.797 13.7747 64.3959 13.4202C63.7722 12.8689 63.129 12.3388 62.4691 11.8315C62.3184 11.7156 62.166 11.6011 62.0131 11.4878C61.9397 11.4363 61.7829 11.3249 61.7545 11.3057C61.3098 11.0054 60.8669 10.7039 60.413 10.4172C58.8121 9.40586 57.5297 8.72576 55.9211 8.0441C49.3695 5.26773 42.106 4.82171 35.1854 6.43922C32.3806 7.09461 29.6122 8.15351 27.0577 9.52847C27.5856 10.3127 28.0485 11.1432 28.4268 12.0223C29.2577 13.9532 29.6367 16.358 28.7855 18.3499C27.999 20.1905 26.4205 21.6153 24.4308 21.9941C19.6188 22.9106 15.5344 17.6245 15.9695 13.1817C16.2243 10.5798 17.8812 8.57407 19.9472 7.00361C17.6336 5.70948 14.7798 5.13961 11.9906 5.2653C8.72595 5.4122 5.5478 6.34173 2.98277 8.43376C1.99704 9.23762 -0.332871 7.33792 0.572905 6.36762C5.4544 1.13806 13.3732 0.358808 19.6841 3.33393C20.7792 3.85022 21.8278 4.46998 22.809 5.17973C23.5101 4.79697 24.2091 4.44958 24.8751 4.13366C32.7991 0.376962 42.2277 -0.53633 50.7132 1.70692C58.9019 3.87177 66.6885 8.73714 72.1148 15.3891C72.0529 15.0549 71.991 14.7212 71.9272 14.3876C71.317 11.1887 70.6626 8.03674 70.5316 4.77763C70.5026 4.0579 71.1673 3.89724 71.7458 4.04843C72.507 4.24729 73.1356 4.87574 73.4234 5.59401C74.7154 8.82047 75.6023 12.1274 76.5002 15.4813C77.3761 18.7528 78.362 22.0082 79.1596 25.2977C79.3738 26.1811 79.3035 27.1034 78.2727 27.3769C77.1781 27.6677 76.0236 26.9972 75.2012 26.3416C74.4453 25.7391 73.5542 25.1447 72.4411 24.5705C71.7718 24.2254 70.4629 23.7001 69.5207 23.3815ZM21.0147 17.4326C20.9242 17.5089 21.0383 17.4969 21.1037 17.4758C20.9299 17.3053 20.8884 17.5389 21.0147 17.4326ZM24.4777 13.2522C24.4429 12.6157 24.285 11.9955 24.0453 11.4066C23.0743 12.147 22.1952 13.0252 21.6138 14.087C21.2924 14.674 21.0679 15.3609 21.0325 16.0287C21.0173 16.3129 21.0306 16.6397 21.0824 16.9082C21.1394 17.203 21.1749 17.3133 21.231 17.4347C21.7551 17.3919 22.2635 17.2376 22.7514 16.9009C23.9322 16.0855 24.5545 14.6594 24.4777 13.2522Z" fill="rgba(255,255,255,0.65)"/>
-              </svg>
-            </div>
           </FadeIn>
 
           {/* Row 1 */}
@@ -2487,7 +2871,7 @@ export default function LandingPage() {
               <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Read the full AI responses. Know exactly when and how your brand gets mentioned across ChatGPT, Claude, Perplexity, and Gemini.</p>
               <FeatureBullets items={["Run prompts across 4 AI models simultaneously", "Read full responses — not just a yes or no", "Weekly tracking so you never miss a shift"]} />
             </div>
-            <MentionsFeedCard />
+            <PromptTrackingScreenshot />
           </FadeIn>
 
           {/* Row 2 */}
