@@ -16,21 +16,22 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Comly — AI Visibility Audit for Your Brand",
+  title: "Comly — Get Recommended by AI",
   description:
-    "Find out if AI recommends your brand. Run an AI visibility audit and see how you rank against competitors in AI-generated responses.",
+    "Find out why AI recommends your competitors instead of you — and fix it. Audit your brand's visibility across ChatGPT, Gemini & Perplexity in 60 seconds.",
   metadataBase: new URL("https://www.trycomly.com"),
   openGraph: {
-    title: "Comly — AI Visibility Audit for Your Brand",
-    description: "See how ChatGPT, Claude, Gemini & Perplexity talk about you — and outrank competitors.",
+    title: "Comly — Get Recommended by AI",
+    description: "Find out why AI recommends your competitors instead of you — and fix it. Audit your brand's visibility across ChatGPT, Gemini & Perplexity in 60 seconds.",
+    siteName: "Comly",
     type: "website",
     url: "https://www.trycomly.com",
     images: [{ url: "/og-banner.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Comly — AI Visibility Audit for Your Brand",
-    description: "See how ChatGPT, Claude, Gemini & Perplexity talk about you — and outrank competitors.",
+    title: "Comly — Get Recommended by AI",
+    description: "Find out why AI recommends your competitors instead of you — and fix it. Audit your brand's visibility across ChatGPT, Gemini & Perplexity in 60 seconds.",
     images: ["/og-banner.png"],
   },
 };
@@ -42,6 +43,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Comly",
+              url: "https://www.trycomly.com",
+            }),
+          }}
+        />
+      </head>
       <body className={`${inter.className} ${dmSans.variable} ${outfit.variable} bg-gray-50 text-gray-900 antialiased`}>
         {children}
         <Analytics />
