@@ -39,7 +39,7 @@ Return a JSON object with EXACTLY these fields:
 }
 
 For pricing_tiers: extract the ACTUAL plan names and prices from the website content. Use real numbers found on the page (e.g. "$9/mo", "$49/year"). If a plan has no public price, use "Custom". If no pricing is found, return an empty array.
-For competitors: first scan the website content above for any explicitly mentioned competing products or alternatives and use those. If none appear in the content, use your knowledge of this specific brand/product — not just the category label — to list 3-5 actual direct competitors (tools buyers genuinely compare it against). Never infer competitors solely from a brand name pattern; always reason about the real product's market. Example: for an AI chatbot like ChatGPT list Claude, Gemini, Perplexity — not voice assistants like Alexa or Siri.
+For competitors: use your knowledge of this specific brand/product to list 3-5 actual direct competitors (tools buyers genuinely compare it against). IMPORTANT: ignore any demo, example, sample, or placeholder content on the page — many SaaS websites show demo dashboards with fake brand names and fake competitor lists; those are UI examples, not real competitors. Reason about the real product's market from the URL and description only. Example: for an AI chatbot like ChatGPT list Claude, Gemini, Perplexity — not voice assistants like Alexa or Siri.
 For all other fields: if you cannot determine a value from the content, provide your best guess based on the available context.`;
 
     const response = await openai.chat.completions.create({
