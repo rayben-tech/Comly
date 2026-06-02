@@ -59,7 +59,7 @@ For all other fields: if you cannot determine a value from the content, provide 
   } catch (err) {
     console.error("Extract profile error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to analyze website content. Please try again." },
+      { error: "Failed to analyze website content. Please try again." },
       { status: 500 }
     );
   }

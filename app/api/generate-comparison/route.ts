@@ -184,7 +184,7 @@ Return only the improved markdown content. No explanation.`;
     return NextResponse.json({ content });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate comparison" },
+      { error: "Failed to generate comparison. Please try again." },
       { status: 500 }
     );
   }

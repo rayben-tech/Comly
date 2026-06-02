@@ -50,8 +50,7 @@ Return ONLY a valid JSON array of 3 strings, nothing else. Example format:
     if (!Array.isArray(replies) || replies.length === 0) throw new Error("Empty replies from model");
     return NextResponse.json({ replies });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("generate-reply error:", msg);
-    return NextResponse.json({ replies: [], error: msg }, { status: 500 });
+    console.error("generate-reply error:", err);
+    return NextResponse.json({ replies: [], error: "Failed to generate reply. Please try again." }, { status: 500 });
   }
 }

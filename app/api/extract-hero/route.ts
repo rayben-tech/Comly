@@ -37,7 +37,7 @@ If you cannot find a field, return an empty string. Do not invent content.`,
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to extract hero" },
+      { error: "Failed to extract hero content. Please try again." },
       { status: 500 }
     );
   }

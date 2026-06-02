@@ -29,8 +29,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ result: results[0] });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("run-prompt error:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error("run-prompt error:", err);
+    return NextResponse.json({ error: "Failed to run prompt. Please try again." }, { status: 500 });
   }
 }

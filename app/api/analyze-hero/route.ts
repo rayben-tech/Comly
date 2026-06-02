@@ -61,7 +61,7 @@ issues should be 3-5 concise, specific problems found (e.g. "H1 is too vague —
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to analyze" },
+      { error: "Failed to analyze. Please try again." },
       { status: 500 }
     );
   }

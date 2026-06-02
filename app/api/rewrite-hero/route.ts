@@ -167,7 +167,7 @@ Return valid JSON only:
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to rewrite" },
+      { error: "Failed to rewrite hero. Please try again." },
       { status: 500 }
     );
   }
