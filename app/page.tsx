@@ -2847,7 +2847,7 @@ export default function LandingPage() {
           {/* Pivot */}
           <FadeIn className="text-center">
             <p className="text-[22px] font-bold text-white">That&apos;s exactly what Comly fixes.</p>
-            <p className="mt-2 text-[15px] text-white/70">Stop optimizing for SEO. Start optimizing for GEO — Generative Engine Optimization.</p>
+            <p className="mt-2 text-[15px] text-white/70">Stop optimizing for SEO. Start optimizing for AEO — Answer Engine Optimization.</p>
           </FadeIn>
 
         </div>
