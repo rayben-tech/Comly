@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Lenis from "lenis";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuditResult, BrandProfile, PromptResult, CompetitorRanking } from "@/types";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -54,6 +55,23 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showTour, setShowTour] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const wrapper = scrollRef.current;
+    if (!wrapper) return;
+    const lenis = new Lenis({
+      wrapper,
+      content: wrapper.firstElementChild as HTMLElement,
+      duration: 1.4,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+    let rafId: number;
+    function raf(time: number) { lenis.raf(time); rafId = requestAnimationFrame(raf); }
+    rafId = requestAnimationFrame(raf);
+    return () => { lenis.destroy(); cancelAnimationFrame(rafId); };
+  }, []);
 
   useEffect(() => {
     // Only show on desktop (sidebar must be visible for tour steps 4-5)
@@ -175,7 +193,7 @@ export function AuditResults({ result, profile: initialProfile, onReset, onRerun
       </motion.div>
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <div className="flex-1 overflow-y-auto pb-14 lg:pb-0">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto pb-14 lg:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePage}
