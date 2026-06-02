@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import Lenis from "lenis";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -40,6 +41,23 @@ type Page =
 export function DemoDashboard({ fullScreen = false }: { fullScreen?: boolean }) {
   const [activePage, setActivePage] = useState<Page>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const wrapper = scrollRef.current;
+    if (!wrapper) return;
+    const lenis = new Lenis({
+      wrapper,
+      content: wrapper.firstElementChild as HTMLElement,
+      duration: 1.4,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+    let rafId: number;
+    function raf(time: number) { lenis.raf(time); rafId = requestAnimationFrame(raf); }
+    rafId = requestAnimationFrame(raf);
+    return () => { lenis.destroy(); cancelAnimationFrame(rafId); };
+  }, []);
 
   function nav(page: string) {
     setActivePage(page as Page);
@@ -71,7 +89,7 @@ export function DemoDashboard({ fullScreen = false }: { fullScreen?: boolean }) 
       </motion.div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={activePage}
