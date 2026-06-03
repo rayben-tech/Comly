@@ -4,7 +4,7 @@ import { useState, useRef, KeyboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Check, Globe, User, Sparkles, Zap, Loader2 } from "lucide-react";
 
-const MAX_PROMPTS = 25;
+const MAX_PROMPTS = 15;
 
 const STEP_DEFS = [
   { label: "Scrape",   Icon: Globe     },

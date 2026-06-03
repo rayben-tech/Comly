@@ -149,22 +149,13 @@ export async function runAudit(profile: BrandProfile, customPrompts?: string[]):
 
   let geminiParsed: { results: RawResult[] };
   if (geminiResult.status === "rejected") {
-    console.warn("Gemini failed, falling back to OpenAI:", geminiResult.reason);
-    geminiParsed = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: buildUserPrompt(geminiPrompts, profile) },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-      max_tokens: 1500,
-    }).then((r) => JSON.parse(r.choices[0].message.content!) as { results: RawResult[] });
+    console.warn("Gemini failed, skipping:", geminiResult.reason);
+    geminiParsed = { results: [] };
   } else {
     geminiParsed = geminiResult.value;
   }
 
-  if (!Array.isArray(geminiParsed.results)) throw new Error("Invalid Gemini response format");
+  if (!Array.isArray(geminiParsed.results)) geminiParsed = { results: [] };
 
   const openaiResults = parseResults(openaiParsed, profile.brand_name);
   const geminiResults = parseResults(geminiParsed, profile.brand_name);
