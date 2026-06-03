@@ -3,6 +3,7 @@ import { runAudit } from "@/lib/audit-runner";
 import { BrandProfile } from "@/types";
 import { checkRateLimit, getIp } from "@/lib/ratelimit";
 
+export const runtime = "edge";
 export const maxDuration = 60;
 
 
