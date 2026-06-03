@@ -95,7 +95,7 @@ export async function callGemini(prompt: string): Promise<{ results: RawResult[]
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" },
+      generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1200 },
     }),
   });
 
@@ -136,7 +136,7 @@ export async function runAudit(profile: BrandProfile, customPrompts?: string[]):
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 6000,
+      max_tokens: 1500,
     }).then((r) => JSON.parse(r.choices[0].message.content!) as { results: RawResult[] }),
 
     callGemini(`${systemPrompt}\n\n${buildUserPrompt(geminiPrompts, profile)}`),
@@ -158,7 +158,7 @@ export async function runAudit(profile: BrandProfile, customPrompts?: string[]):
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 1500,
     }).then((r) => JSON.parse(r.choices[0].message.content!) as { results: RawResult[] });
   } else {
     geminiParsed = geminiResult.value;
