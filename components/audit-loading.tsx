@@ -505,14 +505,14 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
         `Best free ${profile.category.toLowerCase()} tools`,
         `${profile.category} tools with best AI features`,
       ]
-    : Array.from({ length: 25 }, (_, i) => `Generating prompt ${i + 1}...`);
+    : Array.from({ length: 15 }, (_, i) => `Generating prompt ${i + 1}...`);
 
   useEffect(() => {
     let count = 0;
     const iv = setInterval(() => {
       count++;
       setVisibleCount(count);
-      if (count >= 25) {
+      if (count >= 15) {
         clearInterval(iv);
         setTimeout(() => setDone(true), 600);
       }
@@ -538,12 +538,12 @@ function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
               animate={{ opacity: 1, scale: 1 }}
               className="text-sm font-bold text-[#5B2D91]"
             >
-              25 prompts ready ✓
+              15 prompts ready ✓
             </motion.p>
           ) : (
             <motion.div key="loading" exit={{ opacity: 0 }} className="flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 text-[#5B2D91] animate-spin" />
-              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/25 targeted prompts...</p>
+              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/15 targeted prompts...</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -582,20 +582,20 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
   useEffect(() => {
     let count = 0;
     const fire = () => {
-      if (count >= 25) { setAllDone(true); return; }
+      if (count >= 15) { setAllDone(true); return; }
       count++;
       setFiredCount(count);
       setShowResponse(true);
       setTimeout(() => setShowResponse(false), 1100);
-      if (count < 25) setTimeout(fire, 700);
+      if (count < 15) setTimeout(fire, 700);
       else setTimeout(() => setAllDone(true), 1400);
     };
     const t = setTimeout(fire, 400);
     return () => clearTimeout(t);
   }, []);
 
-  const stackSize = Math.max(0, 25 - firedCount);
-  const progress = (firedCount / 25) * 100;
+  const stackSize = Math.max(0, 15 - firedCount);
+  const progress = (firedCount / 15) * 100;
 
   return (
     <motion.div
@@ -620,7 +620,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
                 boxShadow: "0 8px 28px rgba(91,45,145,0.18), 0 2px 8px rgba(0,0,0,0.07)",
               }}
             >
-              Prompt {firedCount + i + 1} of 25
+              Prompt {firedCount + i + 1} of 15
             </div>
           ))}
           {stackSize === 0 && (
@@ -699,7 +699,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
       {/* Progress */}
       <div className="mt-4 space-y-1.5">
         <div className="flex justify-between text-[11px] text-[#6b7280]">
-          <span>Firing prompt {Math.min(firedCount + 1, 25)} / 25</span>
+          <span>Firing prompt {Math.min(firedCount + 1, 15)} / 15</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="h-1.5 bg-[#f3eeff] rounded-full overflow-hidden">
