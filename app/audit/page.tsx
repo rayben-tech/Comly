@@ -422,7 +422,7 @@ function AuditFlow() {
       setReviewPrompts(prompts);
       setLoadingPhase(null);
       setStep("review-prompts");
-    }, 3800);
+    }, 6500);
   }
 
   // Core firing logic — called with explicit args to avoid stale closure issues
