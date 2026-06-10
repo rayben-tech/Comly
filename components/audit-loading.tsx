@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Check, Loader2, Globe, User, Sparkles, Zap,
   ChevronLeft, ChevronRight, RotateCw, Bookmark,
-  Building2, Tag, Users, Trophy,
+  Building2, Tag, Users, Trophy, Search, Radio,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
 import { PROMPT_MODELS } from "@/lib/prompt-models";
@@ -471,257 +471,273 @@ function ProfileAnimation({ profile }: { profile: BrandProfile | null }) {
   );
 }
 
-// ── STEP 3 — Prompts ─────────────────────────────────────────────────────────
+// ── STEP 3 — Web Hunt ───────────────────────────────────────────────────────
 
 function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
-  const [visibleCount, setVisibleCount] = useState(0);
-  const [done, setDone] = useState(false);
+  const brand      = profile?.brand_name ?? "Your Brand";
+  const competitor = (profile?.competitors ?? [])[0] ?? "a competitor";
 
-  const prompts = profile
-    ? [
-        `What are the best ${profile.category.toLowerCase()} tools?`,
-        `Compare top ${profile.category.toLowerCase()} solutions`,
-        `Best tools for ${profile.target_users.split(",")[0]?.trim() ?? "teams"}`,
-        `${(profile.competitors ?? [])[0] ?? "top tool"} alternatives`,
-        `Is ${profile.brand_name} good for ${(profile.main_use_cases ?? [])[0]?.toLowerCase() ?? "teams"}?`,
-        `${profile.brand_name} vs ${(profile.competitors ?? [])[1] ?? "competition"}`,
-        `Top ${profile.category.toLowerCase()} recommendations 2024`,
-        `${(profile.main_use_cases ?? [])[1] ?? "workflow"} tools for startups`,
-        `What is ${profile.brand_name} used for?`,
-        `Best ${profile.category.toLowerCase()} for ${profile.target_users.split(",")[0]?.trim() ?? "teams"}`,
-        `${profile.brand_name} review and comparison`,
-        `${(profile.competitors ?? [])[2] ?? "top tool"} vs ${profile.brand_name}`,
-        `Top tools for ${(profile.main_use_cases ?? [])[0]?.toLowerCase() ?? "productivity"}`,
-        `${profile.brand_name} pricing and plans`,
-        `Is ${profile.brand_name} worth it?`,
-        `Best ${profile.category.toLowerCase()} for small businesses`,
-        `${profile.brand_name} features overview`,
-        `${profile.category} software comparison 2025`,
-        `What do experts recommend for ${profile.category.toLowerCase()}?`,
-        `How does ${profile.brand_name} compare to alternatives?`,
-        `${profile.brand_name} use cases and examples`,
-        `Top-rated ${profile.category.toLowerCase()} tools this year`,
-        `${profile.brand_name} for ${profile.target_users.split(",")[1]?.trim() ?? "enterprises"}`,
-        `Best free ${profile.category.toLowerCase()} tools`,
-        `${profile.category} tools with best AI features`,
-      ]
-    : Array.from({ length: 15 }, (_, i) => `Generating prompt ${i + 1}...`);
+  const SOURCES = [
+    { domain: "reddit.com",           label: "Reddit",       relevant: 23 },
+    { domain: "quora.com",            label: "Quora",        relevant: 11 },
+    { domain: "g2.com",               label: "G2",           relevant:  8 },
+    { domain: "producthunt.com",      label: "Product Hunt", relevant:  6 },
+    { domain: "news.ycombinator.com", label: "Hacker News",  relevant:  9 },
+    { domain: "trustpilot.com",       label: "Trustpilot",   relevant:  4 },
+  ];
+
+  const MENTIONS = [
+    { text: `"What's the best alternative to ${competitor}?"`,              source: "Reddit · r/SaaS",      tag: "gap"        },
+    { text: `"${brand} keeps coming up in every thread I read"`,            source: "Hacker News",           tag: "mention"    },
+    { text: `"ChatGPT recommended ${competitor} three times this week"`,    source: "Quora",                 tag: "competitor" },
+    { text: `"Tried ${brand} — pretty solid for our use case"`,             source: "G2 Review",             tag: "mention"    },
+    { text: `"Why doesn't AI ever mention ${brand} in this category?"`,     source: "Reddit · r/startups",   tag: "gap"        },
+  ];
+
+  const [scannedCount, setScannedCount] = useState(0);
+  const [mentionCount, setMentionCount] = useState(0);
+  const [totalCount,   setTotalCount]   = useState(0);
+  const [done,         setDone]         = useState(false);
 
   useEffect(() => {
-    let count = 0;
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    SOURCES.forEach((_, i) => ts.push(setTimeout(() => setScannedCount(i + 1), 300 + i * 550)));
+    MENTIONS.forEach((_, i) => ts.push(setTimeout(() => setMentionCount(i + 1), 600 + i * 480)));
+    ts.push(setTimeout(() => setDone(true), 3800));
+
+    const start = Date.now();
     const iv = setInterval(() => {
-      count++;
-      setVisibleCount(count);
-      if (count >= 15) {
-        clearInterval(iv);
-        setTimeout(() => setDone(true), 600);
-      }
-    }, 240);
-    return () => clearInterval(iv);
+      const elapsed = Date.now() - start;
+      setTotalCount(Math.min(Math.floor(elapsed / 1.9), 1867));
+      if (elapsed >= 3600) clearInterval(iv);
+    }, 30);
+
+    return () => { ts.forEach(clearTimeout); clearInterval(iv); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <motion.div
-      key="prompts"
+      key="hunting"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.3 }}
       className="w-full"
     >
-      <div className="flex items-center justify-center gap-2 mb-3 h-6">
-        <AnimatePresence mode="wait">
-          {done ? (
-            <motion.p
-              key="done"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-sm font-bold text-[#5B2D91]"
-            >
-              15 prompts ready ✓
-            </motion.p>
-          ) : (
-            <motion.div key="loading" exit={{ opacity: 0 }} className="flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 text-[#5B2D91] animate-spin" />
-              <p className="text-sm text-[#6b7280]">Generating {visibleCount}/15 targeted prompts...</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-[#5B2D91]/10 flex items-center justify-center">
+            <Radio className="w-3.5 h-3.5 text-[#5B2D91]" />
+          </div>
+          <span className="text-[14px] font-bold text-[#0a0a0a]">Wisp is scanning the web for you</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] text-[#5B2D91] font-semibold bg-[#f3eeff] px-2.5 py-1 rounded-full">
+          {!done && <Loader2 className="w-3 h-3 animate-spin" />}
+          {done && <Check className="w-3 h-3" />}
+          <span>{totalCount.toLocaleString()} pages scanned</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {prompts.map((prompt, i) => (
-          <AnimatePresence key={i}>
-            {i < visibleCount && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-                className="bg-white border border-[#e5e5e5] rounded-lg p-3 flex items-start gap-2.5" style={{ boxShadow: "0 8px 28px rgba(91,45,145,0.16), 0 2px 8px rgba(0,0,0,0.07)" }}
-              >
-                <span className="w-5 h-5 rounded-full bg-[#5B2D91] text-white text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  {i + 1}
-                </span>
-                <p className="text-[11px] text-[#0a0a0a] leading-snug line-clamp-2">{prompt}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        ))}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Sources */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#bbbbbb] mb-2">Sources checked</p>
+          <div className="space-y-1.5">
+            {SOURCES.map((s, i) => {
+              const isDone   = scannedCount > i;
+              const isActive = scannedCount === i;
+              return (
+                <div
+                  key={s.domain}
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 border transition-all duration-300 ${
+                    isDone   ? "bg-white border-[#efefef]" :
+                    isActive ? "bg-[#f3eeff] border-[#c4a0f0]" :
+                               "bg-[#fafafa] border-[#f5f5f5] opacity-40"
+                  }`}
+                >
+                  <img src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=32`} width={14} height={14} className="rounded-sm shrink-0" alt="" />
+                  <span className="text-[11px] font-medium text-[#0a0a0a] flex-1">{s.label}</span>
+                  {isDone ? (
+                    <span className="text-[10px] font-bold text-emerald-600">{s.relevant} found</span>
+                  ) : isActive ? (
+                    <Loader2 className="w-3 h-3 text-[#5B2D91] animate-spin shrink-0" />
+                  ) : (
+                    <span className="text-[10px] text-[#cccccc]">—</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Live mention feed */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#bbbbbb] mb-2">Live mentions</p>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {MENTIONS.slice(0, mentionCount).map((m, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.22 }}
+                  className="bg-white rounded-lg border border-[#f0f0f0] px-3 py-2 shadow-sm"
+                >
+                  <p className="text-[11px] text-[#0a0a0a] leading-snug line-clamp-2">{m.text}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[9px] text-[#aaaaaa]">{m.source}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                      m.tag === "gap"        ? "bg-red-50 text-red-400"          :
+                      m.tag === "competitor" ? "bg-orange-50 text-orange-500"    :
+                                              "bg-emerald-50 text-emerald-600"
+                    }`}>
+                      {m.tag === "gap" ? "Gap" : m.tag === "competitor" ? "Competitor" : "Mention"}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
 }
 
-// ── STEP 4 — Firing ──────────────────────────────────────────────────────────
+// ── STEP 4 — AI Visibility Test ────────────────────────────────────────────
 
 function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
-  const [firedCount, setFiredCount] = useState(0);
-  const [showResponse, setShowResponse] = useState(false);
+  const brand    = profile?.brand_name ?? "Your Brand";
+  const category = profile?.category   ?? "productivity tools";
+
+  const MODELS = [
+    { name: "ChatGPT",    domain: "chatgpt.com",        mentioned: false },
+    { name: "Perplexity", domain: "perplexity.ai",      mentioned: false },
+    { name: "Gemini",     domain: "gemini.google.com",  mentioned: false },
+    { name: "Claude",     domain: "claude.ai",           mentioned: true  },
+  ];
+
+  const [tested,  setTested]  = useState(0);
+  const [score,   setScore]   = useState(0);
   const [allDone, setAllDone] = useState(false);
 
   useEffect(() => {
-    let count = 0;
-    const fire = () => {
-      if (count >= 15) { setAllDone(true); return; }
-      count++;
-      setFiredCount(count);
-      setShowResponse(true);
-      setTimeout(() => setShowResponse(false), 1100);
-      if (count < 15) setTimeout(fire, 700);
-      else setTimeout(() => setAllDone(true), 1400);
-    };
-    const t = setTimeout(fire, 400);
-    return () => clearTimeout(t);
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    MODELS.forEach((_, i) => ts.push(setTimeout(() => setTested(i + 1), 600 + i * 1100)));
+    const finishAt = 600 + MODELS.length * 1100 + 300;
+    ts.push(setTimeout(() => {
+      setAllDone(true);
+      let s = 0;
+      const iv = setInterval(() => {
+        s++;
+        setScore(s);
+        if (s >= 34) clearInterval(iv);
+      }, 22);
+    }, finishAt));
+    return () => ts.forEach(clearTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const stackSize = Math.max(0, 15 - firedCount);
-  const progress = (firedCount / 15) * 100;
 
   return (
     <motion.div
-      key="firing"
+      key="testing"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.3 }}
       className="w-full"
     >
-      <div className="flex items-center gap-6">
-        {/* Left — prompt stack */}
-        <div className="flex-1 relative h-44 flex items-center justify-center">
-          {Array.from({ length: Math.min(stackSize, 5) }).map((_, i) => (
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-6 h-6 rounded-full bg-[#5B2D91]/10 flex items-center justify-center">
+          <Zap className="w-3.5 h-3.5 text-[#5B2D91]" />
+        </div>
+        <span className="text-[14px] font-bold text-[#0a0a0a]">Wisp is testing your AI visibility</span>
+      </div>
+
+      {/* Query being tested */}
+      <div className="bg-[#fafafa] border border-[#efefef] rounded-xl px-4 py-2.5 mb-5 flex items-center gap-2">
+        <span className="text-[10px] text-[#aaaaaa] font-medium shrink-0 uppercase tracking-wide">Query</span>
+        <span className="text-[12px] font-medium text-[#0a0a0a] italic">&ldquo;Best {category} tools for teams?&rdquo;</span>
+      </div>
+
+      {/* AI model cards 2×2 */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        {MODELS.map((m, i) => {
+          const isTested = tested > i;
+          const isActive = tested === i;
+          return (
             <div
-              key={`${firedCount}-${i}`}
-              className="absolute left-0 right-0 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2.5 text-[11px] text-[#6b7280]"
-              style={{
-                transform: `translateY(${i * -5}px) scale(${1 - i * 0.025})`,
-                zIndex: 5 - i,
-                opacity: 1 - i * 0.18,
-                boxShadow: "0 8px 28px rgba(91,45,145,0.18), 0 2px 8px rgba(0,0,0,0.07)",
-              }}
+              key={m.name}
+              className={`rounded-xl border p-4 transition-all duration-400 ${
+                isTested
+                  ? m.mentioned
+                    ? "bg-emerald-50 border-emerald-200"
+                    : "bg-red-50/60 border-red-100"
+                  : isActive
+                    ? "bg-[#f3eeff] border-[#5B2D91]/30"
+                    : "bg-[#fafafa] border-[#f0f0f0] opacity-50"
+              }`}
             >
-              Prompt {firedCount + i + 1} of 15
-            </div>
-          ))}
-          {stackSize === 0 && (
-            <div className="text-xs text-[#6b7280] italic">All prompts fired</div>
-          )}
-        </div>
-
-        {/* Center — animated arrow */}
-        <div className="relative w-14 flex items-center justify-center">
-          <motion.div
-            key={firedCount}
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 10, opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 0.45, ease: "easeInOut" }}
-            className="absolute flex items-center"
-          >
-            <div className="h-0.5 w-8 bg-[#5B2D91]" />
-            <div className="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#5B2D91]" />
-          </motion.div>
-        </div>
-
-        {/* Right — current model + response */}
-        <div className="flex-1 flex flex-col items-center gap-2">
-          {(() => {
-            const model = PROMPT_MODELS[Math.max(0, firedCount - 1)] ?? PROMPT_MODELS[0];
-            return (
-              <motion.div
-                key={model.name}
-                animate={firedCount > 0 ? { borderColor: ["#e5e5e5", "#5B2D91", "#e5e5e5"] } : {}}
-                transition={{ duration: 0.4 }}
-                className="bg-white border border-[#e5e5e5] rounded-xl p-3 w-full text-center" style={{ boxShadow: "0 10px 36px rgba(91,45,145,0.22), 0 3px 10px rgba(0,0,0,0.08)" }}
-              >
-                <motion.img
-                  key={model.domain}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                  src={`https://www.google.com/s2/favicons?domain=${model.domain}&sz=32`}
-                  alt={model.name}
-                  className="w-6 h-6 mx-auto mb-1 rounded"
+              <div className="flex items-center gap-2.5 mb-2">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${m.domain}&sz=32`}
+                  width={20} height={20}
+                  className="rounded-md shrink-0"
+                  alt={m.name}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
+                <span className="text-[13px] font-semibold text-[#0a0a0a] flex-1">{m.name}</span>
+                {isActive && <Loader2 className="w-3.5 h-3.5 text-[#5B2D91] animate-spin" />}
+              </div>
+              {isTested && (
                 <motion.p
-                  key={model.name + "-label"}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-xs font-semibold text-[#0a0a0a]"
+                  initial={{ opacity: 0, y: 3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-[11px] font-semibold ${m.mentioned ? "text-emerald-600" : "text-red-400"}`}
                 >
-                  {model.name}
+                  {m.mentioned ? `✓ ${brand} mentioned` : `✗ ${brand} not found`}
                 </motion.p>
-              </motion.div>
-            );
-          })()}
-
-
-          <div className="h-8 flex items-center justify-center w-full">
-            <AnimatePresence>
-              {showResponse && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                  transition={{ duration: 0.18 }}
-                  className="flex items-center gap-1.5 text-[11px] text-[#16a34a] bg-green-50 border border-green-200 rounded-lg px-2.5 py-1 w-full justify-center"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] shrink-0" />
-                  Response received
-                </motion.div>
               )}
-            </AnimatePresence>
-          </div>
-        </div>
+              {!isTested && !isActive && (
+                <p className="text-[11px] text-[#cccccc]">Queued…</p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Progress */}
-      <div className="mt-4 space-y-1.5">
-        <div className="flex justify-between text-[11px] text-[#6b7280]">
-          <span>Firing prompt {Math.min(firedCount + 1, 15)} / 15</span>
-          <span>{Math.round(progress)}%</span>
-        </div>
-        <div className="h-1.5 bg-[#f3eeff] rounded-full overflow-hidden">
+      {/* Score reveal */}
+      <AnimatePresence>
+        {allDone && (
           <motion.div
-            className="h-full bg-[#5B2D91] rounded-full"
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.35 }}
-          />
-        </div>
-
-        <AnimatePresence>
-          {allDone && (
-            <motion.p
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center text-sm font-semibold text-[#16a34a] pt-1"
-            >
-              Audit complete! Building your report...
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </div>
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white border border-[#5B2D91]/20 rounded-xl px-5 py-4 flex items-center gap-5"
+            style={{ boxShadow: "0 0 0 4px rgba(91,45,145,0.06), 0 8px 28px rgba(91,45,145,0.12)" }}
+          >
+            <div className="text-center shrink-0">
+              <p className="text-[42px] font-black text-[#5B2D91] leading-none">{score}</p>
+              <p className="text-[10px] text-[#aaaaaa] font-medium">/ 100</p>
+            </div>
+            <div className="h-10 w-px bg-[#f0f0f0] shrink-0" />
+            <div>
+              <p className="text-[15px] font-bold text-[#0a0a0a]">AI Visibility Score</p>
+              <p className="text-[12px] text-[#6b7280] mt-0.5 leading-relaxed">
+                {brand} appears in 1 of 4 AI engines. Significant gaps found — Wisp is building your report.
+              </p>
+            </div>
+            <div className="ml-auto">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-orange-500 bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                Low visibility
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -729,10 +745,10 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
 // ── Step Indicator ───────────────────────────────────────────────────────────
 
 const STEP_DEFS = [
-  { label: "Scrape", Icon: Globe },
-  { label: "Profile", Icon: User },
-  { label: "Prompts", Icon: Sparkles },
-  { label: "Audit", Icon: Zap },
+  { label: "Reading", Icon: Globe },
+  { label: "Mapping", Icon: User },
+  { label: "Hunting", Icon: Search },
+  { label: "Scoring", Icon: Zap },
 ];
 
 const phaseToStep: Record<LoadingPhase, number> = {
@@ -743,10 +759,10 @@ const phaseToStep: Record<LoadingPhase, number> = {
 };
 
 const stepDescriptions: Record<LoadingPhase, string> = {
-  scraping: "Step 1 of 4 · Reading your website",
-  extracting: "Step 2 of 4 · Detecting your brand profile",
-  prompts: "Step 3 of 4 · Generating audit prompts",
-  firing: "Step 4 of 4 · Firing prompts at AI models",
+  scraping: "Step 1 of 4 · Wisp is reading your website",
+  extracting: "Step 2 of 4 · Wisp is mapping your brand",
+  prompts: "Step 3 of 4 · Wisp is hunting for mentions across the web",
+  firing: "Step 4 of 4 · Wisp is testing your AI visibility",
 };
 
 function StepIndicator({ phase }: { phase: LoadingPhase }) {

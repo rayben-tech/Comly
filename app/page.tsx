@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Globe, ArrowRight, Check, X, Menu, ChevronDown, Plus,
   BarChart3, TrendingUp, Target, Eye, Bell, Shield,
-  ExternalLink, Search, RefreshCw, Users,
+  ExternalLink, Search, RefreshCw, Users, Zap,
   CheckCircle2, XCircle, AlertCircle, Loader2, User,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +24,43 @@ import { useScroll } from "@/components/ui/use-scroll";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+// ─── CYCLING AI NAME (hero headline) ─────────────────────────────────────────
+
+function TypewriterPhrase() {
+  const phrases = ["AI answers", "AI citations", "AI overviews", "ChatGPT", "Perplexity", "Claude"];
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [displayed, setDisplayed] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = phrases[phraseIdx];
+    if (!isDeleting && displayed === current) {
+      const t = setTimeout(() => setIsDeleting(true), 1800);
+      return () => clearTimeout(t);
+    }
+    if (isDeleting && displayed === "") {
+      setIsDeleting(false);
+      setPhraseIdx(i => (i + 1) % phrases.length);
+      return;
+    }
+    const t = setTimeout(() => {
+      setDisplayed(isDeleting
+        ? displayed.slice(0, -1)
+        : current.slice(0, displayed.length + 1)
+      );
+    }, isDeleting ? 55 : 90);
+    return () => clearTimeout(t);
+  }, [displayed, isDeleting, phraseIdx]);
+
+  return (
+    <span>
+      {displayed}
+      <span className="inline-block w-[3px] h-[0.85em] bg-[#0a0a0a] ml-[2px] align-middle" style={{ animation: "blink 1s step-end infinite" }} />
+      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+    </span>
+  );
+}
 
 // ─── COMLY LOGO ───────────────────────────────────────────────────────────────
 
@@ -285,14 +322,14 @@ function LLMChatWindow({ model, s, items, variant = "before" }: {
                             <span className="text-[#a78bfa] font-bold shrink-0 mt-0.5">{item.num}.</span>
                             <div className="flex-1 bg-[#5B2D91]/20 border border-[#7c3aed]/30 rounded-lg px-2.5 py-1.5">
                               <span className="font-bold text-white">{item.label}</span>
-                              <span className="text-white/50 text-[11px]"> — {item.desc}</span>
+                              <span className="text-white/50 text-[11px]"> {item.desc}</span>
                               <span className="ml-2 text-[9px] font-bold text-[#a78bfa] bg-[#5B2D91]/30 px-1.5 py-0.5 rounded-full align-middle">★ top pick</span>
                             </div>
                           </li>
                         ) : (
                           <li key={item.num} className="flex items-baseline gap-2 text-[12px] text-white/65" style={{ animation: "msgIn 0.25s ease" }}>
                             <span className="text-white/30 font-medium shrink-0">{item.num}.</span>
-                            <span><strong className="text-white/80 font-semibold">{item.label}</strong><span className="text-white/40"> — {item.desc}</span></span>
+                            <span><strong className="text-white/80 font-semibold">{item.label}</strong><span className="text-white/40"> {item.desc}</span></span>
                           </li>
                         )
                       ))}
@@ -416,7 +453,7 @@ function LLMConversations() {
           </button>
         ))}
       </div>
-      {/* Side-by-side windows — stacked on mobile, side by side on md+ */}
+      {/* Side-by-side windows stacked on mobile, side by side on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <div>
           <div className="flex items-center gap-2 mb-3 px-1">
@@ -546,11 +583,11 @@ const TESTIMONIALS = [
 const FAQ_ITEMS = [
   {
     q: "What's a visibility score?",
-    a: "Your visibility score (0–100) shows how often ChatGPT mentions your brand across targeted prompts in your category. 0 means never mentioned, 100 means mentioned in every prompt.",
+    a: "Your visibility score (0-100) shows how often ChatGPT mentions your brand across targeted prompts in your category. 0 means never mentioned, 100 means mentioned in every prompt.",
   },
   {
     q: "How fast do I get results?",
-    a: "Your first audit is ready in about 60 seconds. We scrape your site, extract your brand profile, generate and run prompts, and return your score — all automatically.",
+    a: "Your first audit is ready in about 60 seconds. We scrape your site, extract your brand profile, generate and run prompts, and return your score all automatically.",
   },
   {
     q: "Do I need to set up anything?",
@@ -558,7 +595,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How is this different from SEO tools?",
-    a: "SEO tools track Google rankings. Comly tracks AI mentions. 50% of AI citations don't overlap with Google's top results — meaning your Google ranking doesn't predict your AI visibility.",
+    a: "SEO tools track Google rankings. Comly tracks AI mentions. 50% of AI citations don't overlap with Google's top results meaning your Google ranking doesn't predict your AI visibility.",
   },
   {
     q: "Why does my brand score low even if it's well known?",
@@ -580,28 +617,15 @@ const FAQ_ITEMS = [
 
 // ─── NAVBAR ───────────────────────────────────────────────────────────────────
 
-function Navbar({ onCta, visible = true, user, hasAudit }: {
+function Navbar({ onCta, visible = true, user, hasAudit, overDark = false }: {
   onCta: () => void;
   visible?: boolean;
   user?: { email: string; avatar_url?: string; name?: string } | null;
   hasAudit?: boolean;
+  overDark?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const scrolled = useScroll(10);
-  const [overPurple, setOverPurple] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const pain = document.getElementById("pain");
-      const features = document.getElementById("features");
-      if (!pain || !features) return;
-      const y = window.scrollY + 60;
-      setOverPurple(y >= pain.offsetTop && y < features.offsetTop + features.offsetHeight * 0.6);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const links = [
     { label: "Home",         href: "#hero" },
@@ -623,13 +647,13 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
         "sticky top-0 z-50 mx-auto w-full border-b border-transparent",
         "md:rounded-xl md:border",
         "md:[transition:max-width_500ms_cubic-bezier(0.4,0,0.2,1),top_500ms_cubic-bezier(0.4,0,0.2,1),background-color_300ms_ease,box-shadow_300ms_ease,border-color_300ms_ease,padding_300ms_ease]",
-        overPurple && !menuOpen
-          ? "bg-white/10 backdrop-blur-md border-white/15 md:top-4"
+        scrolled && !menuOpen && overDark
+          ? "bg-black/60 border-white/10 backdrop-blur-lg md:top-4"
           : scrolled && !menuOpen
           ? "bg-white/95 supports-[backdrop-filter]:bg-white/80 border-[#e5e5e5] backdrop-blur-lg md:top-4 md:shadow-sm"
           : menuOpen
           ? "bg-white/95"
-          : "bg-white border-transparent",
+          : "bg-transparent border-transparent",
       )}
       style={{
         maxWidth: scrolled && !menuOpen ? "896px" : "1280px",
@@ -646,8 +670,8 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
       >
         {/* Logo */}
         <a href="#hero" className="flex items-center gap-2 shrink-0">
-          <ComlyLogo size={28} />
-          <span className={cn("font-bold text-base tracking-tight [font-family:var(--font-outfit)] transition-colors duration-300", overPurple ? "text-white" : "text-[#0a0a0a]")}>Comly</span>
+          <WispGhost size={28} />
+          <span className={cn("font-bold text-base tracking-tight [font-family:var(--font-outfit)]", overDark && scrolled ? "text-white" : "text-[#0a0a0a]")}>Comly</span>
         </a>
 
         {/* Desktop links */}
@@ -656,7 +680,7 @@ function Navbar({ onCta, visible = true, user, hasAudit }: {
             <a
               key={l.href}
               href={l.href}
-              className={buttonVariants({ variant: "ghost", size: "sm", className: cn("transition-colors duration-300", overPurple ? "text-white/80 hover:text-white" : "text-[#6b6b6b] hover:text-[#0a0a0a]") })}
+              className={buttonVariants({ variant: "ghost", size: "sm", className: overDark && scrolled ? "text-white/60 hover:text-white" : "text-[#6b6b6b] hover:text-[#0a0a0a]" })}
             >
               {l.label}
             </a>
@@ -1233,7 +1257,7 @@ function HeroDashboardPreview() {
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar — matches real sidebar layout */}
+        {/* Sidebar matches real sidebar layout */}
         <aside className="w-[160px] shrink-0 border-r border-[#ebebeb] flex flex-col bg-white">
           {/* Brand header */}
           <div className="px-3 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
@@ -1293,7 +1317,7 @@ function HeroDashboardPreview() {
               Brand
             </div>
           </div>
-          {/* Footer — Comly branding */}
+          {/* Footer Comly branding */}
           <div className="px-2 pb-2 pt-2 border-t border-[#f0f0f0]">
             <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md">
               <svg width="16" height="16" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
@@ -1316,7 +1340,7 @@ function HeroDashboardPreview() {
 
         {/* Main */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top bar — matches real TopBar */}
+          {/* Top bar matches real TopBar */}
           <div className="bg-white border-b border-[#e8e8e8] shrink-0 flex items-center gap-2 px-3 h-[36px]">
             <div className="flex items-center gap-1 text-[10px]">
               <span className="text-[#aaaaaa] font-medium">Comly</span>
@@ -1457,7 +1481,7 @@ function HeroDashboardPreview() {
               </div>
             </div>
 
-            {/* Prompts performance table — partially clipped to show depth */}
+            {/* Prompts performance table partially clipped to show depth */}
             <div className="bg-white border border-[#e5e5e5] rounded-xl overflow-hidden shrink-0">
               <div className="flex items-center justify-between px-3 py-2 bg-[#fafafa] border-b border-[#f0f0f0]">
                 <div className="flex items-center gap-1.5">
@@ -1499,7 +1523,7 @@ function HeroDashboardPreview() {
                         {row.pos ? (
                           <span className="text-[9px] font-semibold text-[#6b6b6b] bg-[#f7f7f5] px-1.5 py-0.5 rounded">#{row.pos}</span>
                         ) : (
-                          <span className="text-[#d0d0d0] text-[12px]">—</span>
+                          <span className="text-[#d0d0d0] text-[12px]">-</span>
                         )}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
@@ -1588,7 +1612,7 @@ function FeatureCardShell({ title, badge, children }: { title: string; badge?: R
   );
 }
 
-// Row 1 — LLM tab switcher
+// Row 1 LLM tab switcher
 const MENTIONS_DATA = {
   "chatgpt.com": [
     { snippet: "For team productivity, I'd recommend checking out…", pos: 2, score: 74 },
@@ -1624,7 +1648,7 @@ const DEMO_PROMPTS = [
     label: "Discovery", labelStyle: "bg-blue-50 text-blue-600 border-blue-100",
     mentioned: true, rank: 2,
     prompt: "What are the best AI visibility tools for marketing teams?",
-    response: "For marketing teams tracking AI mentions, Comly provides detailed visibility scores across ChatGPT, Gemini, Claude and Perplexity — making it easy to see exactly where your brand shows up.",
+    response: "For marketing teams tracking AI mentions, Comly provides detailed visibility scores across ChatGPT, Gemini, Claude and Perplexity making it easy to see exactly where your brand shows up.",
     competitors: ["Semrush", "Ahrefs"],
   },
   {
@@ -1632,7 +1656,7 @@ const DEMO_PROMPTS = [
     label: "Direct Brand", labelStyle: "bg-purple-50 text-purple-600 border-purple-100",
     mentioned: true, rank: 1,
     prompt: "How does Comly help improve AI search visibility?",
-    response: "Comly offers a full audit across ChatGPT, Claude, Gemini and Perplexity — giving brands a visibility score and the exact steps to rank higher in AI-generated answers.",
+    response: "Comly offers a full audit across ChatGPT, Claude, Gemini and Perplexity giving brands a visibility score and the exact steps to rank higher in AI-generated answers.",
     competitors: ["BrandMentions", "Mention"],
   },
   {
@@ -1672,7 +1696,7 @@ const DEMO_PROMPTS = [
     label: "Discovery", labelStyle: "bg-blue-50 text-blue-600 border-blue-100",
     mentioned: true, rank: 1,
     prompt: "Top marketing tools that use AI for brand visibility?",
-    response: "Among the tools focused specifically on AI visibility, Comly is one of the most purpose-built — it tracks how your brand appears across major AI models and gives you a clear score.",
+    response: "Among the tools focused specifically on AI visibility, Comly is one of the most purpose-built it tracks how your brand appears across major AI models and gives you a clear score.",
     competitors: ["Mention", "Brand24"],
   },
   {
@@ -1680,10 +1704,102 @@ const DEMO_PROMPTS = [
     label: "Direct Brand", labelStyle: "bg-purple-50 text-purple-600 border-purple-100",
     mentioned: true, rank: 1,
     prompt: "Is Comly worth it for small businesses?",
-    response: "For small businesses that rely on inbound discovery, Comly provides a clear picture of whether AI models are recommending them — and what to fix if they're not.",
+    response: "For small businesses that rely on inbound discovery, Comly provides a clear picture of whether AI models are recommending them and what to fix if they're not.",
     competitors: [],
   },
 ];
+
+function BrandReconCard() {
+  const competitors = ["Coda", "Confluence", "Obsidian", "Slite"];
+  const mentions = [
+    { text: "\"Best all-in-one workspace for remote teams\"", source: "Reddit · r/SaaS" },
+    { text: "\"Notion is our default recommendation for async teams\"", source: "G2 Review" },
+    { text: "\"Top pick for knowledge management in 2025\"", source: "ProductHunt" },
+  ];
+  return (
+    <DemoScreenShell wispPeek="center">
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#f0f0f0]">
+        <p className="text-[12px] font-semibold text-[#0a0a0a]">Brand Profile</p>
+        <span className="flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-semibold px-2 py-0.5 rounded-full">
+          <CheckCircle2 className="w-2.5 h-2.5" /> Scanned
+        </span>
+      </div>
+
+      {/* Identity */}
+      <div className="px-4 py-3 flex items-start gap-3 border-b border-[#f0f0f0]">
+        <img src="https://www.google.com/s2/favicons?domain=notion.so&sz=64" width={40} height={40} className="rounded-xl shrink-0 shadow-sm" alt="Notion" />
+        <div>
+          <p className="text-[13px] font-semibold text-[#0a0a0a]">Notion</p>
+          <p className="text-[11px] text-[#6b6b6b] leading-relaxed mt-0.5">All-in-one workspace for notes, docs, wikis and project management. Used by millions of teams.</p>
+          <div className="flex gap-1.5 mt-1.5">
+            <span className="text-[9px] bg-[#f5f5f5] text-[#555] px-1.5 py-0.5 rounded-full font-medium">Productivity</span>
+            <span className="text-[9px] bg-[#f5f5f5] text-[#555] px-1.5 py-0.5 rounded-full font-medium">Knowledge Base</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Competitors */}
+      <div className="px-4 py-2.5 border-b border-[#f0f0f0]">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-[#aaaaaa] mb-1.5">Competitors detected</p>
+        <div className="flex flex-wrap gap-1.5">
+          {competitors.map(c => (
+            <span key={c} className="flex items-center gap-1 text-[10px] bg-white border border-[#e5e5e5] text-[#0a0a0a] px-2 py-0.5 rounded-full font-medium shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <img src={`https://www.google.com/s2/favicons?domain=${c.toLowerCase().replace(".","")}.com&sz=32`} alt={c} width={10} height={10} className="rounded-sm" />
+              {c}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Web mentions */}
+      <div className="px-4 py-2.5">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-[#aaaaaa] mb-1.5">Brand mentions found</p>
+        <div className="space-y-1.5">
+          {mentions.map((m, i) => (
+            <div key={i} className="bg-[#fafafa] rounded-lg px-2.5 py-1.5 border border-[#f0f0f0]">
+              <p className="text-[10px] text-[#0a0a0a] leading-snug">{m.text}</p>
+              <p className="text-[9px] text-[#aaaaaa] mt-0.5">{m.source}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </DemoScreenShell>
+  );
+}
+
+function QuestionDiscoveryCard() {
+  const questions = [
+    { q: "What's the best AI automation tool for ops teams?",       source: "Reddit · r/automation", meta: "1.2k upvotes" },
+    { q: "Is there a Zapier alternative with real AI agents?",       source: "Quora",                 meta: "89 answers"   },
+    { q: "Which workflow tool handles complex multi-step tasks?",    source: "G2 Reviews",            meta: "47 mentions"  },
+    { q: "What does Notion do that Confluence can't?",              source: "Product Hunt",           meta: "discussion"   },
+    { q: "Best automation platform for non-technical founders?",     source: "Reddit · r/SaaS",       meta: "634 upvotes"  },
+  ];
+  return (
+    <DemoScreenShell wispPeek="left">
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#f0f0f0]">
+        <p className="text-[12px] font-semibold text-[#0a0a0a]">Questions Discovered</p>
+        <span className="text-[10px] bg-[#7C22FF]/10 text-[#7C22FF] font-semibold px-2 py-0.5 rounded-full">23 found</span>
+      </div>
+      <p className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-widest text-[#aaaaaa]">From reviews &amp; conversations across the web</p>
+      <div className="px-3 pb-3 space-y-1.5">
+        {questions.map((item, i) => (
+          <div key={i} className="bg-[#fafafa] rounded-xl border border-[#f0f0f0] px-3 py-2">
+            <p className="text-[11px] text-[#0a0a0a] font-medium leading-snug mb-1">&ldquo;{item.q}&rdquo;</p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-[#7C22FF] font-semibold">{item.source}</span>
+              <span className="text-[9px] text-[#aaaaaa]">· {item.meta}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 py-2.5 border-t border-[#f0f0f0] flex items-center justify-between">
+        <span className="text-[10px] text-[#6b6b6b]">Prompts ready to fire</span>
+        <span className="text-[11px] font-bold text-[#0a0a0a]">23 prompts · 18 sources</span>
+      </div>
+    </DemoScreenShell>
+  );
+}
 
 function PromptTrackingScreenshot() {
   const [openSet, setOpenSet] = useState<Set<string>>(new Set(["02", "05"]));
@@ -1696,7 +1812,7 @@ function PromptTrackingScreenshot() {
   }
 
   return (
-    <DemoScreenShell hint="interactive — try clicking">
+    <DemoScreenShell wispPeek="center">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <p className="text-[12px] font-semibold text-[#0a0a0a]">Prompt Breakdown</p>
@@ -1790,7 +1906,169 @@ function PromptTrackingScreenshot() {
   );
 }
 
-// Row 2 — Animated competitor bars
+function GapReportCard() {
+  const competitors = [
+    { name: "Notion",     domain: "notion.so",   pct: 78, you: false },
+    { name: "Coda",       domain: "coda.io",     pct: 61, you: false },
+    { name: "Your Brand", domain: "",            pct: 34, you: true  },
+    { name: "Obsidian",   domain: "obsidian.md", pct: 28, you: false },
+  ];
+  const reasons = [
+    { text: "No llms.txt found on your domain", icon: "✗" },
+    { text: "Competitors have 3× more AI citations", icon: "✗" },
+    { text: "Category page isn't AI-readable", icon: "✗" },
+  ];
+  return (
+    <DemoScreenShell wispPeek="right">
+      <div className="px-4 pt-4 pb-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#aaaaaa]">AI Visibility</p>
+            <p className="text-[15px] font-bold text-[#0a0a0a] leading-tight">Competitor Ranking</p>
+          </div>
+          <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+            Invisible
+          </span>
+        </div>
+
+        {/* Competitors */}
+        <div className="space-y-1.5 mb-4">
+          {competitors.map((c, i) => (
+            <div key={c.name} className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${c.you ? "bg-[#5B2D91]/[0.07] border border-[#5B2D91]/15 shadow-[0_0_0_1px_rgba(91,45,145,0.08)]" : "bg-[#fafafa] border border-[#f0f0f0]"}`}>
+              <span className="text-[10px] text-[#cccccc] w-3 shrink-0 font-semibold">{i + 1}</span>
+              {c.domain ? (
+                <img src={`https://www.google.com/s2/favicons?domain=${c.domain}&sz=32`} width={16} height={16} className="rounded-md shrink-0" alt="" />
+              ) : (
+                <span className="w-4 h-4 rounded-md bg-[#5B2D91] shrink-0 flex items-center justify-center text-white text-[8px] font-bold">Y</span>
+              )}
+              <span className={`text-[12px] flex-1 font-semibold ${c.you ? "text-[#5B2D91]" : "text-[#0a0a0a]"}`}>{c.name}</span>
+              <div className="w-24 h-2 bg-[#efefef] rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{
+                  width: `${c.pct}%`,
+                  background: c.you ? "linear-gradient(90deg,#a855f7,#5B2D91)" : "#d1d5db"
+                }} />
+              </div>
+              <span className={`text-[11px] font-bold w-8 text-right ${c.you ? "text-[#5B2D91]" : "text-[#aaaaaa]"}`}>{c.pct}%</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-[#f0f0f0] mb-3" />
+
+        {/* Reasons */}
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#bbbbbb] mb-2">Why you&apos;re invisible</p>
+        <div className="space-y-1.5">
+          {reasons.map((r, i) => (
+            <div key={i} className="flex items-center gap-2 bg-red-50/60 border border-red-100 rounded-lg px-2.5 py-1.5">
+              <span className="text-[10px] font-bold text-red-400 shrink-0">{r.icon}</span>
+              <span className="text-[11px] text-[#666] leading-snug">{r.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </DemoScreenShell>
+  );
+}
+
+function SourceTakeoverCard() {
+  const sources = [
+    { domain: "reddit.com",   label: "Reddit",   note: "r/automation · r/SaaS",        status: "Replying",   active: true  },
+    { domain: "quora.com",    label: "Quora",    note: "B2B automation questions",      status: "Replying",   active: true  },
+    { domain: "linkedin.com", label: "LinkedIn", note: "Thought-leadership post",       status: "Writing",    active: true  },
+    { domain: "medium.com",   label: "Medium",   note: "Comparison article",            status: "Writing",    active: true  },
+    { domain: "g2.com",       label: "G2",       note: "Review page optimisation",      status: "Queued",     active: false },
+  ];
+  return (
+    <DemoScreenShell wispPeek="right">
+      <div className="px-4 pt-3 pb-2 border-b border-[#f0f0f0]">
+        <p className="text-[12px] font-semibold text-[#0a0a0a]">AI Sources Getting You In</p>
+        <p className="text-[10px] text-[#6b6b6b] mt-0.5">Sources Wisp found in AI answers · now placing you inside each</p>
+      </div>
+      <div className="px-3 py-2.5 space-y-1.5">
+        {sources.map((s, i) => (
+          <div key={i} className="bg-white rounded-xl border border-[#f0f0f0] px-3 py-2 flex items-center gap-2.5">
+            <img src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=32`} alt={s.label} width={14} height={14} className="rounded-sm shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-[#0a0a0a]">{s.label}</p>
+              <p className="text-[9px] text-[#aaaaaa] truncate">{s.note}</p>
+            </div>
+            <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0 ${
+              s.status === "Replying" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+              s.status === "Writing"  ? "bg-[#7C22FF]/10 text-[#7C22FF] border-[#7C22FF]/20" :
+                                        "bg-[#f5f5f5] text-[#aaaaaa] border-[#e5e5e5]"
+            }`}>{s.status}</span>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 py-2 border-t border-[#f0f0f0] bg-[#fafafa] rounded-b-2xl">
+        <p className="text-[10px] text-[#6b6b6b]"><span className="font-semibold text-[#7C22FF]">4 of 5</span> sources active Wisp is placing you inside each one</p>
+      </div>
+    </DemoScreenShell>
+  );
+}
+
+function SourceInfiltratorCard() {
+  const platforms = [
+    {
+      domain: "reddit.com", label: "Reddit",
+      items: [
+        { title: "Best AI automation tools for ops teams?",   sub: "r/automation · 2.1k upvotes", status: "Replying" },
+        { title: "Zapier vs everything else in 2025",          sub: "r/SaaS · 847 upvotes",        status: "Queued"   },
+      ],
+    },
+    {
+      domain: "quora.com", label: "Quora",
+      items: [
+        { title: "What's the best workflow automation for B2B?", sub: "89 answers · trending", status: "Replying" },
+        { title: "Is Zapier still worth it in 2025?",            sub: "34 answers",            status: "Queued"   },
+      ],
+    },
+    {
+      domain: "linkedin.com", label: "LinkedIn",
+      items: [
+        { title: "Drafting thought-leadership post on AI automation", sub: "Targeting: B2B ops · 12k reach est.", status: "Writing" },
+      ],
+    },
+  ];
+  return (
+    <DemoScreenShell wispPeek="left-far">
+      <div className="px-4 pt-3 pb-2 border-b border-[#f0f0f0]">
+        <p className="text-[12px] font-semibold text-[#0a0a0a]">Source Infiltration</p>
+        <p className="text-[10px] text-[#6b6b6b] mt-0.5">Wisp getting you placed where AI learns from</p>
+      </div>
+      <div className="px-3 py-2.5 space-y-3">
+        {platforms.map((platform, pi) => (
+          <div key={pi}>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <img src={`https://www.google.com/s2/favicons?domain=${platform.domain}&sz=32`} alt={platform.label} width={12} height={12} className="rounded-sm" />
+              <p className="text-[10px] font-bold text-[#0a0a0a]">{platform.label}</p>
+            </div>
+            <div className="space-y-1">
+              {platform.items.map((item, ii) => (
+                <div key={ii} className="flex items-start gap-2 bg-[#fafafa] rounded-lg border border-[#f0f0f0] px-2.5 py-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-[#0a0a0a] font-medium leading-snug truncate">{item.title}</p>
+                    <p className="text-[9px] text-[#aaaaaa] mt-0.5">{item.sub}</p>
+                  </div>
+                  <span className={`text-[9px] font-semibold shrink-0 px-1.5 py-0.5 rounded-full border ${
+                    item.status === "Replying" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                    item.status === "Writing"  ? "bg-[#7C22FF]/10 text-[#7C22FF] border-[#7C22FF]/20" :
+                                                 "bg-[#f5f5f5] text-[#aaaaaa] border-[#e5e5e5]"
+                  }`}>{item.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </DemoScreenShell>
+  );
+}
+
+// Row 2 Animated competitor bars
 const COMPETITOR_DATA = [
   { rank: 1, name: "Confluence", domain: "confluence.atlassian.com", pct: 85, pos: "1.2", you: false },
   { rank: 2, name: "Your brand", domain: "trycomly.com",             pct: 68, pos: "2.1", you: true  },
@@ -1806,17 +2084,37 @@ const COMP_ROWS = [
   { name: "Jira",      domain: "atlassian.com", vis: 21, color: "#10b981", you: false },
 ];
 
-function DemoScreenShell({ hint, hintSide = "left", children }: { hint: string; hintSide?: "left" | "right"; children: React.ReactNode }) {
+function DemoScreenShell({ hint, hintSide = "left", wispPeek, children }: { hint?: string; hintSide?: "left" | "right"; wispPeek?: "center" | "left" | "left-far" | "right" | "right-far"; children: React.ReactNode }) {
+  const wispStyle: React.CSSProperties = {
+    position: "absolute",
+    top: -40,
+    height: 44,
+    width: 78,
+    overflow: "hidden",
+    pointerEvents: "none",
+    zIndex: 10,
+    ...(wispPeek === "center"     && { left: "50%", transform: "translateX(-50%)" }),
+    ...(wispPeek === "left"       && { left: 32 }),
+    ...(wispPeek === "left-far"   && { left: 8 }),
+    ...(wispPeek === "right"      && { right: 32 }),
+    ...(wispPeek === "right-far"  && { right: 8 }),
+  };
   return (
     <div className="relative">
-      <div className={`absolute -top-6 ${hintSide === "left" ? "left-0" : "right-0"} flex items-center gap-1 pointer-events-none select-none z-10`}>
-        {hintSide === "right" && <p className="text-[11.5px] text-[#5B2D91]/50 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>{hint}</p>}
-        <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style={hintSide === "right" ? { transform: "scaleX(-1)" } : {}}>
-          <path d="M2 1 Q2 15 11 15" stroke="#5B2D91" strokeWidth="1.2" strokeOpacity="0.4" fill="none" strokeLinecap="round"/>
-          <path d="M8 12 L11 15 L8 18" stroke="#5B2D91" strokeWidth="1.2" strokeOpacity="0.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        {hintSide === "left" && <p className="text-[11.5px] text-[#5B2D91]/50 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>{hint}</p>}
-      </div>
+      {wispPeek ? (
+        <div style={wispStyle}>
+          <WispGhost size={78} />
+        </div>
+      ) : hint ? (
+        <div className={`absolute -top-6 ${hintSide === "left" ? "left-0" : "right-0"} flex items-center gap-1 pointer-events-none select-none z-10`}>
+          {hintSide === "right" && <p className="text-[11.5px] text-[#5B2D91]/50 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>{hint}</p>}
+          <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style={hintSide === "right" ? { transform: "scaleX(-1)" } : {}}>
+            <path d="M2 1 Q2 15 11 15" stroke="#5B2D91" strokeWidth="1.2" strokeOpacity="0.4" fill="none" strokeLinecap="round"/>
+            <path d="M8 12 L11 15 L8 18" stroke="#5B2D91" strokeWidth="1.2" strokeOpacity="0.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {hintSide === "left" && <p className="text-[11.5px] text-[#5B2D91]/50 whitespace-nowrap" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>{hint}</p>}
+        </div>
+      ) : null}
       <div className="rounded-2xl border border-[#e0e0e0] shadow-[0_12px_48px_rgba(0,0,0,0.13)] overflow-hidden bg-white">
         <div className="bg-[#f5f5f5] border-b border-[#e0e0e0] px-3 py-2 flex items-center gap-2.5">
           <div className="flex gap-1.5 shrink-0">
@@ -1837,7 +2135,7 @@ function CompetitorRankCard() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const maxVis = Math.max(...COMP_ROWS.map(r => r.vis));
   return (
-    <DemoScreenShell hint="interactive — try hovering" hintSide="right">
+    <DemoScreenShell wispPeek="right-far">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
         <div>
           <p className="text-[12px] font-semibold text-[#0a0a0a]">Competitors</p>
@@ -1883,11 +2181,11 @@ function CompetitorRankCard() {
   );
 }
 
-// Row 3 — Reddit / Quora toggle
+// Row 3 Reddit / Quora toggle
 const THREADS = {
   reddit: [
     { sub: "r/SaaS",        title: "Best AI-powered tools for marketing teams?",          votes: "3.1k", comments: 52 },
-    { sub: "r/Entrepreneur", title: "ChatGPT keeps recommending my competitor — why?",   votes: "5.4k", comments: 89 },
+    { sub: "r/Entrepreneur", title: "ChatGPT keeps recommending my competitor why?",   votes: "5.4k", comments: 89 },
     { sub: "r/startups",    title: "Which tools are AI models actually recommending?",    votes: "2.8k", comments: 41 },
   ],
   quora: [
@@ -1900,7 +2198,7 @@ const THREADS = {
 const DEMO_THREADS = {
   reddit: [
     { id: "t1", sub: "r/SaaS",         title: "Best AI-powered tools for marketing teams?",          votes: "3.1k", comments: 52, tag: "Recommendation", tagColor: "#f59e0b", tagBg: "#fffbeb", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
-    { id: "t2", sub: "r/Entrepreneur",  title: "ChatGPT keeps recommending my competitor — why?",    votes: "5.4k", comments: 89, tag: "Pain point",      tagColor: "#ef4444", tagBg: "#fff1f2", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
+    { id: "t2", sub: "r/Entrepreneur",  title: "ChatGPT keeps recommending my competitor why?",    votes: "5.4k", comments: 89, tag: "Pain point",      tagColor: "#ef4444", tagBg: "#fff1f2", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
     { id: "t3", sub: "r/startups",      title: "Which tools are AI models actually recommending?",   votes: "2.8k", comments: 41, tag: "Recommendation", tagColor: "#f59e0b", tagBg: "#fffbeb", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
     { id: "t4", sub: "r/marketing",     title: "How do I get my SaaS mentioned in ChatGPT answers?", votes: "1.9k", comments: 28, tag: "How-to",          tagColor: "#0ea5e9", tagBg: "#f0f9ff", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
   ],
@@ -1908,7 +2206,7 @@ const DEMO_THREADS = {
     { id: "q1", sub: "Quora", title: "Which tools help brands rank in ChatGPT responses?",  votes: "1.8k", comments: 23, tag: "Recommendation", tagColor: "#f59e0b", tagBg: "#fffbeb", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
     { id: "q2", sub: "Quora", title: "How do I get my product mentioned by AI models?",     votes: "3.2k", comments: 37, tag: "How-to",          tagColor: "#0ea5e9", tagBg: "#f0f9ff", scoreLabel: "HIGH", scoreColor: "text-emerald-600 bg-emerald-50" },
     { id: "q3", sub: "Quora", title: "What makes a brand show up in Perplexity answers?",   votes: "1.1k", comments: 18, tag: "Discussion",      tagColor: "#6b7280", tagBg: "#f9fafb", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
-    { id: "q4", sub: "Quora", title: "AI vs SEO — which drives more discovery in 2025?",    votes: "4.1k", comments: 64, tag: "Discussion",      tagColor: "#6b7280", tagBg: "#f9fafb", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
+    { id: "q4", sub: "Quora", title: "AI vs SEO which drives more discovery in 2025?",    votes: "4.1k", comments: 64, tag: "Discussion",      tagColor: "#6b7280", tagBg: "#f9fafb", scoreLabel: "MED",  scoreColor: "text-amber-600 bg-amber-50"   },
   ],
 };
 
@@ -1918,7 +2216,7 @@ function ThreadsCard() {
   const [replied,  setReplied]  = useState<Set<string>>(new Set(["t2"]));
   const threads = DEMO_THREADS[platform];
   return (
-    <DemoScreenShell hint="interactive — save, reply, switch" hintSide="left">
+    <DemoScreenShell wispPeek="left">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
         <div>
           <p className="text-[12px] font-semibold text-[#0a0a0a]">Engagement Threads</p>
@@ -1985,13 +2283,13 @@ function ThreadsCard() {
   );
 }
 
-// Row 4 — Content generator with preview panel
+// Row 4 Content generator with preview panel
 const CONTENT_ITEMS = [
   {
     id: "listicle",
     label: "Listicles Generator",
     desc: "AI-optimized listicles that place your brand alongside top competitors",
-    preview: `# 10 Best Project Management Tools in 2025\n\n1. **Confluence** — enterprise-grade\n2. **Your Brand** — best for AI-first teams ✦\n3. **Coda** — flexible databases\n4. **Notion** — all-in-one workspace`,
+    preview: `# 10 Best Project Management Tools in 2025\n\n1. **Confluence** enterprise-grade\n2. **Your Brand** best for AI-first teams ✦\n3. **Coda** flexible databases\n4. **Notion** all-in-one workspace`,
   },
   {
     id: "llms-txt",
@@ -2002,7 +2300,7 @@ const CONTENT_ITEMS = [
   {
     id: "comparison",
     label: "Comparison Pages",
-    desc: '"Your Brand vs Competitor" pages — the format AI loves to reference',
+    desc: '"Your Brand vs Competitor" pages the format AI loves to reference',
     preview: `# Your Brand vs Confluence\n\n| Feature       | Your Brand | Confluence |\n|---------------|------------|------------|\n| AI-ready      | ✓          | ✗          |\n| llms.txt      | ✓          | ✗          |\n| Setup time    | 5 min      | 2 days     |`,
   },
 ];
@@ -2011,7 +2309,7 @@ const CONTENT_TABS = [
   {
     id: "listicle", label: "Listicles", icon: "📋",
     desc: "AI-optimized listicles that place your brand alongside top competitors",
-    preview: `# 10 Best AI Visibility Tools in 2025\n\n**1. Semrush** — enterprise-grade SEO\n**2. Your Brand** — best for AI-first teams ✦\n**3. Ahrefs** — backlink analysis\n**4. Moz** — domain authority\n**5. BrandMentions** — real-time alerts`,
+    preview: `# 10 Best AI Visibility Tools in 2025\n\n**1. Semrush** enterprise-grade SEO\n**2. Your Brand** best for AI-first teams ✦\n**3. Ahrefs** backlink analysis\n**4. Moz** domain authority\n**5. BrandMentions** real-time alerts`,
   },
   {
     id: "llms-txt", label: "llms.txt", icon: "🤖",
@@ -2019,7 +2317,7 @@ const CONTENT_TABS = [
     preview: `# Your Brand\n\nAI visibility audit platform for modern brands.\n\n## What we do\n- Audit AI mentions across ChatGPT, Claude,\n  Gemini & Perplexity\n- Track competitors in real-time\n- Generate content AI can't ignore\n\n## Why cite us\nTrusted by 2,000+ marketing teams.`,
   },
   {
-    id: "comparison", label: "Comparison", icon: "⚖️",
+    id: "comparison", label: "Comparison", icon: "âš–ï¸",
     desc: '"Your Brand vs Competitor" pages AI loves to reference',
     preview: `# Your Brand vs Semrush\n\n| Feature        | Your Brand | Semrush |\n|----------------|------------|---------|\n| AI visibility  | ✓          | ✗       |\n| llms.txt gen   | ✓          | ✗       |\n| ChatGPT audit  | ✓          | ✗       |\n| Price          | $49/mo     | $129/mo |`,
   },
@@ -2029,7 +2327,7 @@ function ContentGenCard() {
   const [active, setActive] = useState("listicle");
   const item = CONTENT_TABS.find((c) => c.id === active)!;
   return (
-    <DemoScreenShell hint="interactive — switch generators" hintSide="right">
+    <DemoScreenShell wispPeek="right">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
         <div>
           <p className="text-[12px] font-semibold text-[#0a0a0a]">Content Generator</p>
@@ -2066,7 +2364,7 @@ function ContentGenCard() {
   );
 }
 
-// Row 5 — Intelligence demo data
+// Row 5 Intelligence demo data
 const VISITOR_SOURCES = [
   { domain: "chatgpt.com",       label: "ChatGPT",    count: 1203, change: "+18%", color: "#10a37f", spark: [72,78,74,83,91,88,96,94,102,109,105,114,118,116] },
   { domain: "perplexity.ai",     label: "Perplexity", count:  684, change: "+7%",  color: "#20b2aa", spark: [38,42,40,45,51,48,55,53,59,62,58,66,70,63] },
@@ -2081,15 +2379,15 @@ const PLAYBOOK_COMPETITORS = [
     name: "Asana", domain: "asana.com", count: 14,
     groups: {
       reddit: [
-        { title: "r/productivity — Asana keeps coming up in AI recommendations", domain: "reddit.com", action: "Join thread →" },
-        { title: "r/SaaS — Why does ChatGPT always suggest Asana?", domain: "reddit.com", action: "Join thread →" },
+        { title: "r/productivity Asana keeps coming up in AI recommendations", domain: "reddit.com", action: "Join thread →" },
+        { title: "r/SaaS Why does ChatGPT always suggest Asana?", domain: "reddit.com", action: "Join thread →" },
       ],
       review: [
-        { title: "G2 — Asana Project Management category", domain: "g2.com", action: "Submit listing →" },
-        { title: "Capterra — Top project management tools 2025", domain: "capterra.com", action: "Submit listing →" },
+        { title: "G2 Asana Project Management category", domain: "g2.com", action: "Submit listing →" },
+        { title: "Capterra Top project management tools 2025", domain: "capterra.com", action: "Submit listing →" },
       ],
       press: [
-        { title: "Forbes — Best project management tools for teams", domain: "forbes.com", action: "Pitch outlet →" },
+        { title: "Forbes Best project management tools for teams", domain: "forbes.com", action: "Pitch outlet →" },
       ],
     },
   },
@@ -2097,15 +2395,15 @@ const PLAYBOOK_COMPETITORS = [
     name: "Monday", domain: "monday.com", count: 9,
     groups: {
       reddit: [
-        { title: "r/projectmanagement — Monday.com vs alternatives", domain: "reddit.com", action: "Join thread →" },
+        { title: "r/projectmanagement Monday.com vs alternatives", domain: "reddit.com", action: "Join thread →" },
       ],
       review: [
-        { title: "G2 — Monday.com Work OS reviews", domain: "g2.com", action: "Submit listing →" },
-        { title: "Trustpilot — Monday.com customer reviews", domain: "trustpilot.com", action: "Submit listing →" },
+        { title: "G2 Monday.com Work OS reviews", domain: "g2.com", action: "Submit listing →" },
+        { title: "Trustpilot Monday.com customer reviews", domain: "trustpilot.com", action: "Submit listing →" },
       ],
       press: [
-        { title: "TechCrunch — Work management tools AI recommends", domain: "techcrunch.com", action: "Pitch outlet →" },
-        { title: "Inc — Best productivity software for 2025", domain: "inc.com", action: "Pitch outlet →" },
+        { title: "TechCrunch Work management tools AI recommends", domain: "techcrunch.com", action: "Pitch outlet →" },
+        { title: "Inc Best productivity software for 2025", domain: "inc.com", action: "Pitch outlet →" },
       ],
     },
   },
@@ -2113,13 +2411,13 @@ const PLAYBOOK_COMPETITORS = [
     name: "ClickUp", domain: "clickup.com", count: 6,
     groups: {
       reddit: [
-        { title: "r/ClickUp — AI keeps mentioning ClickUp for teams", domain: "reddit.com", action: "Join thread →" },
+        { title: "r/ClickUp AI keeps mentioning ClickUp for teams", domain: "reddit.com", action: "Join thread →" },
       ],
       review: [
-        { title: "G2 — ClickUp Project Management reviews", domain: "g2.com", action: "Submit listing →" },
+        { title: "G2 ClickUp Project Management reviews", domain: "g2.com", action: "Submit listing →" },
       ],
       press: [
-        { title: "Business Insider — All-in-one tools AI recommends", domain: "businessinsider.com", action: "Pitch outlet →" },
+        { title: "Business Insider All-in-one tools AI recommends", domain: "businessinsider.com", action: "Pitch outlet →" },
       ],
     },
   },
@@ -2127,7 +2425,7 @@ const PLAYBOOK_COMPETITORS = [
 
 const CAT_META = {
   reddit: { label: "Reddit",           icon: "🟠", color: "text-orange-600 bg-orange-50 border-orange-100" },
-  review: { label: "Reviews & Listings", icon: "⭐", color: "text-blue-600 bg-blue-50 border-blue-100"   },
+  review: { label: "Reviews & Listings", icon: "â­", color: "text-blue-600 bg-blue-50 border-blue-100"   },
   press:  { label: "Press & Blogs",    icon: "📰", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
 } as const;
 
@@ -2163,13 +2461,13 @@ function VisitorsCard() {
   const comp = PLAYBOOK_COMPETITORS.find(c => c.name === activeComp)!;
 
   return (
-    <DemoScreenShell hint="interactive — switch views" hintSide="left">
+    <DemoScreenShell wispPeek="left-far">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
         <div>
           <p className="text-[12px] font-semibold text-[#0a0a0a]">Intelligence</p>
           <p className="text-[11px] text-[#6b6b6b] mt-0.5">AI traffic + competitor playbook</p>
         </div>
-        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">● Live</span>
+        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">â— Live</span>
       </div>
       <div className="flex gap-1 px-4 pt-2.5 pb-2 border-b border-[#f0f0f0]">
         {(["visitors","playbook"] as const).map((t) => (
@@ -2267,10 +2565,656 @@ function VisitorsCard() {
   );
 }
 
+// ─── WISP PIXEL GHOST ─────────────────────────────────────────────────────────
+
+// WispGhost lives in components/ui/wisp-ghost.tsx import it from there
+import { WispGhost } from "@/components/ui/wisp-ghost";
+
+// LLM nodes left + right, feed data INTO Wisp (orange pulses in)
+// Container: 860×500, Wisp center: (430,200)
+const LLM_NODES = [
+  { alt: "ChatGPT",    src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",       cx: 65,  cy: 90  },
+  { alt: "Claude",     src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",         cx: 65,  cy: 300 },
+  { alt: "Gemini",     src: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", cx: 795, cy: 90  },
+  { alt: "Perplexity", src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64",     cx: 795, cy: 300 },
+];
+
+// Platform nodes bottom, Wisp pushes output into them (purple pulses out)
+const PLATFORM_NODES = [
+  { alt: "Reddit",   src: "https://www.google.com/s2/favicons?domain=reddit.com&sz=64",   cx: 145, cy: 455 },
+  { alt: "Quora",    src: "https://www.google.com/s2/favicons?domain=quora.com&sz=64",    cx: 268, cy: 470 },
+  { alt: "LinkedIn", src: "https://www.google.com/s2/favicons?domain=linkedin.com&sz=64", cx: 430, cy: 478 },
+  { alt: "YouTube",  src: "https://www.google.com/s2/favicons?domain=youtube.com&sz=64",  cx: 592, cy: 470 },
+  { alt: "Facebook", src: "https://www.google.com/s2/favicons?domain=facebook.com&sz=64", cx: 715, cy: 455 },
+];
+
+// ─── SOURCE INFILTRATION DEMO (tabbed platform preview) ──────────────────────
+
+const PLATFORM_TAB_DATA = {
+  "reddit.com": {
+    label: "Reddit",
+    tagline: "Wisp scans thousands of subreddits and auto-replies in threads where buyers compare tools.",
+    actionLabel: "Reply",
+    items: [
+      { tag: "r/SaaS", title: "What's the best project management tool for async teams?", meta: "47 comments", hot: true },
+      { tag: "r/productivity", title: "Been using Asana but looking for something lighter", meta: "23 comments", hot: false },
+      { tag: "r/startups", title: "ChatGPT keeps recommending Notion any solid alternatives?", meta: "81 comments", hot: true },
+      { tag: "r/webdev", title: "What do you use for team task management in 2025?", meta: "34 comments", hot: false },
+    ],
+  },
+  "quora.com": {
+    label: "Quora",
+    tagline: "Wisp writes expert answers that mention your brand referenced by AI as trusted sources.",
+    actionLabel: "Answer",
+    items: [
+      { tag: "Question", title: "What is the best tool for managing remote software teams?", meta: "12 answers", hot: false },
+      { tag: "Question", title: "Which project management software does AI recommend most?", meta: "8 answers", hot: true },
+      { tag: "Question", title: "Best alternatives to Asana for small startups?", meta: "19 answers", hot: true },
+      { tag: "Question", title: "How do I get my SaaS mentioned in AI recommendations?", meta: "6 answers", hot: false },
+    ],
+  },
+  "g2.com": {
+    label: "G2",
+    tagline: "Wisp builds your G2 presence the #1 source AI pulls from when recommending software.",
+    actionLabel: "Submit",
+    items: [
+      { tag: "Category", title: "Project Management Software Top Picks 2025", meta: "234 reviews", hot: false },
+      { tag: "Compare", title: "Your Brand vs Asana comparison page missing", meta: "High AI citation", hot: true },
+      { tag: "Category", title: "Best Task Management Tools for Remote Teams", meta: "156 reviews", hot: true },
+      { tag: "Review", title: "G2 profile incomplete 4 required fields unfilled", meta: "Blocking AI pickup", hot: false },
+    ],
+  },
+  "linkedin.com": {
+    label: "LinkedIn",
+    tagline: "Wisp comments on LinkedIn posts where your ideal buyers are already active.",
+    actionLabel: "Comment",
+    items: [
+      { tag: "Post", title: "\"We tried 5 project management tools here's what we found\"", meta: "89 reactions", hot: false },
+      { tag: "Group", title: "SaaS Founders: which tools do you use for async teams?", meta: "31 replies", hot: true },
+      { tag: "Article", title: "Why AI recommendations are replacing Google for discovery", meta: "67 reactions", hot: true },
+      { tag: "Post", title: "Our team switched from Monday.com best decision we made", meta: "44 reactions", hot: false },
+    ],
+  },
+  "youtube.com": {
+    label: "YouTube",
+    tagline: "Wisp posts strategic comments on videos your buyers watch before making a purchase.",
+    actionLabel: "Comment",
+    items: [
+      { tag: "Video", title: "Best Project Management Tools for 2025 (Honest Review)", meta: "1.2k comments", hot: false },
+      { tag: "Video", title: "Asana vs Monday.com which is actually better?", meta: "843 comments", hot: true },
+      { tag: "Video", title: "How I manage my SaaS startup with just one tool", meta: "567 comments", hot: true },
+      { tag: "Video", title: "Top 5 productivity tools every founder needs", meta: "390 comments", hot: false },
+    ],
+  },
+  "trustpilot.com": {
+    label: "Trustpilot",
+    tagline: "Wisp builds your review presence so AI cites your reputation, not your competitor's.",
+    actionLabel: "Request",
+    items: [
+      { tag: "Category", title: "Project Management 3 competitors outrank you in reviews", meta: "AI priority source", hot: true },
+      { tag: "Gap", title: "Your profile has 0 verified reviews invisible to AI", meta: "Critical fix", hot: true },
+      { tag: "Outreach", title: "42 past customers haven't reviewed yet auto-request ready", meta: "42 contacts", hot: false },
+      { tag: "Compare", title: "Your avg rating is 0.8 below category leader", meta: "Hurts AI ranking", hot: false },
+    ],
+  },
+};
+
+const PLATFORM_TABS_ORDER = ["reddit.com", "quora.com", "g2.com", "linkedin.com", "youtube.com", "trustpilot.com"];
+
+// ─── REDDIT ANIMATED DEMO ─────────────────────────────────────────────────────
+
+const REDDIT_THREADS_DEMO = [
+  { sub: "r/SaaS", flair: "Question", title: "Best project management tool for async remote teams?", score: "2.4k", comments: 47, time: "3h", hot: true, aiScore: 94 },
+  { sub: "r/productivity", flair: "Discussion", title: "Tried Asana for 6 months looking for something lighter with better async", score: "891", comments: 23, time: "1h", hot: false, aiScore: 87 },
+  { sub: "r/startups", flair: "Tools", title: "ChatGPT keeps recommending Notion for everything solid alternatives?", score: "1.1k", comments: 81, time: "45m", hot: true, aiScore: 96 },
+];
+
+const REDDIT_REPLY = "Been in this exact situation tried 6+ tools before landing on YourBrand for our 14-person remote team. The async-first design is genuinely different from Notion. No more quick sync meetings just to check status. Happy to share more about our setup if helpful.";
+
+const COMMUNITY_ACCOUNT = { username: "u/alex_builds_stuff", karma: "3.2k", age: "2y", color: "#6366f1", letter: "A", badge: "Trusted Redditor" };
+
+function RedditAnimatedDemo() {
+  const [scanCount, setScanCount] = useState(0);
+  const [discoveredCount, setDiscoveredCount] = useState(0);
+  const [c1Done, setC1Done] = useState(false);
+  const [responseText, setResponseText] = useState("");
+  const [qualityChecks, setQualityChecks] = useState(0);
+  const [posted, setPosted] = useState(false);
+  const [upvotes, setUpvotes] = useState(1);
+
+  // Card 1 independent loop
+  useEffect(() => {
+    let alive = true;
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    const ivs: ReturnType<typeof setInterval>[] = [];
+    const loop = () => {
+      if (!alive) return;
+      setScanCount(0); setDiscoveredCount(0); setC1Done(false);
+      let s = 0;
+      const si = setInterval(() => {
+        if (!alive) { clearInterval(si); return; }
+        s += Math.floor(Math.random() * 12) + 4;
+        setScanCount(Math.min(s, 847));
+        if (s >= 847) clearInterval(si);
+      }, 35);
+      ivs.push(si);
+      REDDIT_THREADS_DEMO.forEach((_, i) => {
+        ts.push(setTimeout(() => { if (alive) setDiscoveredCount(i + 1); }, 700 + 900 * i));
+      });
+      const doneAt = 700 + 900 * (REDDIT_THREADS_DEMO.length - 1) + 900;
+      ts.push(setTimeout(() => { if (alive) setC1Done(true); }, doneAt));
+      ts.push(setTimeout(loop, doneAt + 2200));
+    };
+    loop();
+    return () => { alive = false; ts.forEach(clearTimeout); ivs.forEach(clearInterval); };
+  }, []);
+
+  // Card 2 independent loop (offset start)
+  useEffect(() => {
+    let alive = true;
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    const ivs: ReturnType<typeof setInterval>[] = [];
+    const loop = () => {
+      if (!alive) return;
+      setResponseText(""); setQualityChecks(0);
+      let i = 0;
+      const iv = setInterval(() => {
+        if (!alive) { clearInterval(iv); return; }
+        i++;
+        setResponseText(REDDIT_REPLY.slice(0, i));
+        if (i >= REDDIT_REPLY.length) {
+          clearInterval(iv);
+          [1, 2, 3].forEach((q) => ts.push(setTimeout(() => { if (alive) setQualityChecks(q); }, 420 * q)));
+          ts.push(setTimeout(loop, 420 * 3 + 2000));
+        }
+      }, 22);
+      ivs.push(iv);
+    };
+    ts.push(setTimeout(loop, 1200));
+    return () => { alive = false; ts.forEach(clearTimeout); ivs.forEach(clearInterval); };
+  }, []);
+
+  // Card 3 - Wisp auto-posts loop
+  useEffect(() => {
+    let alive = true;
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    const ivs: ReturnType<typeof setInterval>[] = [];
+    const loop = () => {
+      if (!alive) return;
+      setPosted(false); setUpvotes(1);
+      ts.push(setTimeout(() => { if (alive) setPosted(true); }, 600));
+      let u = 1;
+      const ui = setInterval(() => {
+        if (!alive) { clearInterval(ui); return; }
+        u++; setUpvotes(u);
+        if (u >= 18) clearInterval(ui);
+      }, 200);
+      ivs.push(ui);
+      ts.push(setTimeout(loop, 600 + 18 * 200 + 2500));
+    };
+    ts.push(setTimeout(loop, 2400));
+    return () => { alive = false; ts.forEach(clearTimeout); ivs.forEach(clearInterval); };
+  }, []);
+
+  return (
+    <div className="grid grid-cols-6 gap-3 max-w-5xl mx-auto">
+
+      {/* ── A: Scan counter ── */}
+      <div className="col-span-6 lg:col-span-2 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl p-7 flex flex-col justify-between min-h-[280px]">
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff4500] animate-pulse" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#ff4500]/60">Threads Scanned</span>
+          </div>
+          <div className="text-[64px] font-extrabold text-white leading-none tabular-nums tracking-tight">{scanCount}</div>
+          <div className="mt-5 h-[3px] bg-white/6 rounded-full overflow-hidden">
+            <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg,#ff4500,#ff6534)" }}
+              animate={{ width: `${(scanCount / 847) * 100}%` }} transition={{ duration: 0.08 }} />
+          </div>
+          <p className="mt-2 text-[12px] text-white/20 tabular-nums">{scanCount} / 847 posts</p>
+        </div>
+        <div className="h-9 flex items-end">
+          <AnimatePresence>
+            {c1Done && (
+              <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2 text-[12px] text-emerald-400 font-semibold">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                3 high-impact found
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ── B: Reply crafting ── */}
+      <div className="col-span-6 sm:col-span-3 lg:col-span-2 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl p-7 flex flex-col gap-4 min-h-[280px]">
+        <div className="flex items-center gap-2">
+          <span className={cn("w-1.5 h-1.5 rounded-full transition-colors duration-300", responseText.length > 0 && responseText.length < REDDIT_REPLY.length ? "bg-[#ff4500] animate-pulse" : responseText.length >= REDDIT_REPLY.length ? "bg-emerald-400" : "bg-white/20")} />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-white/35">
+            {responseText.length === 0 ? "Standby" : responseText.length < REDDIT_REPLY.length ? "Writing reply..." : "Reply ready"}
+          </span>
+        </div>
+        <div className={cn("flex-1 bg-white/4 rounded-2xl p-4 border transition-colors duration-500", responseText.length > 0 && responseText.length < REDDIT_REPLY.length ? "border-[#ff4500]/35" : responseText.length >= REDDIT_REPLY.length ? "border-emerald-500/25" : "border-white/6")}>
+          <p className="text-[12px] text-white/60 leading-relaxed">
+            {responseText.length > 0 ? responseText.slice(0, 115) : <span className="text-white/15 italic text-[11px]">Waiting for thread analysis...</span>}
+            {responseText.length > 0 && responseText.length < REDDIT_REPLY.length && (
+              <span className="inline-block w-0.5 h-[13px] bg-white/50 ml-0.5 animate-pulse align-middle rounded-sm" />
+            )}
+          </p>
+        </div>
+        <div className="space-y-2">
+          {["Sounds human, not robotic", "Brand mention: subtle", "Adds real value"].map((label, i) => (
+            <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={qualityChecks > i ? { opacity: 1, x: 0 } : { opacity: 0, x: -6 }} transition={{ duration: 0.3 }} className="flex items-center gap-2">
+              <svg className="w-3 h-3 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span className="text-[11px] text-white/40">{label}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── C: AI pickup chart ── */}
+      <div className="col-span-6 sm:col-span-3 lg:col-span-2 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl p-7 flex flex-col gap-3 min-h-[280px]">
+        <div className="flex-1">
+          <svg className="w-full h-[100px]" viewBox="0 0 200 90" fill="none" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="pg2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ff4500" stopOpacity="0.2"/>
+                <stop offset="100%" stopColor="#ff4500" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M4 80 C40 78 70 66 100 54 C130 42 158 27 190 16" stroke="#ff4500" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <path d="M4 80 C40 78 70 66 100 54 C130 42 158 27 190 16 L190 90 L4 90 Z" fill="url(#pg2)"/>
+            <circle cx="190" cy="16" r="5" fill="#242426" stroke="#ff4500" strokeWidth="2"/>
+            <circle cx="190" cy="16" r="2.5" fill="#ff4500"/>
+          </svg>
+        </div>
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff4500] animate-pulse" />
+            <span className="text-[11px] text-white/30 font-medium">Live</span>
+            <div className="ml-auto flex items-baseline gap-1.5">
+              <span className="text-[36px] font-extrabold text-white tabular-nums leading-none">{upvotes}</span>
+              <span className="text-[12px] text-white/35 mb-0.5">upvotes</span>
+            </div>
+          </div>
+          <h3 className="text-[15px] font-bold text-white">AI pickup in 24-72h</h3>
+          <p className="text-[12px] text-white/30 mt-1 leading-relaxed">Posted today. AI cites your brand tomorrow.</p>
+        </div>
+      </div>
+
+      {/* ── D: Thread Discovery ── */}
+      <div className="col-span-6 lg:col-span-3 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl overflow-hidden min-h-[300px]">
+        <div className="grid sm:grid-cols-2 h-full">
+          <div className="p-8 flex flex-col justify-between gap-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#ff4500]/12 border border-[#ff4500]/20 flex items-center justify-center shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=64" className="w-6 h-6" alt="Reddit" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-bold text-white mb-1.5">Find High-Impact Threads</h3>
+              <p className="text-[13px] text-white/35 leading-relaxed">Surface Reddit threads by relevance and AI citation potential.</p>
+            </div>
+          </div>
+          <div className="relative sm:border-l border-white/6 p-5 pt-8">
+            <div className="absolute left-3 top-3 flex gap-1.5">
+              <span className="block w-2 h-2 rounded-full bg-white/10" />
+              <span className="block w-2 h-2 rounded-full bg-white/10" />
+              <span className="block w-2 h-2 rounded-full bg-white/10" />
+            </div>
+            <div className="space-y-2.5 mt-1">
+              {REDDIT_THREADS_DEMO.map((t, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={discoveredCount > i ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="flex items-center gap-2.5 bg-white/4 rounded-xl px-3.5 py-3">
+                  <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" className="w-4 h-4 rounded shrink-0" alt="" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-[#ff4500] mb-0.5">{t.sub}</p>
+                    <p className="text-[11px] text-white/55 truncate leading-snug">{t.title}</p>
+                  </div>
+                  {t.hot && <span className="shrink-0 text-[10px] font-bold text-white bg-[#ff4500] px-2.5 py-1 rounded-full">Engage</span>}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── E: We Post for You ── */}
+      <div className="col-span-6 lg:col-span-3 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl overflow-hidden min-h-[300px]">
+        <div className="grid sm:grid-cols-2 h-full">
+          <div className="p-8 flex flex-col justify-between gap-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#7C22FF]/12 border border-[#7C22FF]/25 flex items-center justify-center shrink-0">
+              <WispGhost size={28} />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-bold text-white mb-1.5">We Post for You</h3>
+              <p className="text-[13px] text-white/35 leading-relaxed">Trusted community profiles. Zero spam flags, zero effort.</p>
+            </div>
+          </div>
+          <div className="relative sm:border-l border-white/6">
+            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/6 -translate-x-1/2" />
+            <div className="relative flex h-full flex-col justify-center gap-5 py-8 px-5">
+              {[
+                { name: "u/alex_builds_stuff", side: "right" as const, color: "#6366f1", letter: "A" },
+                { name: "u/sarah_remote_work",  side: "left"  as const, color: "#10b981", letter: "S" },
+                { name: "u/mike_saas_tools",    side: "right" as const, color: "#f59e0b", letter: "M" },
+              ].map((acc, i) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: acc.side === "right" ? 16 : -16 }}
+                  animate={posted ? { opacity: 1, x: 0 } : { opacity: 0, x: acc.side === "right" ? 16 : -16 }}
+                  transition={{ delay: i * 0.15, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className={cn("flex items-center gap-2.5", acc.side === "right" ? "flex-row-reverse" : "flex-row")}
+                >
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0 ring-2 ring-[#242426]" style={{ background: acc.color }}>
+                    {acc.letter}
+                  </div>
+                  <span className="text-[11px] text-white/55 bg-white/6 border border-white/8 rounded-lg px-2.5 py-1 truncate max-w-[110px]">{acc.name}</span>
+                </motion.div>
+              ))}
+              {posted && (
+                <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="flex justify-center">
+                  <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5">
+                    Live on Reddit · 0 brand flags
+                  </span>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+// --- QUORA ANIMATED DEMO ---
+
+const QUORA_QUESTIONS_DEMO = [
+  { space: "SaaS & Software", title: "Best project management for remote teams?", views: "12k", score: 94 },
+  { space: "Startups",        title: "ChatGPT keeps recommending Notion — better options?", views: "19k", score: 88 },
+  { space: "Productivity",    title: "How do async-first teams avoid status meetings?", views: "8.4k", score: 71 },
+];
+
+const QUORA_ANSWER = "Great question. After evaluating 8+ tools with distributed teams, YourBrand stands out for one reason: it was built async-first, not just async-compatible. Unlike Notion or Asana you never feel like you're fighting the tool.";
+
+function QuoraAnimatedDemo() {
+  const [scanCount, setScanCount] = useState(0);
+  const [pulledCount, setPulledCount] = useState(0);
+  const [scoreCount, setScoreCount] = useState(0);
+  const [responseText, setResponseText] = useState("");
+  const [qualityChecks, setQualityChecks] = useState(0);
+  const [answerDone, setAnswerDone] = useState(false);
+
+  const Q_RED = "#b92b27";
+
+  useEffect(() => {
+    let alive = true;
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    const ivs: ReturnType<typeof setInterval>[] = [];
+
+    const loop = () => {
+      if (!alive) return;
+      setScanCount(0); setPulledCount(0); setScoreCount(0);
+      setResponseText(""); setQualityChecks(0); setAnswerDone(false);
+
+      // Step 1: scan counter
+      let s = 0;
+      const si = setInterval(() => {
+        if (!alive) { clearInterval(si); return; }
+        s += Math.floor(Math.random() * 12) + 4;
+        setScanCount(Math.min(s, 523));
+        if (s >= 523) clearInterval(si);
+      }, 35);
+      ivs.push(si);
+
+      // Step 1: questions appear
+      [900, 1700, 2500].forEach((d, i) => ts.push(setTimeout(() => { if (alive) setPulledCount(i + 1); }, d)));
+
+      // Step 2: score bars appear (same time as step 1)
+      [700, 1500, 2300].forEach((d, i) => ts.push(setTimeout(() => { if (alive) setScoreCount(i + 1); }, d)));
+
+      // Step 3: type answer (same time as steps 1 & 2)
+      ts.push(setTimeout(() => {
+        if (!alive) return;
+        let i = 0;
+        const iv = setInterval(() => {
+          if (!alive) { clearInterval(iv); return; }
+          i++;
+          setResponseText(QUORA_ANSWER.slice(0, i));
+          if (i >= QUORA_ANSWER.length) {
+            clearInterval(iv);
+            [1, 2, 3].forEach((q) => ts.push(setTimeout(() => { if (alive) setQualityChecks(q); }, 420 * q)));
+            ts.push(setTimeout(() => { if (alive) setAnswerDone(true); }, 420 * 3 + 500));
+          }
+        }, 22);
+        ivs.push(iv);
+      }, 400));
+
+      ts.push(setTimeout(loop, 11000));
+    };
+
+    loop();
+    return () => { alive = false; ts.forEach(clearTimeout); ivs.forEach(clearInterval); };
+  }, []);
+
+  return (
+    <div className="grid grid-cols-6 gap-3 max-w-5xl mx-auto">
+
+      {/* Step 1: Pull */}
+      <div className="col-span-6 lg:col-span-2 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl p-7 flex flex-col gap-5 min-h-[340px]">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: Q_RED }} />
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: Q_RED + "99" }}>Step 1 — Pull</span>
+          </div>
+          <p className="text-[14px] font-semibold text-white/75 mt-1">Scanning Quora for your niche</p>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[46px] font-extrabold text-white leading-none tabular-nums tracking-tight">{scanCount}</span>
+          <span className="text-[13px] text-white/30 mb-1">questions scanned</span>
+        </div>
+        <div className="flex-1 space-y-2.5">
+          {QUORA_QUESTIONS_DEMO.map((q, i) => (
+            <motion.div key={i}
+              initial={{ opacity: 0, y: 6 }}
+              animate={pulledCount > i ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-start gap-2.5 bg-white/4 rounded-xl px-3.5 py-2.5"
+            >
+              <img src="https://www.google.com/s2/favicons?domain=quora.com&sz=32" className="w-4 h-4 rounded shrink-0 mt-0.5" alt="" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold mb-0.5" style={{ color: Q_RED }}>{q.space}</p>
+                <p className="text-[11px] text-white/55 leading-snug">{q.title}</p>
+              </div>
+              <span className="shrink-0 text-[10px] text-white/25 mt-0.5">{q.views}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 2: Filter */}
+      <div className="col-span-6 lg:col-span-2 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl p-7 flex flex-col gap-5 min-h-[340px]">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full transition-colors duration-500" style={{ background: scoreCount > 0 ? "#f59e0b" : "#3f3f46" }} />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-white/35">Step 2 — Filter</span>
+          </div>
+          <p className="text-[14px] font-semibold text-white/75 mt-1">Scoring by relevance & reach</p>
+        </div>
+        <div className="flex-1 flex flex-col justify-center gap-5">
+          {QUORA_QUESTIONS_DEMO.map((q, i) => (
+            <div key={i}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] text-white/50 leading-snug flex-1 mr-3 truncate">{q.title}</p>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={scoreCount > i ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-[13px] font-bold tabular-nums shrink-0"
+                  style={{ color: q.score >= 88 ? "#10b981" : "#f59e0b" }}
+                >{q.score}</motion.span>
+              </div>
+              <div className="h-[5px] bg-white/6 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{ width: scoreCount > i ? `${q.score}%` : "0%" }}
+                  transition={{ duration: 0.9, ease: "easeOut" }}
+                  style={{ background: q.score >= 88 ? "#10b981" : "#f59e0b" }}
+                />
+              </div>
+              <AnimatePresence>
+                {q.score >= 88 && scoreCount > i && (
+                  <motion.span
+                    initial={{ opacity: 0, y: 3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="text-[10px] font-semibold text-emerald-400 mt-1.5 inline-block"
+                  >Selected for answer</motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 3: Craft */}
+      <div className="col-span-6 lg:col-span-2 bg-gradient-to-b from-[#242426] to-[#1c1c1e] border border-white/8 rounded-3xl p-7 flex flex-col gap-4 min-h-[340px]">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className={cn(
+              "w-1.5 h-1.5 rounded-full transition-colors duration-300",
+              responseText.length > 0 && !answerDone ? "animate-pulse" : answerDone ? "bg-emerald-400" : ""
+            )} style={responseText.length > 0 && !answerDone ? { background: "#a855f7" } : {}} />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-white/35">Step 3 — Craft</span>
+          </div>
+          <p className="text-[14px] font-semibold text-white/75 mt-1">
+            {answerDone ? "Answer ready" : responseText.length > 0 ? "Writing best answer..." : "Waiting for filter..."}
+          </p>
+        </div>
+        <div className={cn(
+          "flex-1 bg-white/4 rounded-2xl p-4 border transition-colors duration-500",
+          responseText.length > 0 && !answerDone ? "border-[#a855f7]/30" : answerDone ? "border-emerald-500/25" : "border-white/6"
+        )}>
+          <p className="text-[12px] text-white/60 leading-relaxed">
+            {responseText.length > 0
+              ? responseText.slice(0, 160)
+              : <span className="text-white/15 italic text-[11px]">Waiting for top question...</span>}
+            {responseText.length > 0 && !answerDone && (
+              <span className="inline-block w-0.5 h-[13px] bg-white/50 ml-0.5 animate-pulse align-middle rounded-sm" />
+            )}
+          </p>
+        </div>
+        <div className="space-y-2">
+          {["Genuine insight, not spam", "Natural brand mention", "Ranks in AI answers too"].map((label, i) => (
+            <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={qualityChecks > i ? { opacity: 1, x: 0 } : { opacity: 0, x: -6 }} transition={{ duration: 0.3 }} className="flex items-center gap-2">
+              <svg className="w-3 h-3 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span className="text-[11px] text-white/40">{label}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+function SourceInfiltrationDemo() {
+  const [selected, setSelected] = useState("reddit.com");
+  const data = PLATFORM_TAB_DATA[selected as keyof typeof PLATFORM_TAB_DATA];
+
+  return (
+    <div className="mb-20">
+      {/* Tab icons */}
+      <div className="flex justify-center gap-3 mb-8">
+        {PLATFORM_TABS_ORDER.map((domain) => {
+          const isActive = domain === selected;
+          const isLive = domain === "reddit.com" || domain === "quora.com";
+          return (
+            <div key={domain} className="relative">
+              <button
+                onClick={() => { if (isLive) setSelected(domain); }}
+                className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200",
+                  !isLive && "cursor-default opacity-50",
+                  isActive
+                    ? domain === "reddit.com"
+                      ? "bg-[#ff4500]/15 border-2 border-[#ff4500]/50 scale-110 shadow-lg shadow-[#ff4500]/15"
+                      : domain === "quora.com"
+                      ? "bg-[#b92b27]/15 border-2 border-[#b92b27]/50 scale-110 shadow-lg shadow-[#b92b27]/15"
+                      : "bg-[#a855f7]/15 border-2 border-[#a855f7]/50 scale-110 shadow-lg shadow-[#a855f7]/15"
+                    : isLive
+                    ? "bg-white/6 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105"
+                    : "bg-white/4 border border-white/8"
+                )}
+              >
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                  className="w-7 h-7 rounded-lg"
+                  alt={domain}
+                />
+              </button>
+              {!isLive && (
+                <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wide bg-white/10 text-white/50 border border-white/10 rounded-full px-1.5 py-0.5 leading-none pointer-events-none">
+                  Soon
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {selected === "reddit.com" ? (
+          <motion.div key="reddit" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22, ease: "easeOut" }}>
+            <RedditAnimatedDemo />
+          </motion.div>
+        ) : selected === "quora.com" ? (
+          <motion.div key="quora" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22, ease: "easeOut" }}>
+            <QuoraAnimatedDemo />
+          </motion.div>
+        ) : (
+          <motion.div
+            key={selected}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 max-w-2xl mx-auto"
+          >
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center shrink-0">
+                <img src={`https://www.google.com/s2/favicons?domain=${selected}&sz=64`} className="w-5 h-5 rounded" alt={data.label} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold text-white">{data.label}</p>
+                <p className="text-[11px] text-white/35 leading-snug">{data.tagline}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {data.items.map((item, i) => (
+                <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/6 rounded-xl px-4 py-3 hover:bg-white/6 transition-colors">
+                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", item.hot ? "bg-[#a855f7] animate-pulse" : "bg-white/15")} />
+                  <span className="text-[10px] text-white/30 font-medium shrink-0 w-[68px] truncate">{item.tag}</span>
+                  <span className="text-[12px] text-white/65 flex-1 leading-snug truncate">{item.title}</span>
+                  <span className="text-[10px] text-white/20 shrink-0 hidden sm:block">{item.meta}</span>
+                  <button className="shrink-0 text-[10px] font-semibold text-[#a855f7] bg-[#a855f7]/10 border border-[#a855f7]/20 px-2.5 py-1 rounded-lg hover:bg-[#a855f7]/20 transition-colors whitespace-nowrap">
+                    {data.actionLabel}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-[11px] text-white/25">Wisp is monitoring {data.label} auto-engaging 24/7</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const [heroMouse, setHeroMouse] = useState({ x: 0, y: 0 });
   const [url, setUrl] = useState("");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [navVisible, setNavVisible] = useState(false);
@@ -2328,10 +3272,23 @@ export default function LandingPage() {
     setCheckoutLoading(false);
   };
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const [overDark, setOverDark] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setNavVisible(true), 120);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = document.getElementById("dark-section");
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      setOverDark(rect.top <= 56 && rect.bottom > 56);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -2427,41 +3384,23 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="bg-white text-[#0a0a0a] font-sans antialiased">
+    <div className="bg-[#f5eeff] text-[#0a0a0a] font-sans antialiased">
       <SmoothScroll />
-      <Navbar onCta={handleCheckout} visible={navVisible} user={sessionUser} hasAudit={hasAudit} />
+      <Navbar onCta={handleCheckout} visible={navVisible} user={sessionUser} hasAudit={hasAudit} overDark={overDark} />
 
-      {/* ═══════════════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HERO
-      ═══════════════════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section
         id="hero"
-        className="relative min-h-screen pt-14 overflow-hidden [background:linear-gradient(to_bottom,#ffffff_0%,#f5eeff_18%,#dbbff5_50%,#a87be0_100%)]"
-        onMouseMove={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          setHeroMouse({
-            x: (e.clientX - r.left) / r.width - 0.5,
-            y: (e.clientY - r.top) / r.height - 0.5,
-          });
-        }}
-        onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}
+        className="relative min-h-screen pt-14 overflow-hidden [background:linear-gradient(to_bottom,#f5eeff_0%,#f2eaff_50%,#f5eeff_100%)]"
       >
 
-        {/* LLM logos */}
-        {[
-          { src: "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",       alt: "ChatGPT",    style: { top: "6%",  left:  "22%" }, depth: 16, rotate: -12 },
-          { src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64",         alt: "Claude",     style: { top: "16%", left:  "16%" }, depth: 26, rotate:  8  },
-          { src: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", alt: "Gemini",     style: { top: "6%",  right: "22%" }, depth: 16, rotate:  10 },
-          { src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64",     alt: "Perplexity", style: { top: "16%", right: "16%" }, depth: 26, rotate: -7  },
-        ].map(({ src, alt, style, depth, rotate }) => (
-          <LLMBadge key={alt} src={src} alt={alt} style={style} depth={depth} rotate={rotate} mouseOffset={heroMouse} />
-        ))}
-
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-10 lg:pt-16 pb-0 flex flex-col items-center text-center">
-          <h1 className="text-[54px] md:text-[72px] font-extrabold leading-[1.05] tracking-tight text-[#0a0a0a] mb-8 [font-family:var(--font-outfit)]">
-            Be the brand
+          <h1 className="text-[44px] md:text-[62px] font-bold leading-[1.2] tracking-tight text-[#0a0a0a] mb-8 [font-family:var(--font-outfit)] text-center">
+            Rank in <TypewriterPhrase />
             <br />
-            AI recommends
+            Not just Google
           </h1>
 
           <motion.p
@@ -2645,33 +3584,33 @@ export default function LandingPage() {
             </DemoFrame>
             <div
               className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
-              style={{ background: "linear-gradient(to bottom, transparent 0%, #a87be0 100%)" }}
+              style={{ background: "linear-gradient(to bottom, transparent 0%, #f5eeff 100%)" }}
             />
           </motion.div>
 
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          PAIN POINTS — GEO vs SEO
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="pain" className="bg-[#a87be0] py-24 px-6">
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          PAIN POINTS GEO vs SEO
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section id="pain" className="bg-transparent py-24 px-6">
         <div className="max-w-5xl mx-auto">
 
           <FadeIn className="text-center mb-16">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-white/60 mb-4">The shift is already happening</p>
-            <h2 className="text-[42px] font-bold tracking-tight text-white leading-tight">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91]/70 mb-4">The shift is already happening</p>
+            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a] leading-tight">
               SEO won&apos;t save you here.
             </h2>
-            <p className="mt-4 text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
-              Google ranks pages. AI recommends brands. Millions of buyers now skip Google entirely and ask ChatGPT instead — and your SEO has zero effect on what AI says about you.
+            <p className="mt-4 text-lg text-[#6b6b6b] max-w-2xl mx-auto leading-relaxed">
+              Google ranks pages. AI recommends brands. Millions of buyers now skip Google entirely and ask ChatGPT instead and your SEO has zero effect on what AI says about you.
             </p>
           </FadeIn>
 
           {/* Yesterday vs Today */}
           <div className="relative flex flex-col lg:flex-row items-stretch gap-5 mb-16">
 
-            {/* LEFT — Google / Yesterday */}
+            {/* LEFT Google / Yesterday */}
             <div className="flex-1 relative">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                 <span className="inline-flex items-center gap-1.5 bg-[#0a0a0a] text-white text-[11px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
@@ -2712,7 +3651,7 @@ export default function LandingPage() {
                       domain: "storehero.ai", path: "storehero.ai › best-ecomme...",
                       title: "Best eCommerce Analytics Tools for 2026 (Ranked & ...)",
                       date: null,
-                      desc: <>Discover the <strong>best ecommerce analytics tools for 2026</strong> — ranked by profitability, forecasting, and scalability. See how StoreHero helps DTC brands connect…</>
+                      desc: <>Discover the <strong>best ecommerce analytics tools for 2026</strong> ranked by profitability, forecasting, and scalability. See how StoreHero helps DTC brands connect…</>
                     },
                     {
                       domain: "datahawk.co", path: "datahawk.co › Blog old",
@@ -2729,7 +3668,7 @@ export default function LandingPage() {
                       </div>
                       <p className="text-[14px] text-[#1a0dab] font-medium mb-0.5 hover:underline cursor-pointer leading-snug">{r.title}</p>
                       <p className="text-[12px] text-[#4d5156] leading-relaxed">
-                        {r.date && <span className="text-[#70757a]">{r.date} — </span>}{r.desc}
+                        {r.date && <span className="text-[#70757a]">{r.date} </span>}{r.desc}
                       </p>
                     </div>
                   ))}
@@ -2739,13 +3678,15 @@ export default function LandingPage() {
 
             {/* The shift pill */}
             <div className="hidden lg:flex items-center justify-center shrink-0">
-              <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[11px] font-bold px-3.5 py-2 rounded-full whitespace-nowrap">
+              <div className="inline-flex items-center gap-1.5 bg-[#5B2D91]/10 border border-[#5B2D91]/20 text-[#5B2D91] text-[11px] font-bold px-3.5 py-2 rounded-full whitespace-nowrap">
                 The shift <ArrowRight className="w-3 h-3" />
               </div>
             </div>
 
-            {/* RIGHT — ChatGPT / Today */}
+            {/* RIGHT ChatGPT / Today */}
             <div className="flex-1 relative">
+
+
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                 <span className="inline-flex items-center gap-1.5 bg-[#fde047] text-[#0a0a0a] text-[11px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -2839,130 +3780,472 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+        </div>
+      </section>
+
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          WISP AEO agent skills
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section className="pt-16 pb-24 px-6 scroll-mt-20 bg-transparent" id="features">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Header */}
+          <FadeIn className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-[#5B2D91]/10 border border-[#5B2D91]/20 rounded-full px-4 py-1.5 mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#5B2D91] animate-pulse shrink-0" />
+              <span className="text-[12px] font-semibold text-[#5B2D91] tracking-wide">The first AEO agent</span>
+            </div>
+            <h2 className="text-[52px] font-black tracking-tight text-[#0a0a0a] leading-[1.05] mb-4">Meet Wisp.</h2>
+            <p className="text-[17px] text-[#6b6b6b] max-w-lg mx-auto leading-relaxed">
+              The first AEO agent. Wisp lives inside AI answers scanning, engaging, and feeding every engine until your brand is the one they recommend.
+            </p>
+          </FadeIn>
+
+          {/* Stage: LLMs → Wisp → Platforms node graph */}
+          <div className="flex flex-col items-center mb-14">
+
+            {/* Desktop node-graph layout */}
+            <div className="hidden lg:block relative" style={{ width: 860, height: 500 }}>
+
+              <svg style={{ position: "absolute", inset: 0, pointerEvents: "none" }} width={860} height={500}>
+                {/* Static background lines LLMs to Wisp (dim white) */}
+                <path d="M 65 90  C 200 75  370 150 430 200" fill="none" stroke="rgba(91,45,145,0.2)" strokeWidth="1.5" />
+                <path d="M 65 300 C 200 315 370 250 430 200" fill="none" stroke="rgba(91,45,145,0.2)" strokeWidth="1.5" />
+                <path d="M 795 90  C 660 75  490 150 430 200" fill="none" stroke="rgba(91,45,145,0.2)" strokeWidth="1.5" />
+                <path d="M 795 300 C 660 315 490 250 430 200" fill="none" stroke="rgba(91,45,145,0.2)" strokeWidth="1.5" />
+
+                {/* Static background lines Wisp to Platforms (dim white) */}
+                <path d="M 430 200 C 350 300 190 390 145 455" fill="none" stroke="rgba(91,45,145,0.15)" strokeWidth="1.5" />
+                <path d="M 430 200 C 400 300 290 410 268 470" fill="none" stroke="rgba(91,45,145,0.15)" strokeWidth="1.5" />
+                <path d="M 430 200 C 430 320 430 400 430 478" fill="none" stroke="rgba(91,45,145,0.15)" strokeWidth="1.5" />
+                <path d="M 430 200 C 460 300 570 410 592 470" fill="none" stroke="rgba(91,45,145,0.15)" strokeWidth="1.5" />
+                <path d="M 430 200 C 510 300 670 390 715 455" fill="none" stroke="rgba(91,45,145,0.15)" strokeWidth="1.5" />
+
+                {/* Orange pulses LLMs → Wisp (receiving AI intelligence) */}
+                {[
+                  { d: "M 65 90  C 200 75  370 150 430 200", delay: 0    },
+                  { d: "M 65 300 C 200 315 370 250 430 200", delay: 0.8  },
+                  { d: "M 795 90  C 660 75  490 150 430 200", delay: 0.4  },
+                  { d: "M 795 300 C 660 315 490 250 430 200", delay: 1.2  },
+                ].map((p, i) => (
+                  <motion.path
+                    key={`llm-${i}`}
+                    d={p.d}
+                    fill="none"
+                    stroke="#FF6A00"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    pathLength={1}
+                    strokeDasharray="0.07 1"
+                    animate={{ strokeDashoffset: [0, -1.07] }}
+                    transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.4, ease: "linear", delay: p.delay }}
+                  />
+                ))}
+
+                {/* Purple pulses Wisp → Platforms (dispatching actions) */}
+                {[
+                  { d: "M 430 200 C 350 300 190 390 145 455", delay: 0    },
+                  { d: "M 430 200 C 400 300 290 410 268 470", delay: 0.4  },
+                  { d: "M 430 200 C 430 320 430 400 430 478", delay: 0.8  },
+                  { d: "M 430 200 C 460 300 570 410 592 470", delay: 1.2  },
+                  { d: "M 430 200 C 510 300 670 390 715 455", delay: 1.6  },
+                ].map((p, i) => (
+                  <motion.path
+                    key={`plat-${i}`}
+                    d={p.d}
+                    fill="none"
+                    stroke="#A855F7"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    pathLength={1}
+                    strokeDasharray="0.07 1"
+                    animate={{ strokeDashoffset: [0, -1.07] }}
+                    transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1.2, ease: "linear", delay: p.delay }}
+                  />
+                ))}
+              </svg>
+
+              {/* Wisp centered */}
+              <div style={{ position: "absolute", left: 430, top: 200, transform: "translate(-50%,-50%)" }}>
+                <WispGhost size={200} />
+              </div>
+              <div style={{ position: "absolute", left: 430, top: 308, transform: "translateX(-50%)" }}
+                   className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#5B2D91]/40 animate-pulse" />
+                <p className="text-[11px] font-bold text-[#5B2D91]/60 tracking-widest uppercase">Wisp</p>
+              </div>
+
+              {/* LLM logos left + right */}
+              {LLM_NODES.map((logo) => (
+                <div
+                  key={logo.alt}
+                  style={{ position: "absolute", left: logo.cx, top: logo.cy, transform: "translate(-50%,-50%)" }}
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-white shadow-[0_4px_18px_rgba(0,0,0,0.14)] flex items-center justify-center overflow-hidden">
+                    <img src={logo.src} alt={logo.alt} width={36} height={36} className="rounded-xl" />
+                  </div>
+                  <p className="text-center text-[10px] font-semibold text-[#5B2D91]/60 mt-1.5 whitespace-nowrap">{logo.alt}</p>
+                </div>
+              ))}
+
+              {/* Platform logos bottom */}
+              {PLATFORM_NODES.map((logo) => (
+                <div
+                  key={logo.alt}
+                  style={{ position: "absolute", left: logo.cx, top: logo.cy, transform: "translate(-50%,-50%)" }}
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-white shadow-[0_4px_18px_rgba(0,0,0,0.14)] flex items-center justify-center overflow-hidden">
+                    <img src={logo.src} alt={logo.alt} width={32} height={32} className="rounded-xl" />
+                  </div>
+                  <p className="text-center text-[10px] font-semibold text-[#5B2D91]/60 mt-1.5 whitespace-nowrap">{logo.alt}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile: LLMs above, Wisp center, platforms below */}
+            <div className="lg:hidden w-full flex flex-col items-center gap-6">
+              <div className="grid grid-cols-4 gap-4 w-full max-w-xs">
+                {LLM_NODES.map((logo) => (
+                  <div key={logo.alt} className="flex flex-col items-center gap-1.5">
+                    <div className="w-11 h-11 rounded-2xl bg-white shadow-md flex items-center justify-center overflow-hidden">
+                      <img src={logo.src} alt={logo.alt} width={30} height={30} className="rounded-xl" />
+                    </div>
+                    <p className="text-[8px] font-semibold text-[#5B2D91]/60 text-center">{logo.alt}</p>
+                  </div>
+                ))}
+              </div>
+              <WispGhost size={160} />
+              <p className="text-[11px] font-bold text-[#5B2D91]/60 tracking-widest uppercase">Wisp</p>
+              <div className="flex items-center gap-4 flex-wrap justify-center">
+                {PLATFORM_NODES.map((logo) => (
+                  <div key={logo.alt} className="flex flex-col items-center gap-1.5">
+                    <div className="w-11 h-11 rounded-2xl bg-white shadow-md flex items-center justify-center overflow-hidden">
+                      <img src={logo.src} alt={logo.alt} width={30} height={30} className="rounded-xl" />
+                    </div>
+                    <p className="text-[8px] font-semibold text-[#5B2D91]/60 text-center">{logo.alt}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
           </div>
 
-          {/* Pivot */}
-          <FadeIn className="text-center">
-            <p className="text-[22px] font-bold text-white">That&apos;s exactly what Comly fixes.</p>
-            <p className="mt-2 text-[15px] text-white/70">Stop optimizing for SEO. Start optimizing for AEO — Answer Engine Optimization.</p>
-          </FadeIn>
-
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          FEATURES — alternating rows
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-6 [background:linear-gradient(to_bottom,#a87be0_0%,#b98de5_10%,#caaae9_25%,#dcc4ef_40%,#ece0f8_55%,#f3eeff_68%,#f7f7f5_82%)]" id="features">
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          WISP SKILLS deep dive rows
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section className="pt-8 pb-24 px-6 bg-transparent">
         <div className="max-w-5xl mx-auto">
-          <FadeIn className="relative text-center mb-20">
-            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">Everything you need to dominate AI search</h2>
-            <p className="mt-3 text-lg text-[#6b6b6b]">One dashboard. Zero guesswork.</p>
+          <FadeIn className="text-center mb-20">
+            <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">This is how Wisp works</h2>
+            <p className="mt-3 text-lg text-[#6b6b6b]">Deploy once. Wisp works for your brand every day.</p>
           </FadeIn>
 
           {/* Row 1 */}
           <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">01 — Prompt Tracking</p>
-              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">See what each AI model actually says about your brand</h3>
-              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Read the full AI responses. Know exactly when and how your brand gets mentioned across ChatGPT, Claude, Perplexity, and Gemini.</p>
-              <FeatureBullets items={["Run prompts across 4 AI models simultaneously", "Read full responses — not just a yes or no", "Weekly tracking so you never miss a shift"]} />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">01 Brand Recon</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Wisp maps everything about you before it starts</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Wisp scans your website, hunts for brand mentions across the internet, and builds a full picture of who you are so every move it makes is built around your business, not a guess.</p>
+              <FeatureBullets items={["Reads your site and extracts your brand identity automatically", "Scans the web for mentions, reviews, and conversations about you", "Builds a detailed brand report you can review and edit before Wisp starts working"]} />
             </div>
-            <PromptTrackingScreenshot />
+            <BrandReconCard />
           </FadeIn>
 
           {/* Row 2 */}
           <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
             <div className="order-last lg:order-first">
-              <CompetitorRankCard />
+              <QuestionDiscoveryCard />
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">02 — Competitor Intelligence</p>
-              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">See exactly who ranks above you — and why</h3>
-              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Don't just know you're mentioned — know whether you're #1 or buried behind five others. See who AI recommends instead of you.</p>
-              <FeatureBullets items={["Side-by-side visibility % for every competitor", "Bars animate in as you scroll — see the gap clearly", "Spot momentum shifts before they hurt your rank"]} />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">02 Question Hunt</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Wisp finds what people actually ask about brands like yours</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Before firing a single prompt, Wisp digs through reviews, Reddit threads, and Q&amp;A sites to find the exact questions your customers type into AI then turns them into prompts.</p>
+              <FeatureBullets items={["Scans reviews, Reddit, Quora, and forums for real questions", "Extracts the exact phrasing your audience uses not guesses", "Turns every question into a ready-to-fire AI prompt"]} />
             </div>
           </FadeIn>
 
           {/* Row 3 */}
           <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">03 — Engage & Get Cited</p>
-              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Get into the threads AI learns from</h3>
-              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Find every Reddit and Quora thread where your audience already asks questions. Reply, get upvoted, and watch AI start recommending you.</p>
-              <FeatureBullets items={["Curated threads relevant to your brand, daily", "AI models train on these conversations — every reply counts", "Switch between Reddit and Quora in one click"]} />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">03 AI Scan</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Wisp asks the same questions your customers ask to every AI engine</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Wisp takes every question it discovered and asks it directly to ChatGPT, Claude, Gemini, and Perplexity the same way your customers do. Then reads every answer in full to see where your brand stands.</p>
+              <FeatureBullets items={["Asks the exact questions your audience already types into AI", "Runs the same question across ChatGPT, Claude, Gemini, and Perplexity", "Reads full answers not just whether you appeared"]} />
             </div>
-            <ThreadsCard />
+            <PromptTrackingScreenshot />
           </FadeIn>
 
           {/* Row 4 */}
           <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
             <div className="order-last lg:order-first">
-              <ContentGenCard />
+              <GapReportCard />
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">04 — Brand Content</p>
-              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Generate content AI can't ignore</h3>
-              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Three generators that create the exact content formats AI models train on — so your brand shows up when it matters most.</p>
-              <FeatureBullets items={["Listicles that place your brand alongside top competitors", "llms.txt so every AI knows exactly what you offer", "Comparison pages that rank in AI-generated responses"]} />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">04 Dashboard</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Wisp gives you a complete picture of where you stand</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Once the audit is done, Wisp assembles a full detailed dashboard from everything it collected your visibility score, how you rank against competitors, which AI engines mention you, and where every gap is.</p>
+              <FeatureBullets items={["Full visibility score across all 4 AI engines", "Competitor ranking see exactly who AI recommends over you", "Every gap identified with the specific reason behind it"]} />
             </div>
           </FadeIn>
 
           {/* Row 5 */}
-          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">05 — Intelligence</p>
-              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Know who's sending you traffic — and where competitors hide</h3>
-              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">See real humans arriving from ChatGPT and Perplexity. Find every place your competitors are mentioned — then get cited there too.</p>
-              <FeatureBullets items={["AI Visitors: which model sent each visit to your site", "GPTBot detection — know when AI crawls your pages", "Competitor Playbook: every Reddit thread, review site, and press mention they have"]} />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">05 Source Takeover</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Wisp reads every source AI pulled from then gets you inside all of them</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">Every AI answer cites sources Reddit threads, Quora answers, LinkedIn posts, G2 reviews. Wisp identifies exactly which sources AI used, then places your brand inside each one automatically.</p>
+              <FeatureBullets items={["Reads every Reddit, Quora, LinkedIn, and G2 source AI cited", "Replies to threads, drafts posts, and optimises review pages", "Strict filter only sources that actually influence AI answers"]} />
             </div>
-            <VisitorsCard />
+            <SourceTakeoverCard />
+          </FadeIn>
+
+          {/* Row 6 */}
+          <FadeIn className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="order-last lg:order-first">
+              <ContentGenCard />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#5B2D91] mb-3">06 Content Push</p>
+              <h3 className="text-[30px] font-bold tracking-tight text-[#0a0a0a] leading-[1.15] mb-4">Wisp generates the content AI trains on and publishes it for you</h3>
+              <p className="text-[15px] text-[#6b6b6b] leading-relaxed mb-8">AI models train on specific content formats. Wisp writes exactly those and pushes them live. Listicles, comparison pages, and an llms.txt all deployed automatically.</p>
+              <FeatureBullets items={["Listicles that place your brand next to the ones AI already recommends", "Comparison pages written to rank inside AI-generated responses", "Published automatically Wisp handles the whole thing end to end"]} />
+            </div>
           </FadeIn>
 
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          WHY THIS MATTERS — before / after
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#f7f7f5] py-28 px-6">
-        <div className="max-w-5xl mx-auto">
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          SOURCE INFILTRATION dark framed section
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section id="dark-section" className="px-4 lg:px-10 py-8 bg-transparent">
+        <motion.div
+          className="rounded-3xl overflow-hidden"
+          style={{ background: "linear-gradient(160deg, #07070a 0%, #0c0618 40%, #180830 100%)" }}
+          initial={{ opacity: 0, scale: 0.97, y: 40 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="px-8 lg:px-20 pt-24 pb-20">
 
-          {/* Heading */}
-          <FadeIn className="text-center mb-16">
-            <AnimatedWords
-              text="From invisible to inevitable."
-              className="text-[42px] md:text-[52px] font-bold tracking-tight text-[#0a0a0a] leading-[1.1]"
-            />
-            <p className="mt-4 text-lg text-[#6b6b6b] max-w-xl mx-auto leading-relaxed">
-              The same question, asked across 4 AI models. Are you showing up in all of them?
-            </p>
-          </FadeIn>
+            {/* Header */}
+            <div className="text-center mb-20">
+              <div className="inline-flex items-center gap-2 bg-white/8 border border-white/10 rounded-full px-4 py-1.5 mb-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7] shrink-0" />
+                <span className="text-[12px] text-white/50 font-medium tracking-wide uppercase">The source strategy</span>
+              </div>
+              <h2 className="text-[40px] md:text-[58px] font-bold text-white tracking-tight leading-[1.05] mb-6">
+                Here&apos;s how Wisp gets you<br className="hidden md:block" /> inside AI&apos;s sources
+              </h2>
+              <p className="text-[18px] text-white/40 max-w-xl mx-auto leading-relaxed">
+                AI doesn&apos;t pull answers from thin air it pulls from Reddit threads, Quora answers, G2 reviews, and editorial sites. Wisp gets your brand inside all of them.
+              </p>
+            </div>
 
-          <LLMConversations />
-        </div>
+            {/* Tabbed platform demo */}
+            <SourceInfiltrationDemo />
+
+            {/* 3 cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
+
+              <div className="bg-white/4 border border-white/8 rounded-2xl p-8">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#a855f7] mb-4">01 Discover</p>
+                <h3 className="text-white font-bold text-[20px] leading-snug mb-4">Pull threads on mass</h3>
+                <p className="text-white/40 text-[14px] leading-relaxed mb-6">
+                  Wisp scans Reddit, Quora, G2, and forums every single day surfacing every thread where your brand could gain ground with AI.
+                </p>
+                <div className="space-y-2">
+                  {["Reddit threads", "Quora answers", "G2 reviews", "Forum discussions"].map(s => (
+                    <div key={s} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7]/60 shrink-0" />
+                      <span className="text-[13px] text-white/35">{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white/4 border border-white/8 rounded-2xl p-8">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#a855f7] mb-4">02 Filter</p>
+                <h3 className="text-white font-bold text-[20px] leading-snug mb-4">Strict filter, zero noise</h3>
+                <p className="text-white/40 text-[14px] leading-relaxed mb-6">
+                  Not every thread moves the needle. Wisp filters by your brand profile, what buyers actually search, and what AI engines are already citing.
+                </p>
+                <div className="space-y-2">
+                  {["Brand profile match", "Buyer intent signals", "AI citation potential", "Engagement quality"].map(s => (
+                    <div key={s} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7]/60 shrink-0" />
+                      <span className="text-[13px] text-white/35">{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white/4 border border-white/8 rounded-2xl p-8">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#a855f7] mb-4">03 Execute</p>
+                <h3 className="text-white font-bold text-[20px] leading-snug mb-4">Get your brand inside</h3>
+                <p className="text-white/40 text-[14px] leading-relaxed mb-6">
+                  Wisp replies to threads, posts on forums, and plants your brand inside the exact sources AI pulls from every day, without you touching a thing.
+                </p>
+                <div className="space-y-2">
+                  {["Auto-replies to threads", "Forum posts", "Review responses", "New content published"].map(s => (
+                    <div key={s} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7]/60 shrink-0" />
+                      <span className="text-[13px] text-white/35">{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom stat bar */}
+            <div className="border-t border-white/8 pt-10 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+              {[
+                { n: "6+", label: "Sources monitored daily" },
+                { n: "4", label: "AI engines tracked" },
+                { n: "100%", label: "Automated execution" },
+                { n: "24/7", label: "Always running" },
+              ].map(({ n, label }) => (
+                <div key={label}>
+                  <p className="text-[32px] font-bold text-white leading-none mb-1">{n}</p>
+                  <p className="text-[13px] text-white/35">{label}</p>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </motion.div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HOW IT WORKS
-      ═══════════════════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="how-it-works">
         <HowItWorksAnimated />
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           PRICING
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white py-28 px-6 overflow-hidden" id="pricing">
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* TESTIMONIALS */}
+      <section className="bg-transparent py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+
+          <FadeIn className="text-center mb-14">
+            <div className="inline-flex items-center gap-1.5 mb-5">
+              <span className="text-[#a855f7] text-lg leading-none">&#x2308;</span>
+              <span className="text-[13px] font-medium text-[#5B2D91] tracking-wide">Testimonials</span>
+              <span className="text-[#a855f7] text-lg leading-none">&#x2309;</span>
+            </div>
+            <h2 className="text-[40px] font-bold tracking-tight text-[#0a0a0a] leading-tight">Results that speak volume</h2>
+            <p className="text-[40px] font-bold tracking-tight text-[#bcbcc4] leading-tight">Read our success stories</p>
+            <p className="mt-4 text-[15px] text-[#6b6b6b]">See how brands are getting recommended by AI with Wisp.</p>
+          </FadeIn>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+            {/* Left tall card */}
+            <div className="bg-white rounded-3xl p-8 flex flex-col shadow-[0_2px_24px_rgba(0,0,0,0.04)] border border-[#f0f0f0]">
+              <div className="mb-5">
+                <span className="text-[22px] font-bold text-[#0a0a0a] tracking-tight leading-none">A complete LLM SEO toolkit</span>
+              </div>
+              <div className="text-[#a855f7] text-3xl font-serif leading-none mb-3">&rdquo;</div>
+              <p className="text-[15px] text-[#3a3a3a] leading-relaxed flex-1">
+                It centralizes everything by finding all our company mentions and letting us reply directly inside the platform. The blog generator and the LLM-txt system are incredibly well thought out. Truly a complete, all-in-one tool for LLM SEO.
+              </p>
+              <div className="flex items-center justify-between mt-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-[#e4e4e7] flex items-center justify-center shrink-0">
+                    <img src="https://www.elevare.one/web/image/website/1/logo/Elevare" alt="Elevare" className="w-8 h-8 object-contain" />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-semibold text-[#0a0a0a] leading-tight">Thomas R.</p>
+                    <p className="text-[12px] text-[#999]">Co-founder, Elevare</p>
+                  </div>
+                </div>
+                <img src="/wisp.png" alt="Wisp" className="h-8 w-auto opacity-70" />
+              </div>
+            </div>
+
+            {/* Right column */}
+            <div className="grid grid-rows-2 gap-4">
+
+              {/* Top wide card */}
+              <div className="bg-white rounded-3xl p-7 flex flex-col shadow-[0_2px_24px_rgba(0,0,0,0.04)] border border-[#f0f0f0]">
+                <div className="mb-3">
+                  <span className="text-[22px] font-bold text-[#0a0a0a] tracking-tight leading-none">Clients from real conversations</span>
+                </div>
+                <div className="text-[#a855f7] text-2xl font-serif leading-none mb-2">&rdquo;</div>
+                <p className="text-[14px] text-[#3a3a3a] leading-relaxed flex-1">
+                  Wisp&rsquo;s engagement engine finds the exact threads where our buyers are asking for help and joins the conversation for us. We&rsquo;ve closed real deals that started as a single Reddit reply.
+                </p>
+                <div className="flex items-center gap-3 mt-5">
+                  <img src="https://i.pravatar.cc/40?u=sarah-growth-lead" alt="Sarah M." className="w-9 h-9 rounded-full object-cover shrink-0" />
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#0a0a0a] leading-tight">Sarah M.</p>
+                    <p className="text-[12px] text-[#999]">Head of Growth, Stackly</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom two cards */}
+              <div className="grid grid-cols-2 gap-4">
+
+                {/* White small card */}
+                <div className="bg-white rounded-3xl p-6 flex flex-col shadow-[0_2px_24px_rgba(0,0,0,0.04)] border border-[#f0f0f0]">
+                  <div className="text-[#a855f7] text-2xl font-serif leading-none mb-2">&rdquo;</div>
+                  <p className="text-[13px] text-[#3a3a3a] leading-relaxed flex-1">
+                    A bigger competitor was everywhere we wanted to be. Within weeks Wisp had us showing up above them in the threads that mattered.
+                  </p>
+                  <div className="flex items-center gap-2.5 mt-5">
+                    <img src="https://i.pravatar.cc/40?u=james-ceo-2024" alt="James K." className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    <div>
+                      <p className="text-[12px] font-semibold text-[#0a0a0a] leading-tight">James K.</p>
+                      <p className="text-[11px] text-[#999]">CEO, Folio HQ</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dark small card */}
+                <div className="bg-[#0f0f12] rounded-3xl p-6 flex flex-col shadow-[0_2px_24px_rgba(0,0,0,0.12)]">
+                  <div className="text-[#a855f7] text-2xl font-serif leading-none mb-2">&rdquo;</div>
+                  <p className="text-[13px] text-[#d4d4d8] leading-relaxed flex-1">
+                    It took a bit of patience, but Wisp slowly built up a real presence for us in the conversations our audience actually reads.
+                  </p>
+                  <div className="flex items-center gap-2.5 mt-5">
+                    <img src="https://i.pravatar.cc/40?u=marc-orbit" alt="Marc D." className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    <div>
+                      <p className="text-[12px] font-semibold text-white leading-tight">Marc D.</p>
+                      <p className="text-[11px] text-[#888]">Marketing Lead, Orbit</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+<section className="bg-transparent py-28 px-6 overflow-hidden" id="pricing">
         <div className="max-w-5xl mx-auto">
 
           <FadeIn className="text-center mb-14">
             <div className="inline-flex items-center gap-2 bg-white border border-[#e0d4f5] rounded-full px-4 py-1.5 mb-6">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="text-[12px] text-[#5B2D91] font-medium">Early adopter pricing — limited spots</span>
+              <span className="text-[12px] text-[#5B2D91] font-medium">Early adopter pricing limited spots</span>
             </div>
             <h2 className="text-[42px] font-bold tracking-tight text-[#0a0a0a]">One plan. Everything included.</h2>
             <p className="mt-3 text-lg text-[#6b6b6b]">No feature tiers. No model limits. No BS.</p>
@@ -3014,14 +4297,14 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
                   {[
                     { bold: "25 prompts fired daily", rest: " across all 4 AI models" },
-                    { bold: "Full competitor tracking", rest: " — see exactly who beats you and why" },
+                    { bold: "Full competitor tracking", rest: " see exactly who beats you and why" },
                     { bold: "AI Visibility Score", rest: " tracked over time" },
-                    { bold: "Reddit & forum monitor", rest: " — draft replies instantly" },
-                    { bold: "Hero copy rewrite", rest: " — get cited more by AI" },
-                    { bold: "Fix recommendations", rest: " — step-by-step ranking actions" },
-                    { bold: "Get listed on G2 & Capterra", rest: " — sites AI pulls from" },
-                    { bold: "Source tracking", rest: " — see what makes AI mention you" },
-                    { bold: "All 4 AI models", rest: " — ChatGPT, Claude, Perplexity, Gemini" },
+                    { bold: "Reddit & forum monitor", rest: " draft replies instantly" },
+                    { bold: "Hero copy rewrite", rest: " get cited more by AI" },
+                    { bold: "Fix recommendations", rest: " step-by-step ranking actions" },
+                    { bold: "Get listed on G2 & Capterra", rest: " sites AI pulls from" },
+                    { bold: "Source tracking", rest: " see what makes AI mention you" },
+                    { bold: "All 4 AI models", rest: " ChatGPT, Claude, Perplexity, Gemini" },
                     { bold: "Priority support", rest: "" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5">
@@ -3045,10 +4328,10 @@ export default function LandingPage() {
       </section>
 
 
-      {/* ═══════════════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           FAQ
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white py-24 px-6 border-t border-[#f0f0f0]" id="faq">
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section className="bg-transparent py-24 px-6 border-t border-[#e0d4f5]" id="faq">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20">
 
@@ -3087,9 +4370,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           CTA BANNER
-      ═══════════════════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section
         className="bg-[#5B2D91] py-28 px-6 relative overflow-hidden"
         style={{
@@ -3117,10 +4400,10 @@ export default function LandingPage() {
         </FadeIn>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           FOOTER
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <footer className="bg-white border-t border-[#e5e5e5] py-16 px-6">
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <footer className="bg-transparent border-t border-[#e0d4f5] py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
             <div className="col-span-2 md:col-span-1">
@@ -3174,3 +4457,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
