@@ -1,14 +1,14 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Check, Loader2, Globe, User, Sparkles, Zap,
+  Check, Loader2, Globe, User, Zap,
   ChevronLeft, ChevronRight, RotateCw, Bookmark,
-  Building2, Tag, Users, Trophy, Search, Radio,
+  Building2, Tag, Users, Trophy, FileText,
 } from "lucide-react";
 import { BrandProfile } from "@/types";
-import { PROMPT_MODELS } from "@/lib/prompt-models";
+import { WispGhost } from "@/components/ui/wisp-ghost";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ interface AuditLoadingProps {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
+function TypewriterText({ text, delay = 0, speed = 22 }: { text: string; delay?: number; speed?: number }) {
   const [displayed, setDisplayed] = useState("");
   const [started, setStarted] = useState(false);
 
@@ -40,9 +40,9 @@ function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
       i++;
       setDisplayed(text.slice(0, i));
       if (i >= text.length) clearInterval(iv);
-    }, 22);
+    }, speed);
     return () => clearInterval(iv);
-  }, [started, text]);
+  }, [started, text, speed]);
 
   return <span>{displayed}<span className="opacity-0 select-none">|</span></span>;
 }
@@ -88,6 +88,74 @@ function WordRevealText({ text, delay = 0 }: { text: string; delay?: number }) {
         )
       )}
     </span>
+  );
+}
+
+// ── Wisp character — persistent across every step ───────────────────────────
+
+const WISP_SPEECH: Record<LoadingPhase, string> = {
+  scraping:   "Give me a sec — I'm reading through every page on your site…",
+  extracting: "Got it. Here's exactly who you are and who you're up against.",
+  prompts:    "Now I'm writing the real questions people ask AI about your space…",
+  firing:     "Asking ChatGPT, Perplexity, Gemini & Claude — let's see if you show up.",
+};
+
+function WispWorker({ phase }: { phase: LoadingPhase }) {
+  return (
+    <div className="flex items-start gap-4 mb-6">
+      {/* Floating Wisp with glow + orbiting sparks */}
+      <div className="relative shrink-0 w-[64px] h-[64px]">
+        {/* soft pulsing glow */}
+        <motion.div
+          className="absolute inset-0 rounded-full bg-[#7C22FF]/30 blur-2xl"
+          animate={{ scale: [1, 1.35, 1], opacity: [0.45, 0.7, 0.45] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* orbiting sparks */}
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full bg-[#9b4dff]"
+            style={{ marginTop: -3, marginLeft: -3 }}
+            animate={{
+              x: [0, Math.cos((i * 2.1)) * 34, 0],
+              y: [0, Math.sin((i * 2.1)) * 34, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.7, ease: "easeInOut" }}
+          />
+        ))}
+        {/* the ghost, bobbing */}
+        <motion.div
+          className="relative flex items-center justify-center w-full h-full"
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <WispGhost size={48} />
+        </motion.div>
+      </div>
+
+      {/* Speech bubble — retypes each phase so it feels like Wisp is talking */}
+      <div className="relative flex-1 pt-1.5">
+        <div className="relative inline-block max-w-full bg-white border border-[#ece6f7] rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-[0_4px_16px_rgba(91,45,145,0.10)]">
+          {/* tail */}
+          <div className="absolute -left-1.5 top-3 w-3 h-3 bg-white border-l border-b border-[#ece6f7] rotate-45" />
+          <p className="relative text-[13px] font-medium text-[#2a2a2a] leading-snug">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={phase}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <TypewriterText text={WISP_SPEECH[phase]} speed={18} />
+              </motion.span>
+            </AnimatePresence>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -325,6 +393,14 @@ function ScrapingAnimation({ url, heroData }: { url: string; heroData?: { title:
             )}
           </AnimatePresence>
 
+          {/* Wisp's scan line sweeping the page */}
+          <motion.div
+            className="absolute left-0 right-0 h-16 pointer-events-none"
+            style={{ background: "linear-gradient(180deg, rgba(124,34,255,0) 0%, rgba(124,34,255,0.10) 50%, rgba(124,34,255,0) 100%)" }}
+            animate={{ top: ["-10%", "100%"] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          />
+
           {/* Floating extraction pills */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {pills.map((pill) => (
@@ -346,7 +422,7 @@ function ScrapingAnimation({ url, heroData }: { url: string; heroData?: { title:
       {/* Progress bar with counter */}
       <div className="mt-4">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] text-[#6b7280]">Scanning website...</span>
+          <span className="text-[11px] text-[#6b7280]">Reading your website...</span>
           <span className="text-[11px] font-bold text-[#5B2D91]">{scanPct}%</span>
         </div>
         <div className="h-[3px] bg-[#f3eeff] rounded-full overflow-hidden">
@@ -471,145 +547,130 @@ function ProfileAnimation({ profile }: { profile: BrandProfile | null }) {
   );
 }
 
-// ── STEP 3 — Web Hunt ───────────────────────────────────────────────────────
+// ── STEP 3 — Wisp writes the test questions ─────────────────────────────────
 
 function PromptsAnimation({ profile }: { profile: BrandProfile | null }) {
-  const brand      = profile?.brand_name ?? "Your Brand";
-  const competitor = (profile?.competitors ?? [])[0] ?? "a competitor";
+  const brand      = profile?.brand_name ?? "your brand";
+  const category   = profile?.category ?? "productivity tools";
+  const audience   = profile?.target_users ?? "teams";
+  const competitor = (profile?.competitors ?? [])[0] ?? "the market leader";
+  const useCase    = (profile?.main_use_cases ?? [])[0] ?? "daily work";
 
-  const SOURCES = [
-    { domain: "reddit.com",           label: "Reddit",       relevant: 23 },
-    { domain: "quora.com",            label: "Quora",        relevant: 11 },
-    { domain: "g2.com",               label: "G2",           relevant:  8 },
-    { domain: "producthunt.com",      label: "Product Hunt", relevant:  6 },
-    { domain: "news.ycombinator.com", label: "Hacker News",  relevant:  9 },
-    { domain: "trustpilot.com",       label: "Trustpilot",   relevant:  4 },
+  const QUESTIONS = [
+    `What are the best ${category} right now?`,
+    `Which ${category} would you recommend for ${audience}?`,
+    `What are the top alternatives to ${competitor}?`,
+    `Is ${brand} a good option for ${useCase}?`,
+    `Compare the most popular ${category} for me.`,
   ];
 
-  const MENTIONS = [
-    { text: `"What's the best alternative to ${competitor}?"`,              source: "Reddit · r/SaaS",      tag: "gap"        },
-    { text: `"${brand} keeps coming up in every thread I read"`,            source: "Hacker News",           tag: "mention"    },
-    { text: `"ChatGPT recommended ${competitor} three times this week"`,    source: "Quora",                 tag: "competitor" },
-    { text: `"Tried ${brand} — pretty solid for our use case"`,             source: "G2 Review",             tag: "mention"    },
-    { text: `"Why doesn't AI ever mention ${brand} in this category?"`,     source: "Reddit · r/startups",   tag: "gap"        },
-  ];
-
-  const [scannedCount, setScannedCount] = useState(0);
-  const [mentionCount, setMentionCount] = useState(0);
-  const [totalCount,   setTotalCount]   = useState(0);
-  const [done,         setDone]         = useState(false);
+  const [writeIdx, setWriteIdx] = useState(0); // how many have started typing
+  const [doneIdx,  setDoneIdx]  = useState(0); // how many are finished
 
   useEffect(() => {
     const ts: ReturnType<typeof setTimeout>[] = [];
-    SOURCES.forEach((_, i) => ts.push(setTimeout(() => setScannedCount(i + 1), 300 + i * 550)));
-    MENTIONS.forEach((_, i) => ts.push(setTimeout(() => setMentionCount(i + 1), 600 + i * 480)));
-    ts.push(setTimeout(() => setDone(true), 3800));
-
-    const start = Date.now();
-    const iv = setInterval(() => {
-      const elapsed = Date.now() - start;
-      setTotalCount(Math.min(Math.floor(elapsed / 1.9), 1867));
-      if (elapsed >= 3600) clearInterval(iv);
-    }, 30);
-
-    return () => { ts.forEach(clearTimeout); clearInterval(iv); };
+    QUESTIONS.forEach((q, i) => {
+      const typeMs = Math.min(q.length * 22 + 200, 1600);
+      const startAt = i * 1450;
+      ts.push(setTimeout(() => setWriteIdx(i + 1), startAt));
+      ts.push(setTimeout(() => setDoneIdx(i + 1), startAt + typeMs));
+    });
+    return () => ts.forEach(clearTimeout);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <motion.div
-      key="hunting"
+      key="writing"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.3 }}
       className="w-full"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-[#5B2D91]/10 flex items-center justify-center">
-            <Radio className="w-3.5 h-3.5 text-[#5B2D91]" />
+      {/* Notepad */}
+      <div
+        className="rounded-xl bg-white border overflow-hidden"
+        style={{
+          borderColor: "rgba(91,45,145,0.22)",
+          boxShadow: "0 16px 50px rgba(91,45,145,0.18), 0 4px 16px rgba(0,0,0,0.06)",
+        }}
+      >
+        {/* Notepad header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#f0f0f0] bg-[#faf8ff]">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-[#5B2D91]/10 flex items-center justify-center">
+              <FileText className="w-3.5 h-3.5 text-[#5B2D91]" />
+            </div>
+            <span className="text-[13px] font-bold text-[#0a0a0a]">Questions to ask the AI</span>
           </div>
-          <span className="text-[14px] font-bold text-[#0a0a0a]">Wisp is scanning the web for you</span>
+          <span className="text-[11px] font-semibold text-[#5B2D91] bg-[#f3eeff] px-2.5 py-1 rounded-full">
+            {doneIdx} / {QUESTIONS.length} written
+          </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-[#5B2D91] font-semibold bg-[#f3eeff] px-2.5 py-1 rounded-full">
-          {!done && <Loader2 className="w-3 h-3 animate-spin" />}
-          {done && <Check className="w-3 h-3" />}
-          <span>{totalCount.toLocaleString()} pages scanned</span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Sources */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#bbbbbb] mb-2">Sources checked</p>
-          <div className="space-y-1.5">
-            {SOURCES.map((s, i) => {
-              const isDone   = scannedCount > i;
-              const isActive = scannedCount === i;
+        {/* Question lines */}
+        <div className="p-5 space-y-2.5">
+          {QUESTIONS.map((q, i) => {
+            if (i >= writeIdx) {
+              // not started yet — faint placeholder line so the list has shape
               return (
-                <div
-                  key={s.domain}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 border transition-all duration-300 ${
-                    isDone   ? "bg-white border-[#efefef]" :
-                    isActive ? "bg-[#f3eeff] border-[#c4a0f0]" :
-                               "bg-[#fafafa] border-[#f5f5f5] opacity-40"
-                  }`}
-                >
-                  <img src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=32`} width={14} height={14} className="rounded-sm shrink-0" alt="" />
-                  <span className="text-[11px] font-medium text-[#0a0a0a] flex-1">{s.label}</span>
-                  {isDone ? (
-                    <span className="text-[10px] font-bold text-emerald-600">{s.relevant} found</span>
-                  ) : isActive ? (
-                    <Loader2 className="w-3 h-3 text-[#5B2D91] animate-spin shrink-0" />
-                  ) : (
-                    <span className="text-[10px] text-[#cccccc]">—</span>
-                  )}
+                <div key={i} className="flex items-center gap-3 opacity-30">
+                  <span className="w-6 h-6 rounded-md bg-[#f3f0fa] text-[#bbb] text-[11px] font-bold flex items-center justify-center shrink-0">
+                    {i + 1}
+                  </span>
+                  <div className="h-2.5 rounded bg-[#f0eef7] flex-1" style={{ maxWidth: `${55 + ((i * 13) % 35)}%` }} />
                 </div>
               );
-            })}
-          </div>
-        </div>
-
-        {/* Live mention feed */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#bbbbbb] mb-2">Live mentions</p>
-          <div className="space-y-2">
-            <AnimatePresence>
-              {MENTIONS.slice(0, mentionCount).map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.22 }}
-                  className="bg-white rounded-lg border border-[#f0f0f0] px-3 py-2 shadow-sm"
-                >
-                  <p className="text-[11px] text-[#0a0a0a] leading-snug line-clamp-2">{m.text}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-[9px] text-[#aaaaaa]">{m.source}</span>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                      m.tag === "gap"        ? "bg-red-50 text-red-400"          :
-                      m.tag === "competitor" ? "bg-orange-50 text-orange-500"    :
-                                              "bg-emerald-50 text-emerald-600"
-                    }`}>
-                      {m.tag === "gap" ? "Gap" : m.tag === "competitor" ? "Competitor" : "Mention"}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+            }
+            const isDone = i < doneIdx;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className={`flex items-center gap-3 rounded-lg px-2.5 py-2 -mx-2.5 transition-colors duration-300 ${
+                  isDone ? "" : "bg-[#f7f3ff]"
+                }`}
+              >
+                <span className={`w-6 h-6 rounded-md text-[11px] font-bold flex items-center justify-center shrink-0 ${
+                  isDone ? "bg-[#5B2D91]/10 text-[#5B2D91]" : "bg-[#5B2D91] text-white"
+                }`}>
+                  {i + 1}
+                </span>
+                <span className="text-[13px] text-[#1a1a1a] font-medium flex-1 leading-snug">
+                  {isDone ? q : <TypewriterText text={q} speed={20} />}
+                </span>
+                {isDone ? (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.3, 1] }}
+                    transition={{ duration: 0.3 }}
+                    className="w-5 h-5 rounded-full bg-[#5B2D91]/10 flex items-center justify-center shrink-0"
+                  >
+                    <Check className="w-3 h-3 text-[#5B2D91]" />
+                  </motion.div>
+                ) : (
+                  <Loader2 className="w-3.5 h-3.5 text-[#5B2D91] animate-spin shrink-0" />
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
+
+      <p className="text-center text-[11px] text-[#9b8bbf] mt-3">
+        These are the exact prompts Wisp will run against every AI engine.
+      </p>
     </motion.div>
   );
 }
 
-// ── STEP 4 — AI Visibility Test ────────────────────────────────────────────
+// ── STEP 4 — Wisp asks the AI engines ───────────────────────────────────────
 
 function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
-  const brand    = profile?.brand_name ?? "Your Brand";
+  const brand    = profile?.brand_name ?? "Your brand";
   const category = profile?.category   ?? "productivity tools";
 
   const MODELS = [
@@ -649,18 +710,10 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
       transition={{ duration: 0.3 }}
       className="w-full"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-[#5B2D91]/10 flex items-center justify-center">
-          <Zap className="w-3.5 h-3.5 text-[#5B2D91]" />
-        </div>
-        <span className="text-[14px] font-bold text-[#0a0a0a]">Wisp is testing your AI visibility</span>
-      </div>
-
-      {/* Query being tested */}
+      {/* Query being asked */}
       <div className="bg-[#fafafa] border border-[#efefef] rounded-xl px-4 py-2.5 mb-5 flex items-center gap-2">
-        <span className="text-[10px] text-[#aaaaaa] font-medium shrink-0 uppercase tracking-wide">Query</span>
-        <span className="text-[12px] font-medium text-[#0a0a0a] italic">&ldquo;Best {category} tools for teams?&rdquo;</span>
+        <span className="text-[10px] text-[#aaaaaa] font-medium shrink-0 uppercase tracking-wide">Asking</span>
+        <span className="text-[12px] font-medium text-[#0a0a0a] italic">&ldquo;Best {category} for teams?&rdquo;</span>
       </div>
 
       {/* AI model cards 2×2 */}
@@ -702,7 +755,7 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
                 </motion.p>
               )}
               {!isTested && !isActive && (
-                <p className="text-[11px] text-[#cccccc]">Queued…</p>
+                <p className="text-[11px] text-[#cccccc]">Waiting…</p>
               )}
             </div>
           );
@@ -745,10 +798,10 @@ function FiringAnimation({ profile }: { profile: BrandProfile | null }) {
 // ── Step Indicator ───────────────────────────────────────────────────────────
 
 const STEP_DEFS = [
-  { label: "Reading", Icon: Globe },
-  { label: "Mapping", Icon: User },
-  { label: "Hunting", Icon: Search },
-  { label: "Scoring", Icon: Zap },
+  { label: "Reading",   Icon: Globe },
+  { label: "Profiling", Icon: User },
+  { label: "Writing",   Icon: FileText },
+  { label: "Testing",   Icon: Zap },
 ];
 
 const phaseToStep: Record<LoadingPhase, number> = {
@@ -760,9 +813,9 @@ const phaseToStep: Record<LoadingPhase, number> = {
 
 const stepDescriptions: Record<LoadingPhase, string> = {
   scraping: "Step 1 of 4 · Wisp is reading your website",
-  extracting: "Step 2 of 4 · Wisp is mapping your brand",
-  prompts: "Step 3 of 4 · Wisp is hunting for mentions across the web",
-  firing: "Step 4 of 4 · Wisp is testing your AI visibility",
+  extracting: "Step 2 of 4 · Wisp is profiling your brand",
+  prompts: "Step 3 of 4 · Wisp is writing the test questions",
+  firing: "Step 4 of 4 · Wisp is asking the AI engines",
 };
 
 function StepIndicator({ phase }: { phase: LoadingPhase }) {
@@ -835,7 +888,11 @@ export function AuditLoadingView({ phase, url, profile, heroData, onReset }: Aud
           </div>
 
           {/* Animation zone */}
-          <div className="p-8 min-h-[480px] flex items-center justify-center">
+          <div className="p-8 min-h-[520px]">
+            {/* Wisp — always present, narrating every step */}
+            <WispWorker phase={phase} />
+
+            {/* The work Wisp is doing right now */}
             <div className="w-full">
               <AnimatePresence mode="wait">
                 {phase === "scraping"   && <ScrapingAnimation url={url} heroData={heroData} />}
@@ -850,4 +907,3 @@ export function AuditLoadingView({ phase, url, profile, heroData, onReset }: Aud
     </div>
   );
 }
-
