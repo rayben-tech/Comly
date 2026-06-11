@@ -692,20 +692,21 @@ function AskingEngines() {
 }
 
 // Compact version of the "Meet Wisp" network graph for the building-report step.
+const GRAPH_W = 660, GRAPH_H = 384;
+const CX = 330, CY = 158;
 const REPORT_LLM = [
-  { alt: "ChatGPT",    domain: "chatgpt.com",       cx: 60,  cy: 55  },
-  { alt: "Claude",     domain: "claude.ai",         cx: 60,  cy: 235 },
-  { alt: "Gemini",     domain: "gemini.google.com", cx: 640, cy: 55  },
-  { alt: "Perplexity", domain: "perplexity.ai",     cx: 640, cy: 235 },
+  { alt: "ChatGPT",    domain: "chatgpt.com",       cx: 52,  cy: 56  },
+  { alt: "Claude",     domain: "claude.ai",         cx: 52,  cy: 250 },
+  { alt: "Gemini",     domain: "gemini.google.com", cx: 608, cy: 56  },
+  { alt: "Perplexity", domain: "perplexity.ai",     cx: 608, cy: 250 },
 ];
 const REPORT_PLATFORM = [
-  { alt: "Reddit",   domain: "reddit.com",   cx: 130, cy: 348 },
-  { alt: "Quora",    domain: "quora.com",    cx: 240, cy: 360 },
-  { alt: "LinkedIn", domain: "linkedin.com", cx: 350, cy: 366 },
-  { alt: "YouTube",  domain: "youtube.com",  cx: 460, cy: 360 },
-  { alt: "Facebook", domain: "facebook.com", cx: 570, cy: 348 },
+  { alt: "Reddit",   domain: "reddit.com",   cx: 118, cy: 322 },
+  { alt: "Quora",    domain: "quora.com",    cx: 224, cy: 334 },
+  { alt: "LinkedIn", domain: "linkedin.com", cx: 330, cy: 338 },
+  { alt: "YouTube",  domain: "youtube.com",  cx: 436, cy: 334 },
+  { alt: "Facebook", domain: "facebook.com", cx: 542, cy: 322 },
 ];
-const CX = 350, CY = 150;
 
 function curveTo(nx: number, ny: number) {
   const mx = (nx + CX) / 2;
@@ -740,14 +741,25 @@ function BuildingReport() {
         <Loader2 className="w-4 h-4 text-[#5B2D91] animate-spin" />
         <span className="text-[15px] font-bold text-[#0a0a0a]">Building your report…</span>
       </div>
-      <p className="text-[12px] text-[#8b7bb0] mb-2">Wisp is connecting every AI engine and source into your visibility report.</p>
+      <p className="text-[12px] text-[#8b7bb0] mb-3 text-center">Wisp is connecting every AI engine and source into your visibility report.</p>
+
+      {/* Progress bar — above the graph so it never collides with nodes */}
+      <div className="w-full max-w-[340px] mb-1">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] text-[#6b7280]">Compiling results</span>
+          <span className="text-[11px] font-bold text-[#5B2D91]">{pct}%</span>
+        </div>
+        <div className="h-[3px] bg-[#f3eeff] rounded-full overflow-hidden">
+          <div className="h-full bg-[#5B2D91] rounded-full" style={{ width: `${pct}%`, transition: "width 90ms linear" }} />
+        </div>
+      </div>
 
       {/* Graph */}
-      <div className="relative mx-auto" style={{ width: 700, height: 380, maxWidth: "100%" }}>
-        <svg style={{ position: "absolute", inset: 0, pointerEvents: "none" }} width={700} height={380}>
+      <div className="relative mx-auto" style={{ width: GRAPH_W, height: GRAPH_H, maxWidth: "100%" }}>
+        <svg style={{ position: "absolute", inset: 0, pointerEvents: "none" }} width={GRAPH_W} height={GRAPH_H}>
           {/* static links */}
-          {REPORT_LLM.map((n) => <path key={`sl-${n.alt}`} d={curveTo(n.cx, n.cy)} fill="none" stroke="rgba(91,45,145,0.18)" strokeWidth={1.5} />)}
-          {REPORT_PLATFORM.map((n) => <path key={`sp-${n.alt}`} d={curveFrom(n.cx, n.cy)} fill="none" stroke="rgba(91,45,145,0.14)" strokeWidth={1.5} />)}
+          {REPORT_LLM.map((n) => <path key={`sl-${n.alt}`} d={curveTo(n.cx, n.cy)} fill="none" stroke="rgba(91,45,145,0.16)" strokeWidth={1.5} />)}
+          {REPORT_PLATFORM.map((n) => <path key={`sp-${n.alt}`} d={curveFrom(n.cx, n.cy)} fill="none" stroke="rgba(91,45,145,0.13)" strokeWidth={1.5} />)}
 
           {/* orange pulses: engines → Wisp */}
           {REPORT_LLM.map((n, i) => (
@@ -759,11 +771,20 @@ function BuildingReport() {
           ))}
         </svg>
 
+        {/* White mask disc — hides the line convergence behind Wisp */}
+        <div
+          style={{
+            position: "absolute", left: CX, top: CY, width: 150, height: 150,
+            transform: "translate(-50%,-50%)",
+            background: "radial-gradient(circle, #ffffff 32%, rgba(255,255,255,0.9) 52%, rgba(255,255,255,0) 72%)",
+          }}
+        />
+
         {/* Wisp centered, bobbing */}
         <motion.div style={{ position: "absolute", left: CX, top: CY, transform: "translate(-50%,-50%)" }} animate={{ y: [0, -6, 0] }} transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}>
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-[#7C22FF]/25 blur-2xl scale-150" />
-            <div className="relative"><WispGhost size={86} /></div>
+            <div className="absolute inset-0 rounded-full bg-[#7C22FF]/25 blur-2xl scale-[1.6]" />
+            <div className="relative"><WispGhost size={100} /></div>
           </div>
         </motion.div>
 
@@ -776,17 +797,6 @@ function BuildingReport() {
             <p className="text-center text-[10px] font-semibold text-[#5B2D91]/60 mt-1 whitespace-nowrap">{n.alt}</p>
           </div>
         ))}
-      </div>
-
-      {/* progress */}
-      <div className="w-full max-w-[420px] mt-1">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] text-[#6b7280]">Compiling results</span>
-          <span className="text-[11px] font-bold text-[#5B2D91]">{pct}%</span>
-        </div>
-        <div className="h-[3px] bg-[#f3eeff] rounded-full overflow-hidden">
-          <div className="h-full bg-[#5B2D91] rounded-full" style={{ width: `${pct}%`, transition: "width 90ms linear" }} />
-        </div>
       </div>
     </motion.div>
   );
