@@ -16,23 +16,26 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Comly — Get Recommended by AI",
+  title: "Spico — A head of marketing that works 24/7",
   description:
-    "Find out why AI recommends your competitors instead of you — and fix it. Audit your brand's visibility across ChatGPT, Gemini & Perplexity in 60 seconds.",
-  metadataBase: new URL("https://www.trycomly.com"),
+    "Spico is an AI head of marketing. It finds marketing opportunities around the clock and hands them to you to act on with one click.",
+  metadataBase: new URL("https://spico.io"),
+  alternates: {
+    canonical: "https://spico.io",
+  },
   openGraph: {
-    title: "Comly — Get Recommended by AI",
-    description: "Find out why AI recommends your competitors instead of you — and fix it. Audit your brand's visibility across ChatGPT, Gemini & Perplexity in 60 seconds.",
-    siteName: "Comly",
+    title: "Spico — A head of marketing that works 24/7",
+    description: "Spico is an AI head of marketing. It finds marketing opportunities around the clock and hands them to you to act on with one click.",
+    siteName: "Spico",
     type: "website",
-    url: "https://www.trycomly.com",
-    images: [{ url: "/og-banner.png", width: 1200, height: 630 }],
+    url: "https://spico.io",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Comly — Get Recommended by AI",
-    description: "Find out why AI recommends your competitors instead of you — and fix it. Audit your brand's visibility across ChatGPT, Gemini & Perplexity in 60 seconds.",
-    images: ["/og-banner.png"],
+    title: "Spico — A head of marketing that works 24/7",
+    description: "Spico is an AI head of marketing. It finds marketing opportunities around the clock and hands them to you to act on with one click.",
+    images: ["/og-image.png"],
   },
 };
 
